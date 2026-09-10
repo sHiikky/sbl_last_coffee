@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "cranky-yellow-cheese",
+    "slug": "snack-2351ccc7-33bf-4c3b-9ec4-ae33a576ff1a",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon-dark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#050505"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.shikky.sbl",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bff41dba-7718-423d-8898-1003aae445db"
+      }
+    },
+    "owner": "shikky"
+  }
+}

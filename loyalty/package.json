@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Позволяет запускать loyaltyService.selfcheck.js напрямую через `node`, не трогая конфигурацию Metro/Babel в остальном проекте (Metro не читает это поле, у него свой резолвер)."
+}

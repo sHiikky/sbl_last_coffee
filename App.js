@@ -1,0 +1,613 @@
+import 'react-native-gesture-handler';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, ActivityIndicator, Easing, Dimensions } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
+
+import HomeScreen from './screens/HomeScreen';
+import MenuScreen from './screens/MenuScreen';
+import ProductScreen from './screens/ProductScreen';
+import CartScreen from './screens/CartScreen';
+import OrderSuccessScreen from './screens/OrderSuccessScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import OrderHistoryScreen from './screens/OrderHistoryScreen';
+import LoyaltyScreen from './screens/LoyaltyScreen';
+import LoyaltyRewardModal from './components/loyalty/LoyaltyRewardModal';
+import { HomeIcon, MenuIcon, CartIcon, ProfileIcon } from './navigation/TabIcons';
+import { colors } from './theme/tokens';
+import { cartKey, getProductById } from './data/products';
+import { fetchVisibleProducts } from './lib/catalogService';
+import useLoyaltyState from './loyalty/useLoyaltyState';
+import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
+import { ensureAnonymousSession, getUserOrThrow, supabase } from './lib/supabaseClient';
+
+const ACTIVE_ORDER_FINAL_STATUSES = ['completed', 'cancelled'];
+
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+const TAB_BAR_HEIGHT = 54;
+const SCREEN_WIDTH = Dimensions.get('window').width;
+
+// Полноценный горизонтальный "перелист" между табами: текущий экран уезжает
+// в одну сторону, следующий въезжает с другой — вместо едва заметного shift.
+const pageSlideInterpolator = ({ current }) => ({
+  sceneStyle: {
+    transform: [
+      {
+        translateX: current.progress.interpolate({
+          inputRange: [-1, 0, 1],
+          outputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+        }),
+      },
+    ],
+  },
+});
+const STORAGE_KEYS = {
+  cart: 'sbl_cart',
+  favorites: 'sbl_favorites',
+  orders: 'sbl_orders',
+  activeOrder: 'sbl_active_order',
+};
+
+function LoadingScreen() {
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+      <ActivityIndicator size="small" color={colors.accent} />
+      <Text style={{ fontSize: 13, color: colors.textSecondary }}>Подготавливаем кофейню SBL…</Text>
+    </View>
+  );
+}
+
+function TabBarIcon({ route, focused, cartCount }) {
+  switch (route.name) {
+    case 'HomeTab': return <HomeIcon focused={focused} />;
+    case 'MenuTab': return <MenuIcon focused={focused} />;
+    case 'CartTab': return <CartIcon focused={focused} count={cartCount} />;
+    case 'ProfileTab': return <ProfileIcon focused={focused} />;
+    default: return null;
+  }
+}
+
+function Tabs({
+  cart,
+  favorites,
+  orderHistory,
+  products,
+  onAddToCart,
+  onIncrement,
+  onDecrement,
+  onOrder,
+  onToggleFavorite,
+  onRepeatOrder,
+  loyaltyState,
+  onRedeemReward,
+  activeOrder,
+  onOpenActiveOrder,
+  onActiveOrderFinished,
+}) {
+  const insets = useSafeAreaInsets();
+  const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
+  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        sceneStyleInterpolator: pageSlideInterpolator,
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 420,
+            easing: Easing.out(Easing.cubic),
+          },
+        },
+        tabBarShowLabel: true,
+        tabBarActiveTintColor: colors.accent,
+        // Было слишком светлое (#B0AEA8) — на белом фоне неактивные иконки/
+        // подписи почти не читались. Взяли более контрастный нейтральный серый.
+        tabBarInactiveTintColor: '#8A8780',
+        tabBarStyle: {
+          height: tabBarHeight,
+          paddingTop: 4,
+          paddingBottom: Math.max(insets.bottom, 4),
+          backgroundColor: 'rgba(255,255,255,0.96)',
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -8 },
+          shadowOpacity: 0.045,
+          shadowRadius: 18,
+          elevation: 8,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '600',
+          lineHeight: 14,
+        },
+        tabBarIcon: ({ focused }) => <TabBarIcon route={route} focused={focused} cartCount={cartCount} />,
+      })}
+      screenListeners={({ navigation }) => ({
+        tabPress: () => {
+          if (!navigation.isFocused()) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        },
+      })}
+    >
+      <Tab.Screen name="HomeTab" options={{ tabBarLabel: 'Главная', title: 'Главная' }}>
+        {props => (
+          <HomeScreen
+            {...props}
+            cart={cart}
+            products={products}
+            onAddToCart={onAddToCart}
+            onDecrement={onDecrement}
+            onRepeatOrder={onRepeatOrder}
+            onToggleFavorite={onToggleFavorite}
+            favoriteIds={favorites}
+            orderHistory={orderHistory}
+            tabBarHeight={tabBarHeight}
+            loyaltyState={loyaltyState}
+            activeOrder={activeOrder}
+            onOpenActiveOrder={onOpenActiveOrder}
+            onActiveOrderFinished={onActiveOrderFinished}
+          />
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen name="MenuTab" options={{ tabBarLabel: 'Меню', title: 'Меню' }}>
+        {props => (
+          <MenuScreen
+            {...props}
+            cart={cart}
+            products={products}
+            onAddToCart={onAddToCart}
+            onDecrement={onDecrement}
+            onToggleFavorite={onToggleFavorite}
+            favoriteIds={favorites}
+            tabBarHeight={tabBarHeight}
+          />
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen name="CartTab" options={{ tabBarLabel: 'Корзина', title: 'Корзина' }}>
+        {props => (
+          <CartScreen
+            {...props}
+            cart={cart}
+            onIncrement={onIncrement}
+            onDecrement={onDecrement}
+            onOrder={onOrder}
+            tabBarHeight={tabBarHeight}
+            loyaltyState={loyaltyState}
+            onRedeemReward={onRedeemReward}
+          />
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen name="ProfileTab" options={{ tabBarLabel: 'Профиль', title: 'Профиль' }}>
+        {props => (
+          <ProfileScreen
+            {...props}
+            tabBarHeight={tabBarHeight}
+            favoriteIds={favorites}
+            orderHistory={orderHistory}
+            onRepeatOrder={onRepeatOrder}
+            loyaltyState={loyaltyState}
+          />
+        )}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+}
+
+function RootStack({
+  cart,
+  favorites,
+  orderHistory,
+  products,
+  onAddToCart,
+  onIncrement,
+  onDecrement,
+  onOrder,
+  onToggleFavorite,
+  onRepeatOrder,
+  loyaltyState,
+  onRedeemReward,
+  devSimulateToday,
+  devSimulateTenDayStreak,
+  devResetLoyalty,
+  activeOrder,
+  onOpenActiveOrder,
+  onActiveOrderFinished,
+}) {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Tabs">
+        {props => (
+          <Tabs
+            {...props}
+            cart={cart}
+            favorites={favorites}
+            orderHistory={orderHistory}
+            products={products}
+            onAddToCart={onAddToCart}
+            onIncrement={onIncrement}
+            onDecrement={onDecrement}
+            onOrder={onOrder}
+            onToggleFavorite={onToggleFavorite}
+            onRepeatOrder={onRepeatOrder}
+            loyaltyState={loyaltyState}
+            onRedeemReward={onRedeemReward}
+            activeOrder={activeOrder}
+            onOpenActiveOrder={onOpenActiveOrder}
+            onActiveOrderFinished={onActiveOrderFinished}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen
+        name="Product"
+        options={{
+          presentation: 'card',
+          animation: 'fade_from_bottom',
+          animationDuration: 220,
+          gestureEnabled: true,
+        }}
+      >
+        {props => (
+          <ProductScreen
+            {...props}
+            onAddToCart={onAddToCart}
+            onToggleFavorite={onToggleFavorite}
+            favoriteIds={favorites}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen name="OrderHistory">
+        {props => (
+          <OrderHistoryScreen
+            {...props}
+            orderHistory={orderHistory}
+            products={products}
+            onRepeatOrder={onRepeatOrder}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen
+        name="Loyalty"
+        options={{ presentation: 'card', animation: 'slide_from_right', gestureEnabled: true }}
+      >
+        {props => (
+          <LoyaltyScreen
+            {...props}
+            loyaltyState={loyaltyState}
+            devSimulateToday={devSimulateToday}
+            devSimulateTenDayStreak={devSimulateTenDayStreak}
+            devResetLoyalty={devResetLoyalty}
+          />
+        )}
+      </Stack.Screen>
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  const [isReady, setIsReady] = useState(false);
+  const [cart, setCart] = useState({});
+  const [favoriteIds, setFavoriteIds] = useState([]);
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [orderComplete, setOrderComplete] = useState(null);
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [products, setProducts] = useState([]);
+  const loyalty = useLoyaltyState(orderHistory);
+
+  const productsById = useMemo(() => {
+    const map = {};
+    products.forEach(product => { map[product.id] = product; });
+    return map;
+  }, [products]);
+
+  // Меню грузим из Supabase (таблица products, синхронизируется из СБИС
+  // отдельной Edge Function — см. lib/catalogService.js и файлы в "Claude
+  // outputs"). Пока список не пришёл, экраны получают пустой массив — это
+  // сознательно (см. HomeScreen/MenuScreen), а не считается ошибкой.
+  useEffect(() => {
+    fetchVisibleProducts()
+      .then(setProducts)
+      .catch(error => {
+        console.warn('[catalog] failed to load products from Supabase', error);
+      });
+  }, []);
+
+  // Тихий анонимный вход в Supabase, затем сверяем с сервером, есть ли у
+  // пользователя незавершённый заказ — баннер на Главной должен появляться
+  // даже после полного перезапуска приложения, а не только пока App.js жив
+  // в памяти. Кэш в AsyncStorage (ниже) используется только для мгновенной
+  // отрисовки до ответа сервера — источник истины всегда Supabase.
+  useEffect(() => {
+    ensureAnonymousSession()
+      .then(() => refreshActiveOrder())
+      .catch(error => {
+        console.warn('[supabase] anonymous sign-in failed on startup', error);
+      });
+  }, []);
+
+  async function refreshActiveOrder() {
+    try {
+      const user = await getUserOrThrow();
+      const { data, error } = await supabase
+        .from('orders')
+        .select('id, order_number, status')
+        .eq('customer_id', user.id)
+        .not('status', 'in', `(${ACTIVE_ORDER_FINAL_STATUSES.join(',')})`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      setActiveOrder(data ? { id: data.id, orderNumber: data.order_number, status: data.status } : null);
+    } catch (error) {
+      console.warn('[order] failed to refresh active order', error);
+    }
+  }
+
+  useEffect(() => {
+    AsyncStorage.multiGet([
+      STORAGE_KEYS.cart,
+      STORAGE_KEYS.favorites,
+      STORAGE_KEYS.orders,
+      STORAGE_KEYS.activeOrder,
+    ]).then(entries => {
+      const map = Object.fromEntries(entries);
+
+      try {
+        if (map[STORAGE_KEYS.cart]) setCart(JSON.parse(map[STORAGE_KEYS.cart]));
+        if (map[STORAGE_KEYS.favorites]) setFavoriteIds(JSON.parse(map[STORAGE_KEYS.favorites]));
+        if (map[STORAGE_KEYS.orders]) setOrderHistory(JSON.parse(map[STORAGE_KEYS.orders]));
+        // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
+        // сверит это с сервером сразу после старта и перезапишет при расхождении.
+        if (map[STORAGE_KEYS.activeOrder]) setActiveOrder(JSON.parse(map[STORAGE_KEYS.activeOrder]));
+      } catch (error) {
+        console.warn('Failed to restore local state', error);
+      } finally {
+        setIsReady(true);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isReady) return;
+    AsyncStorage.setItem(STORAGE_KEYS.cart, JSON.stringify(cart));
+  }, [cart, isReady]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    AsyncStorage.setItem(STORAGE_KEYS.favorites, JSON.stringify(favoriteIds));
+  }, [favoriteIds, isReady]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    AsyncStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orderHistory));
+  }, [orderHistory, isReady]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    if (activeOrder?.id) {
+      AsyncStorage.setItem(STORAGE_KEYS.activeOrder, JSON.stringify(activeOrder));
+    } else {
+      AsyncStorage.removeItem(STORAGE_KEYS.activeOrder);
+    }
+  }, [activeOrder, isReady]);
+
+  // В реальном меню СБИС у каждого варианта товара (размер, молоко и т.д.)
+  // уже отдельная позиция со своей ценой — поэтому один товар = одна строка
+  // корзины, без выбора опций поверх цены (раньше это делали sizeId/milkId/
+  // temperatureId/addonIds, теперь не нужны).
+  const addToCart = (product) => {
+    if (!product) return;
+    const key = cartKey(product.id);
+
+    setCart(prev => {
+      const existing = prev[key];
+      return {
+        ...prev,
+        [key]: existing
+          ? { ...existing, qty: existing.qty + 1 }
+          : {
+              key,
+              id: product.id,
+              name: product.name,
+              image: product.image,
+              imageFit: product.imageFit,
+              imagePosition: product.imagePosition,
+              category: product.category,
+              // Кураторский раздел ("Напитки"/"Еда"/"Десерты"/"Магазин") —
+              // именно на нём, а не на сыром category из СБИС, теперь строится
+              // награда "бесплатный десерт" в программе лояльности (см.
+              // loyaltyService.js), чтобы сэндвичи/супы из старого раздела
+              // "Сытное/Десерты" в неё не попадали.
+              menuCategory: product.menuCategory,
+              unitPrice: product.price,
+              qty: 1,
+            },
+      };
+    });
+  };
+
+  const decrementCart = (key) => {
+    setCart(prev => {
+      const existing = prev[key];
+      if (!existing) return prev;
+      if (existing.qty === 1) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      return { ...prev, [key]: { ...existing, qty: existing.qty - 1 } };
+    });
+  };
+
+  const toggleFavorite = (productId) => {
+    setFavoriteIds(prev => (
+      prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
+    ));
+  };
+
+  const repeatOrder = (order) => {
+    if (!order?.items?.length) return;
+    const nextCart = {};
+
+    order.items.forEach(item => {
+      const product = getProductById(products, item.id);
+      if (!product) return;
+      const key = cartKey(item.id);
+      nextCart[key] = {
+        key,
+        id: item.id,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        image: product.image,
+        imageFit: product.imageFit,
+        imagePosition: product.imagePosition,
+        category: product.category,
+        name: product.name,
+      };
+    });
+
+    setCart(nextCart);
+  };
+
+  // pickupTime/pickupPoint/total/earnedBonuses/itemCount — как раньше, локальные
+  // детали оформления. supabaseOrderId/supabaseOrderNumber — приходят из
+  // CartScreen ПОСЛЕ того, как заказ уже реально создан в Supabase (orders +
+  // order_items), поэтому localOrderHistory (используется loyalty-программой,
+  // профилем и историей заказов) всегда соответствует реальному заказу в БД.
+  const placeOrder = ({ pickupTime, pickupPoint, total, earnedBonuses, itemCount, supabaseOrderId, supabaseOrderNumber }) => {
+    const items = Object.values(cart);
+    const orderNumber = supabaseOrderNumber ? `№${supabaseOrderNumber}` : `SBL-${Math.floor(1000 + Math.random() * 9000)}`;
+    const createdAt = new Date().toISOString();
+
+    const orderRecord = {
+      id: supabaseOrderId || createdAt,
+      supabaseOrderId,
+      orderNumber,
+      createdAt,
+      pickupTime,
+      pickupPoint,
+      total,
+      itemCount,
+      earnedBonuses,
+      items: items.map(item => ({
+        key: item.key,
+        id: item.id,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+      })),
+    };
+
+    setOrderHistory(prev => [orderRecord, ...prev].slice(0, 12));
+    setCart({});
+    setOrderComplete({
+      orderNumber,
+      supabaseOrderId,
+      pickupTime,
+      pickupPoint,
+      itemCount,
+      total,
+      earnedBonuses,
+    });
+    // Баннер на Главной должен появиться сразу, не дожидаясь следующего
+    // refreshActiveOrder() — заказ только что реально создан в Supabase.
+    if (supabaseOrderId) {
+      setActiveOrder({ id: supabaseOrderId, orderNumber: supabaseOrderNumber, status: 'new' });
+    }
+  };
+
+  const openActiveOrder = () => {
+    if (!activeOrder?.id) return;
+    setOrderComplete({
+      orderNumber: activeOrder.orderNumber ? `№${activeOrder.orderNumber}` : null,
+      supabaseOrderId: activeOrder.id,
+    });
+  };
+
+  const finishActiveOrder = () => {
+    setActiveOrder(null);
+  };
+
+  // DEV-only помощники для ручного тестирования серии посещений без ожидания
+  // реальных 10 дней (см. loyalty/loyaltyDev.js). Никогда не вызываются вне __DEV__.
+  const devSimulateToday = () => {
+    if (!__DEV__) return;
+    setOrderHistory(prev => [buildTodaySyntheticOrder(), ...prev].slice(0, 12));
+  };
+  const devSimulateTenDayStreak = () => {
+    if (!__DEV__) return;
+    setOrderHistory(prev => [...buildSyntheticStreakOrders(10), ...prev].slice(0, 12));
+  };
+  const devResetLoyalty = () => {
+    if (!__DEV__) return;
+    setOrderHistory(prev => prev.filter(order => !order.devSynthetic));
+    loyalty.devReset();
+  };
+
+  if (!isReady) {
+    return (
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <LoadingScreen />
+      </SafeAreaProvider>
+    );
+  }
+
+  return (
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <NavigationContainer documentTitle={{ formatter: () => 'SBL' }}>
+        {orderComplete ? (
+          <OrderSuccessScreen
+            order={orderComplete}
+            onDone={() => setOrderComplete(null)}
+            onFinished={finishActiveOrder}
+          />
+        ) : (
+          <RootStack
+            cart={cart}
+            favorites={favoriteIds}
+            orderHistory={orderHistory}
+            products={products}
+            onAddToCart={addToCart}
+            onIncrement={(item) => addToCart(productsById[item.id])}
+            onDecrement={decrementCart}
+            onOrder={placeOrder}
+            onToggleFavorite={toggleFavorite}
+            onRepeatOrder={repeatOrder}
+            loyaltyState={loyalty}
+            onRedeemReward={loyalty.redeemReward}
+            devSimulateToday={devSimulateToday}
+            devSimulateTenDayStreak={devSimulateTenDayStreak}
+            devResetLoyalty={devResetLoyalty}
+            activeOrder={activeOrder}
+            onOpenActiveOrder={openActiveOrder}
+            onActiveOrderFinished={finishActiveOrder}
+          />
+        )}
+      </NavigationContainer>
+
+      <LoyaltyRewardModal
+        reward={loyalty.celebratingReward}
+        onClaim={loyalty.dismissCelebration}
+        onDismiss={loyalty.dismissCelebration}
+      />
+    </SafeAreaProvider>
+  );
+}

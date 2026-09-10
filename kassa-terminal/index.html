@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Касса — SBL coffee</title>
+<style>
+  :root{
+    --bg:#17110D;
+    --panel:#211812;
+    --card:#2C2019;
+    --line: rgba(247,240,228,0.10);
+    --cream:#F7F0E4;
+    --cream-dim: rgba(247,240,228,0.58);
+    --cream-dim2: rgba(247,240,228,0.32);
+    --amber:#F5A93F;
+    --amber-deep:#8A5A16;
+    --mint:#33C2A0;
+    --mint-deep:#155F4C;
+    --green:#4CC26B;
+    --green-deep:#1F6B37;
+    --red:#D9695A;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    background:var(--bg); color:var(--cream); font-family:var(--font-ui);
+    min-height:100vh; -webkit-tap-highlight-color:transparent; overflow-x:hidden;
+  }
+  .hidden{ display:none !important; }
+  button{ font-family:inherit; cursor:pointer; }
+  input{ font-family:inherit; }
+
+  ::view-transition-group(*){ animation-duration:320ms; animation-timing-function:cubic-bezier(.4,0,.2,1); }
+
+  /* ---------- login ---------- */
+  #loginView{
+    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .login-card{
+    width:100%; max-width:360px; background:var(--panel); border:1px solid var(--line);
+    border-radius:22px; padding:34px 30px; text-align:center;
+  }
+  .login-cup{
+    width:46px; height:46px; margin:0 auto 14px; color:var(--amber);
+  }
+  .login-card h1{
+    font-family:var(--font-display); font-style:italic; font-weight:600; font-size:24px; margin:0 0 4px;
+  }
+  .login-card p{ margin:0 0 26px; font-size:13px; color:var(--cream-dim); }
+  .field{ text-align:left; margin-bottom:14px; }
+  .field label{ display:block; font-size:11px; color:var(--cream-dim); margin-bottom:6px; letter-spacing:.04em; }
+  .field input{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--cream);
+    border-radius:10px; padding:11px 13px; font-size:14px; outline:none; transition:border-color .15s;
+  }
+  .field input:focus{ border-color:var(--amber); }
+  .login-btn{
+    width:100%; background:var(--amber); color:#2A1B05; border:none; border-radius:100px;
+    padding:13px; font-size:14px; font-weight:700; margin-top:6px; transition:transform .12s, background .15s;
+  }
+  .login-btn:hover{ background:#f7b95d; }
+  .login-btn:active{ transform:scale(.97); }
+  .login-btn:disabled{ opacity:.6; }
+  .login-error{ min-height:18px; color:var(--red); font-size:12.5px; margin-top:12px; }
+
+  /* ---------- board ---------- */
+  #boardView{ min-height:100vh; }
+  .topbar{
+    display:flex; align-items:center; gap:16px; padding:16px 26px; border-bottom:1px solid var(--line);
+    position:sticky; top:0; background:var(--bg); z-index:5;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-dot{ width:9px; height:9px; border-radius:50%; background:var(--amber); }
+  .topbar h2{
+    font-family:var(--font-display); font-style:italic; font-weight:600; font-size:19px; margin:0;
+  }
+  .topbar .sub{ font-size:11px; color:var(--cream-dim2); }
+  .spacer{ flex:1; }
+  .clock{ font-family:var(--font-mono); font-size:14px; color:var(--cream-dim); }
+  .live-wrap{ display:flex; align-items:center; gap:7px; font-size:11px; color:var(--cream-dim2); }
+  .live-dot{ width:9px; height:9px; border-radius:50%; background:var(--cream-dim2); position:relative; transition:background .3s; }
+  .live-dot.is-live{ background:var(--green); }
+  .live-dot.is-live::after{
+    content:''; position:absolute; inset:-4px; border-radius:50%; border:1px solid var(--green);
+    opacity:.7; animation:pulseDot 1.8s ease-out infinite;
+  }
+  @keyframes pulseDot{ 0%{ transform:scale(.6); opacity:.7; } 100%{ transform:scale(1.9); opacity:0; } }
+
+  .icon-btn{
+    background:none; border:1px solid var(--line); color:var(--cream-dim); width:36px; height:36px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center; transition:border-color .15s, color .15s;
+  }
+  .icon-btn:hover{ border-color:var(--amber); color:var(--amber); }
+  .icon-btn svg{ width:17px; height:17px; }
+  .icon-btn .off-icon{ display:none; }
+  .icon-btn.is-muted .on-icon{ display:none; }
+  .icon-btn.is-muted .off-icon{ display:block; }
+  .logout-btn{
+    background:none; border:1px solid var(--line); color:var(--cream-dim); border-radius:100px;
+    padding:8px 16px; font-size:12.5px; transition:border-color .15s, color .15s;
+  }
+  .logout-btn:hover{ border-color:var(--red); color:var(--red); }
+
+  .board{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; padding:22px 26px 60px; align-items:start; }
+  @media (max-width:920px){ .board{ grid-template-columns:1fr; } }
+
+  .column-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .column-head .dot{ width:8px; height:8px; border-radius:50%; }
+  .column-head.new .dot{ background:var(--amber); }
+  .column-head.preparing .dot{ background:var(--mint); }
+  .column-head.ready .dot{ background:var(--green); }
+  .column-head h3{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0; color:var(--cream-dim); }
+  .count-badge{
+    font-family:var(--font-mono); font-size:11px; background:rgba(247,240,228,0.08); color:var(--cream-dim);
+    padding:2px 9px; border-radius:100px; margin-left:auto;
+  }
+
+  .column-list{ display:flex; flex-direction:column; gap:14px; min-height:80px; }
+  .empty{
+    font-size:12.5px; color:var(--cream-dim2); text-align:center; padding:30px 10px;
+    border:1px dashed var(--line); border-radius:16px;
+  }
+
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px;
+    display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -16px rgba(0,0,0,.6); }
+  .card-top{ display:flex; align-items:baseline; justify-content:space-between; }
+  .ord-num{ font-family:var(--font-mono); font-weight:700; font-size:18px; }
+  .ord-time{ font-size:11px; color:var(--cream-dim2); font-family:var(--font-mono); }
+  .card-items{ display:flex; flex-direction:column; gap:4px; }
+  .item-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--cream-dim); }
+  .item-row .qty{ font-family:var(--font-mono); color:var(--cream-dim2); }
+  .card-total{ font-size:15px; font-weight:700; }
+  .btn{
+    width:100%; border:none; border-radius:100px; padding:12px; font-size:13.5px; font-weight:700;
+    transition:transform .12s ease, filter .15s;
+  }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn:active{ transform:scale(.96); }
+  .btn-new{ background:var(--amber); color:#2A1B05; }
+  .btn-preparing{ background:var(--mint); color:#06251E; }
+  .btn-ready{ background:var(--green); color:#0B2412; }
+  .cancel-link{
+    background:none; border:none; color:var(--cream-dim2); font-size:11.5px; text-decoration:underline;
+    align-self:center; padding:2px 4px;
+  }
+  .cancel-link:hover{ color:var(--red); }
+
+  .done-overlay{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:rgba(76,194,107,0.14); border-radius:18px; opacity:0; transform:scale(.4); pointer-events:none;
+  }
+  .card--done .done-overlay{ animation:doneBounce .45s cubic-bezier(.34,1.56,.64,1) forwards; }
+  .card--done .card-items, .card--done .card-top, .card--done .card-total,
+  .card--done .btn, .card--done .cancel-link{ opacity:.15; filter:blur(1px); transition:opacity .3s, filter .3s; }
+  .done-overlay svg{ width:44px; height:44px; color:var(--green); }
+  @keyframes doneBounce{
+    0%{ transform:scale(.4); opacity:0; }
+    60%{ transform:scale(1.18); opacity:1; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="login-card">
+    <svg class="login-cup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/>
+      <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/>
+      <path d="M7 3.5c0 1-1 1-1 2s1 1 1 2M11 3.5c0 1-1 1-1 2s1 1 1 2"/>
+    </svg>
+    <h1>SBL coffee</h1>
+    <p>Панель кассира</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="emailInput">Email</label>
+        <input type="email" id="emailInput" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="passwordInput">Пароль</label>
+        <input type="password" id="passwordInput" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">Войти</button>
+      <div class="login-error" id="loginError"></div>
+    </form>
+  </div>
+</div>
+
+<div id="boardView" class="hidden">
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <h2>SBL coffee</h2>
+    </div>
+    <span class="sub">панель кассира</span>
+    <div class="spacer"></div>
+    <span class="clock" id="clock">--:--</span>
+    <div class="live-wrap" title="Подключение к базе в реальном времени">
+      <span class="live-dot" id="liveDot"></span> онлайн
+    </div>
+    <button class="icon-btn" id="muteBtn" title="Звук новых заказов">
+      <svg class="on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+    </button>
+    <button class="logout-btn" id="logoutBtn">Выйти</button>
+  </div>
+
+  <div class="board">
+    <div>
+      <div class="column-head new">
+        <span class="dot"></span><h3>Новые</h3><span class="count-badge" id="countNew">0</span>
+      </div>
+      <div class="column-list" id="colNew"></div>
+    </div>
+    <div>
+      <div class="column-head preparing">
+        <span class="dot"></span><h3>Готовится</h3><span class="count-badge" id="countPreparing">0</span>
+      </div>
+      <div class="column-list" id="colPreparing"></div>
+    </div>
+    <div>
+      <div class="column-head ready">
+        <span class="dot"></span><h3>Готово к выдаче</h3><span class="count-badge" id="countReady">0</span>
+      </div>
+      <div class="column-list" id="colReady"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var SUPABASE_URL = 'https://vxefueynagwuavlyeiqc.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_OD1Fh_a_qhnjKeMd30RQRA_WgpOXZwq';
+  var db = null;
+  var libReady = false;
+
+  var muted = false;
+  var audioCtx = null;
+  var ordersCache = [];
+  var channel = null;
+
+  var loginView = document.getElementById('loginView');
+  var boardView = document.getElementById('boardView');
+  var loginForm = document.getElementById('loginForm');
+  var loginError = document.getElementById('loginError');
+  var loginBtn = document.getElementById('loginBtn');
+  var muteBtn = document.getElementById('muteBtn');
+  var logoutBtn = document.getElementById('logoutBtn');
+
+  function loadScript(src){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function(){ resolve(); };
+      s.onerror = function(){ reject(new Error('failed: ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function ensureLib(){
+    var urls = [
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
+      'https://unpkg.com/@supabase/supabase-js@2'
+    ];
+    for (var i = 0; i < urls.length; i++){
+      try{
+        await loadScript(urls[i]);
+        if (window.supabase && window.supabase.createClient) return true;
+      } catch (e) { /* try next CDN */ }
+    }
+    return false;
+  }
+
+  function tryConnect(){
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Подключаемся…';
+    loginError.textContent = '';
+    ensureLib().then(function(ok){
+      if (ok){
+        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+        libReady = true;
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Войти';
+      } else {
+        libReady = false;
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Нет соединения — нажмите ещё раз';
+        loginError.textContent = 'Не получилось подключиться к серверу. Проверьте интернет-соединение.';
+      }
+    });
+  }
+
+  loginBtn.addEventListener('click', function(e){
+    if (!libReady){ e.preventDefault(); tryConnect(); }
+  });
+
+  tryConnect();
+
+  function ensureAudio(){
+    if (!audioCtx){
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+  }
+
+  function playBeep(){
+    if (muted || !audioCtx) return;
+    var t = audioCtx.currentTime;
+    var o1 = audioCtx.createOscillator(), g1 = audioCtx.createGain();
+    o1.type = 'sine'; o1.frequency.value = 880;
+    g1.gain.setValueAtTime(0.0001, t);
+    g1.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+    g1.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    o1.connect(g1); g1.connect(audioCtx.destination);
+    o1.start(t); o1.stop(t + 0.4);
+
+    var o2 = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+    o2.type = 'sine'; o2.frequency.value = 1320;
+    g2.gain.setValueAtTime(0.0001, t + 0.12);
+    g2.gain.exponentialRampToValueAtTime(0.2, t + 0.14);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    o2.connect(g2); g2.connect(audioCtx.destination);
+    o2.start(t + 0.12); o2.stop(t + 0.5);
+  }
+
+  loginForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    ensureAudio();
+    loginError.textContent = '';
+    loginBtn.disabled = true; loginBtn.textContent = 'Входим…';
+    var email = document.getElementById('emailInput').value.trim();
+    var password = document.getElementById('passwordInput').value;
+    var res = await db.auth.signInWithPassword({ email: email, password: password });
+    loginBtn.disabled = false; loginBtn.textContent = 'Войти';
+    if (res.error){
+      loginError.textContent = 'Не получилось войти: проверьте email и пароль.';
+      return;
+    }
+    loginView.classList.add('hidden');
+    boardView.classList.remove('hidden');
+    startBoard();
+  });
+
+  logoutBtn.addEventListener('click', async function(){
+    if (channel) db.removeChannel(channel);
+    await db.auth.signOut();
+    boardView.classList.add('hidden');
+    loginView.classList.remove('hidden');
+    document.getElementById('passwordInput').value = '';
+  });
+
+  muteBtn.addEventListener('click', function(){
+    muted = !muted;
+    muteBtn.classList.toggle('is-muted', muted);
+  });
+
+  function startBoard(){
+    loadOrders();
+    subscribeRealtime();
+    tickClock();
+    setInterval(tickClock, 1000);
+    setInterval(updateElapsedLabels, 20000);
+  }
+
+  function tickClock(){
+    var el = document.getElementById('clock');
+    var now = new Date();
+    el.textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadOrders(prevIds){
+    var res = await db
+      .from('orders')
+      .select('id, order_number, status, total, bonus_redeemed, created_at, order_items(product_name, quantity)')
+      .in('status', ['new', 'accepted', 'preparing', 'ready'])
+      .order('created_at', { ascending: true });
+    if (res.error){ console.error(res.error); return; }
+    var data = res.data || [];
+    if (prevIds){
+      var hasNew = data.some(function(o){ return o.status === 'new' && !prevIds.has(o.id); });
+      if (hasNew) playBeep();
+    }
+    ordersCache = data;
+    renderBoard();
+  }
+
+  function groupByStatus(){
+    var g = { new: [], preparing: [], ready: [] };
+    ordersCache.forEach(function(o){
+      if (o.status === 'new' || o.status === 'accepted') g.new.push(o);
+      else if (o.status === 'preparing') g.preparing.push(o);
+      else if (o.status === 'ready') g.ready.push(o);
+    });
+    return g;
+  }
+
+  function renderBoard(){
+    var doRender = function(){ paintColumns(groupByStatus()); };
+    if (document.startViewTransition) document.startViewTransition(doRender);
+    else doRender();
+  }
+
+  function paintColumns(g){
+    paintColumn('colNew', g.new, 'new');
+    paintColumn('colPreparing', g.preparing, 'preparing');
+    paintColumn('colReady', g.ready, 'ready');
+    document.getElementById('countNew').textContent = g.new.length;
+    document.getElementById('countPreparing').textContent = g.preparing.length;
+    document.getElementById('countReady').textContent = g.ready.length;
+  }
+
+  var emptyText = {
+    new: 'Пока новых заказов нет',
+    preparing: 'Ничего не готовится',
+    ready: 'Готовых заказов нет'
+  };
+  var actionLabel = { new: 'Взять в работу', preparing: 'Готово', ready: 'Выдано' };
+  var nextStatus = { new: 'preparing', preparing: 'ready', ready: 'completed' };
+
+  function paintColumn(containerId, list, statusKey){
+    var container = document.getElementById(containerId);
+    container.innerHTML = '';
+    if (list.length === 0){
+      var div = document.createElement('div');
+      div.className = 'empty';
+      div.textContent = emptyText[statusKey];
+      container.appendChild(div);
+      return;
+    }
+    list.forEach(function(order){ container.appendChild(buildCard(order, statusKey)); });
+  }
+
+  function buildCard(order, statusKey){
+    var card = document.createElement('div');
+    card.className = 'card card--' + statusKey;
+    card.style.viewTransitionName = 'ord-' + String(order.id).replace(/[^a-zA-Z0-9]/g, '');
+    card.dataset.id = order.id;
+
+    var top = document.createElement('div');
+    top.className = 'card-top';
+    var num = document.createElement('span');
+    num.className = 'ord-num'; num.textContent = '№ ' + order.order_number;
+    var time = document.createElement('span');
+    time.className = 'ord-time'; time.dataset.created = order.created_at; time.textContent = elapsedText(order.created_at);
+    top.appendChild(num); top.appendChild(time);
+    card.appendChild(top);
+
+    var items = document.createElement('div');
+    items.className = 'card-items';
+    (order.order_items || []).forEach(function(it){
+      var row = document.createElement('div');
+      row.className = 'item-row';
+      var name = document.createElement('span'); name.textContent = it.product_name;
+      var qty = document.createElement('span'); qty.className = 'qty'; qty.textContent = '× ' + it.quantity;
+      row.appendChild(name); row.appendChild(qty);
+      items.appendChild(row);
+    });
+    card.appendChild(items);
+
+    var total = document.createElement('div');
+    total.className = 'card-total';
+    var cashDue = order.total - (order.bonus_redeemed || 0);
+    total.textContent = order.bonus_redeemed
+      ? formatPrice(cashDue) + ' · бонусами −' + formatPrice(order.bonus_redeemed)
+      : formatPrice(order.total);
+    card.appendChild(total);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-' + statusKey;
+    btn.textContent = actionLabel[statusKey];
+    btn.addEventListener('click', function(){ handleAction(order, statusKey, card); });
+    card.appendChild(btn);
+
+    if (statusKey !== 'ready'){
+      var cancel = document.createElement('button');
+      cancel.className = 'cancel-link';
+      cancel.textContent = 'Отменить заказ';
+      cancel.addEventListener('click', function(){ handleCancel(order); });
+      card.appendChild(cancel);
+    }
+
+    var overlay = document.createElement('div');
+    overlay.className = 'done-overlay';
+    overlay.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
+    card.appendChild(overlay);
+
+    return card;
+  }
+
+  function formatPrice(value){
+    var n = Number(value);
+    if (isNaN(n)) return String(value);
+    return n.toLocaleString('ru-RU') + ' ₽';
+  }
+
+  function elapsedText(createdAt){
+    var mins = Math.max(0, Math.round((Date.now() - new Date(createdAt).getTime()) / 60000));
+    if (mins < 1) return 'только что';
+    return mins + ' мин';
+  }
+
+  function updateElapsedLabels(){
+    document.querySelectorAll('.ord-time').forEach(function(el){
+      el.textContent = elapsedText(el.dataset.created);
+    });
+  }
+
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+  async function handleAction(order, statusKey, cardEl){
+    var to = nextStatus[statusKey];
+    if (to === 'completed'){
+      cardEl.classList.add('card--done');
+      await sleep(520);
+    }
+    var prevIds = new Set(ordersCache.map(function(o){ return o.id; }));
+    var res = await db.from('orders').update({ status: to, updated_at: new Date().toISOString() }).eq('id', order.id);
+    if (res.error){
+      console.error(res.error);
+      alert('Не получилось обновить заказ. Попробуйте ещё раз.');
+      return;
+    }
+    loadOrders(prevIds);
+  }
+
+  function handleCancel(order){
+    if (!confirm('Точно отменить заказ № ' + order.order_number + '?')) return;
+    var prevIds = new Set(ordersCache.map(function(o){ return o.id; }));
+    db.from('orders').update({ status: 'cancelled', updated_at: new Date().toISOString() }).eq('id', order.id)
+      .then(function(res){
+        if (res.error){ console.error(res.error); alert('Не получилось отменить заказ.'); }
+        else loadOrders(prevIds);
+      });
+  }
+
+  function subscribeRealtime(){
+    channel = db.channel('orders-board')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, function(){
+        loadOrders(new Set(ordersCache.map(function(o){ return o.id; })));
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, function(){
+        loadOrders(new Set(ordersCache.map(function(o){ return o.id; })));
+      })
+      .subscribe(function(status){
+        var dot = document.getElementById('liveDot');
+        dot.classList.toggle('is-live', status === 'SUBSCRIBED');
+      });
+  }
+})();
+</script>
+</body>
+</html>

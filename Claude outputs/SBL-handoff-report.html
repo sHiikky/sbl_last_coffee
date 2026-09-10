@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SBL Coffee — статус интеграции СБИС</title>
+<style>
+  :root{
+    --bg:#F2F0EC;
+    --paper:#FFFFFF;
+    --ink:#0C0C0C;
+    --ink-soft:#5B5850;
+    --ink-faint:#8A877E;
+    --line:rgba(12,12,12,0.09);
+    --accent:#E8500A;
+    --accent-soft:rgba(232,80,10,0.10);
+    --done:#1F8A55;
+    --done-bg:rgba(31,138,85,0.10);
+    --partial:#C98A0A;
+    --partial-bg:rgba(201,138,10,0.12);
+    --todo:#B23A34;
+    --todo-bg:rgba(178,58,52,0.09);
+    --code-bg:#111111;
+    --code-ink:#F2F0EC;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{
+    max-width:860px;
+    margin:0 auto;
+    padding:40px 20px 80px;
+  }
+  .top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .brand-mark{
+    width:34px;height:34px;border-radius:10px;
+    background:var(--ink);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:13px;letter-spacing:0.5px;
+  }
+  .brand-name{font-weight:800;font-size:14px;letter-spacing:1.5px;color:var(--ink-soft);text-transform:uppercase;}
+  .for-tag{
+    background:var(--accent);
+    color:#fff;
+    font-size:12.5px;
+    font-weight:700;
+    padding:7px 14px;
+    border-radius:999px;
+    letter-spacing:0.2px;
+  }
+
+  .hero{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:32px 32px 28px;
+    margin-bottom:24px;
+    box-shadow:0 8px 24px rgba(12,12,12,0.035);
+  }
+  .eyebrow{
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 10px;
+  }
+  h1{
+    margin:0 0 8px;
+    font-size:28px;
+    line-height:1.25;
+    font-weight:800;
+    letter-spacing:-0.3px;
+  }
+  .hero-sub{
+    margin:0;
+    color:var(--ink-soft);
+    font-size:15px;
+    line-height:1.55;
+  }
+  .meta-row{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:20px;
+    padding-top:18px;
+    border-top:1px solid var(--line);
+    font-size:13px;
+    color:var(--ink-faint);
+  }
+  .meta-row b{color:var(--ink);font-weight:700;}
+
+  section{margin-bottom:26px;}
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .section-num{
+    font-size:13px;
+    font-weight:800;
+    color:#fff;
+    background:var(--ink);
+    width:24px;height:24px;border-radius:7px;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  h2{
+    margin:0;
+    font-size:18px;
+    font-weight:800;
+    letter-spacing:-0.1px;
+  }
+
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px 24px;
+    box-shadow:0 4px 16px rgba(12,12,12,0.03);
+  }
+
+  .item{
+    display:flex;
+    gap:12px;
+    padding:12px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .item:last-child{border-bottom:none;padding-bottom:0;}
+  .item:first-child{padding-top:0;}
+  .badge{
+    flex-shrink:0;
+    font-size:10.5px;
+    font-weight:800;
+    letter-spacing:0.3px;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:999px;
+    height:fit-content;
+    margin-top:2px;
+    white-space:nowrap;
+  }
+  .badge.done{color:var(--done);background:var(--done-bg);}
+  .badge.partial{color:var(--partial);background:var(--partial-bg);}
+  .badge.todo{color:var(--todo);background:var(--todo-bg);}
+  .item-body b{display:block;font-size:14.5px;font-weight:700;margin-bottom:3px;}
+  .item-body p{margin:0;font-size:13.5px;line-height:1.55;color:var(--ink-soft);}
+
+  .todo-list{list-style:none;margin:0;padding:0;counter-reset:step;}
+  .todo-list li{
+    counter-increment:step;
+    display:flex;
+    gap:14px;
+    padding:13px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+    line-height:1.55;
+  }
+  .todo-list li:last-child{border-bottom:none;padding-bottom:0;}
+  .todo-list li:first-child{padding-top:0;}
+  .todo-list li::before{
+    content:counter(step);
+    flex-shrink:0;
+    width:24px;height:24px;
+    border-radius:7px;
+    background:var(--accent-soft);
+    color:var(--accent);
+    font-weight:800;
+    font-size:12px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .todo-list b{font-weight:700;}
+
+  .cred-card{
+    background:var(--ink);
+    border-radius:16px;
+    padding:24px 26px;
+    color:var(--code-ink);
+  }
+  .cred-row{margin-bottom:18px;}
+  .cred-row:last-child{margin-bottom:0;}
+  .cred-label{
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.8px;
+    text-transform:uppercase;
+    color:rgba(242,240,236,0.5);
+    margin-bottom:6px;
+  }
+  .cred-value{
+    font-family:"SF Mono",Consolas,Menlo,monospace;
+    font-size:13.5px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:10px;
+    padding:10px 14px;
+    word-break:break-all;
+    display:block;
+  }
+  .cred-value a{color:#fff;}
+  .cred-note{
+    font-size:12.5px;
+    color:rgba(242,240,236,0.6);
+    margin-top:6px;
+    line-height:1.5;
+  }
+
+  .warn-card{
+    background:var(--partial-bg);
+    border:1px solid rgba(201,138,10,0.28);
+    border-radius:16px;
+    padding:20px 24px;
+    margin-top:16px;
+  }
+  .warn-card .warn-title{
+    font-weight:800;
+    font-size:14px;
+    color:#8A5C07;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .warn-card p, .warn-card ul{
+    margin:0 0 0;
+    font-size:13.5px;
+    line-height:1.6;
+    color:#6B4A08;
+  }
+  .warn-card ul{padding-left:18px;margin-top:8px;}
+  .warn-card li{margin-bottom:4px;}
+  .warn-card code{
+    background:rgba(0,0,0,0.07);
+    padding:1px 6px;
+    border-radius:6px;
+    font-size:12.5px;
+  }
+
+  .file-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  @media (max-width:560px){ .file-grid{grid-template-columns:1fr;} }
+  .file-chip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:10px 13px;
+    font-size:13px;
+    font-family:"SF Mono",Consolas,Menlo,monospace;
+  }
+  .file-chip .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    flex-shrink:0;
+  }
+
+  footer{
+    margin-top:36px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    font-size:12.5px;
+    color:var(--ink-faint);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top">
+    <div class="brand">
+      <div class="brand-mark">SBL</div>
+      <div class="brand-name">SBL Coffee App</div>
+    </div>
+    <div class="for-tag">Данные для Владоса</div>
+  </div>
+
+  <div class="hero">
+    <p class="eyebrow">Технический отчёт · передача доступов</p>
+    <h1>Статус интеграции СБИС ↔ Supabase ↔ приложение</h1>
+    <p class="hero-sub">Что уже сделано, что доделано частично и что осталось — плюс все доступы и ключи Supabase, нужные, чтобы продолжить интеграцию СБИС.</p>
+    <div class="meta-row">
+      <div>Дата: <b>10 сентября 2026</b></div>
+      <div>Проект: <b>vxefueynagwuavlyeiqc</b></div>
+      <div>Для: <b>Владос</b></div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head"><span class="section-num">1</span><h2>Что сделано полностью</h2></div>
+    <div class="card">
+
+      <div class="item">
+        <span class="badge done">Готово</span>
+        <div class="item-body">
+          <b>Синхронизация каталога СБИС → Supabase</b>
+          <p>Edge Function <code>sync-sbis-catalog</code> забирает каталог из СБИС и заливает в таблицу <code>products</code> (upsert по <code>sbis_id</code>). Запуск только вручную по кнопке — без автоматического крона, так решено сознательно.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge done">Готово</span>
+        <div class="item-body">
+          <b>Защита синхронизации</b>
+          <p>Дедупликация по <code>sbis_id</code>; новые позиции скрыты по умолчанию до ручной проверки; анти-аномалия по цене (отклонение &gt;3× не применяется автоматически); журнал каждого запуска в <code>sync_runs</code>; Telegram-уведомление о результате.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge done">Готово</span>
+        <div class="item-body">
+          <b>Кураторская разметка меню</b>
+          <p>~90 позиций размечены по понятной покупателю таксономии (Напитки/Еда/Десерты/Магазин + подкатегории) — поверх технических папок СБИС. Ручные поля (<code>menu_category</code>, <code>display_name</code>, <code>image_override_url</code> и т.д.) синхронизация никогда не перезаписывает.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge done">Готово</span>
+        <div class="item-body">
+          <b>Экран меню в приложении</b>
+          <p>Полностью переделан: единый скролл, фиксированная шапка и навигация по разделам, scroll-spy, локальные фильтры по подкатегориям, карточки без «пустых» зон у товаров без фото.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge done">Готово</span>
+        <div class="item-body">
+          <b>Инфраструктура Supabase</b>
+          <p>Переезд на новый проект выполнен, Anonymous Sign-In и Realtime (<code>orders</code>/<code>order_items</code>) включены. Исправлен баг лояльности — «бесплатный десерт» больше не начислялся на дорогие сэндвичи.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">2</span><h2>Сделано частично</h2></div>
+    <div class="card">
+
+      <div class="item">
+        <span class="badge partial">Частично</span>
+        <div class="item-body">
+          <b>Синхронизация — только в одну сторону</b>
+          <p>Каталог едет СБИС → приложение. Обратной синхронизации (заказ из приложения → СБИС) нет вообще.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge partial">Частично</span>
+        <div class="item-body">
+          <b>Бонусная программа</b>
+          <p>В приложении своя, самописная логика (<code>loyalty/loyaltyService.js</code>) — никак не связана с бонусами СБИС для очных клиентов. Два разных мира клиентов — главная незакрытая задача интеграции.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge partial">Частично</span>
+        <div class="item-body">
+          <b>Идентификация пользователя</b>
+          <p>Сейчас анонимная (Supabase Anonymous Sign-In) — только чтобы был <code>auth.uid()</code>. Для связки с СБИС (обычно по телефону) этого недостаточно.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge partial">Частично</span>
+        <div class="item-body">
+          <b>Заказы</b>
+          <p>Пишутся в Supabase (<code>orders</code>/<code>order_items</code>), но нигде не передаются в СБИС — касса/учёт о них не узнают.</p>
+        </div>
+      </div>
+
+      <div class="item">
+        <span class="badge partial">Частично</span>
+        <div class="item-body">
+          <b>Классификация каталога</b>
+          <p>3 позиции не размечены («Кедровая сказка», «Шоковзлёт», «Очень странные дела по-сибирски») — нужно уточнить у кофейни, что это. Раздел «Магазин» размечен, но выключен (<code>is_visible = false</code>).</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">3</span><h2>Что осталось сделать</h2></div>
+    <div class="card">
+      <ol class="todo-list">
+        <li><b>Уточнить у СБИС:</b> есть ли API бонусной программы (клиент по телефону, баланс, списание/начисление), API передачи заказа, тестовый (sandbox) контур, актуальный <code>pointId</code>.</li>
+        <li><b>Заменить анонимную авторизацию</b> на идентификацию по номеру телефона (SMS-код) — без этого нельзя связать пользователя приложения с клиентом СБИС.</li>
+        <li><b>Передача заказа в СБИС</b> после оплаты в приложении (сначала в тестовый контур, если есть).</li>
+        <li><b>Бонусы через СБИС</b> вместо самописной логики — после этого старую логику и <code>kassa-terminal</code> можно выводить из эксплуатации.</li>
+        <li><b>Обратная синхронизация статуса заказа</b> СБИС → Supabase → приложение (Realtime уже настроен, не хватает источника обновлений от СБИС).</li>
+        <li><b>Ежедневная сверка</b> Supabase / СБИС / платежей — дешевле поймать рассинхрон на нескольких тестовых заказах, чем на потоке боевых.</li>
+        <li><b>Мелкое по каталогу:</b> доразметить 3 позиции выше, решить судьбу раздела «Магазин».</li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">4</span><h2>Доступы и ключи Supabase</h2></div>
+
+    <div class="cred-card">
+      <div class="cred-row">
+        <div class="cred-label">Проект</div>
+        <span class="cred-value">vxefueynagwuavlyeiqc</span>
+      </div>
+      <div class="cred-row">
+        <div class="cred-label">Dashboard</div>
+        <span class="cred-value"><a href="https://supabase.com/dashboard/project/vxefueynagwuavlyeiqc" target="_blank" rel="noopener">supabase.com/dashboard/project/vxefueynagwuavlyeiqc</a></span>
+      </div>
+      <div class="cred-row">
+        <div class="cred-label">URL проекта (для кода)</div>
+        <span class="cred-value">https://vxefueynagwuavlyeiqc.supabase.co</span>
+      </div>
+      <div class="cred-row">
+        <div class="cred-label">Publishable (anon) key</div>
+        <span class="cred-value">sb_publishable_OD1Fh_a_qhnjKeMd30RQRA_WgpOXZwq</span>
+        <div class="cred-note">Уже используется в коде приложения и kassa-terminal — публичный по своей природе, безопасен для клиентской части.</div>
+      </div>
+    </div>
+
+    <div class="warn-card">
+      <div class="warn-title">⚠️ Чего в коде нет и что нужно взять напрямую из Dashboard</div>
+      <p>Эти значения нигде не хранятся в проекте — так и задумано, из соображений безопасности. Посмотреть/пересоздать их может тот, у кого есть доступ владельца или админа проекта:</p>
+      <ul>
+        <li><code>SUPABASE_SERVICE_ROLE_KEY</code> — секретный ключ Edge Function <code>sync-sbis-catalog</code> (Project Settings → API → <code>service_role</code>). Никогда не должен попадать в код приложения или репозиторий.</li>
+        <li><code>SBIS_APP_CLIENT_ID</code>, <code>SBIS_APP_SECRET</code>, <code>SBIS_SECRET_KEY</code> — секреты СБИС, заданы в Edge Functions → sync-sbis-catalog → Secrets.</li>
+        <li><code>TELEGRAM_BOT_TOKEN</code> / <code>TELEGRAM_CHAT_ID</code> — опционально, для уведомлений о синхронизации.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">5</span><h2>Таблицы, важные для интеграции</h2></div>
+    <div class="card">
+      <div class="file-grid">
+        <div class="file-chip"><span class="dot"></span>products — каталог</div>
+        <div class="file-chip"><span class="dot"></span>sync_runs — журнал синков</div>
+        <div class="file-chip"><span class="dot"></span>orders — заказы (Realtime)</div>
+        <div class="file-chip"><span class="dot"></span>order_items — состав заказов</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><span class="section-num">6</span><h2>Файлы к передаче вместе с отчётом</h2></div>
+    <div class="card">
+      <div class="file-grid">
+        <div class="file-chip"><span class="dot"></span>sync-sbis-catalog.ts</div>
+        <div class="file-chip"><span class="dot"></span>supabase-products-schema.sql</div>
+        <div class="file-chip"><span class="dot"></span>products-menu-taxonomy.sql</div>
+        <div class="file-chip"><span class="dot"></span>products-schema-update-2.sql</div>
+        <div class="file-chip"><span class="dot"></span>add-image-override-column.sql</div>
+        <div class="file-chip"><span class="dot"></span>sbis-integration-analysis.md</div>
+        <div class="file-chip"><span class="dot"></span>sbis-catalog-findings.md</div>
+        <div class="file-chip"><span class="dot"></span>sbis-menu-integration-howto.md</div>
+        <div class="file-chip"><span class="dot"></span>sbis-sync-reliability-recommendations.md</div>
+        <div class="file-chip"><span class="dot"></span>supabase-migration-guide.md</div>
+        <div class="file-chip"><span class="dot"></span>sbl-app-reliability-audit.md</div>
+        <div class="file-chip"><span class="dot"></span>sbl-app-roadmap.md</div>
+        <div class="file-chip"><span class="dot"></span>lib/catalogService.js</div>
+        <div class="file-chip"><span class="dot"></span>lib/supabaseClient.js</div>
+        <div class="file-chip"><span class="dot"></span>screens/MenuScreen.js</div>
+        <div class="file-chip"><span class="dot"></span>loyalty/loyaltyService.js</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>SBL Coffee App — внутренний технический документ · подготовлено для Владоса</footer>
+
+</div>
+</body>
+</html>
