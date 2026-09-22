@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, ScrollView, Image, useWindowDimensions, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,54 +11,72 @@ import { cartKey } from '../data/products';
 import { buildCategoryList, buildSubcategoryList } from '../lib/catalogService';
 
 // ─────────────────────────────────────────────────────────────────────────
-// Архитектура экрана (после переработки навигации):
+// АРХИТЕКТУРА SCROLL NAVIGATION
 //
-//   ┌ Header (чёрный, фиксированный, НЕ часть скролла) ─────────────────┐
-//   │  ○ поиск        SBL · SBL COFFEE                                  │
-//   ├ Category bar (светлый, фиксированный, НЕ часть скролла) ──────────┤
-//   │  [Все] [Напитки] [Еда] [Десерты]                                  │
-//   ├ FlatList (единственный скролл на весь экран) ─────────────────────┤
-//   │  НАПИТКИ                                                          │
-//   │  [Все] [Кофе] [Авторский кофе] [Матча] ...  ← локальный фильтр    │
-//   │  Кофе                                                             │
-//   │  [карточка] [карточка]                                            │
-//   │  ...                                                              │
-//   │  ЕДА                                                              │
-//   │  ...                                                              │
-//   │  ДЕСЕРТЫ                                                          │
-//   │  ...                                                              │
-//   └────────────────────────────────────────────────────────────────────┘
+// Header и category bar — обычные соседние View ДО FlatList (не sticky
+// overlay, не stickyHeaderIndices). Список начинается физически ниже них,
+// поэтому scrollToIndex/scrollToOffset никогда не должны компенсировать
+// высоту шапки — в отличие от оверлейных sticky-баров, тут этой категории
+// багов просто не существует по конструкции.
 //
-// Header и category bar — обычные соседние View ДО FlatList в дереве, а не
-// stickyHeaderIndices и не absolute-позиционирование поверх списка. Поэтому:
-//   1. Им физически некуда "заехать" — весь остальной контент рендерится
-//      строго ниже них, конфликтов z-index/наложения быть не может.
-//   2. FlatList начинается сразу под ними, так что scrollToIndex(0, viewPosition: 0)
-//      кладёт секцию ровно в видимую область — не нужно вычитать высоту
-//      шапки/навигации из смещения.
-// Ровно это было причиной прошлых багов (шапка "уезжала" при использовании
-// stickyHeaderIndices, категории "выглядывали" из-под неё при попытке
-// наложения) — теперь такой класс багов исключён самой структурой дерева.
+// Единственный источник истины для activeCategory — navigationModeRef,
+// простая state machine с тремя режимами:
 //
-// Двухуровневая навигация:
-//   - activeCategory (главные категории вверху) — это НЕ фильтр, а навигация
-//     по всему списку: тап скроллит к разделу, ручной скролл через
-//     onViewableItemsChanged подсвечивает раздел, в котором сейчас viewport
-//     ("scroll-spy"). Список остаётся один сплошной — ничего не скрывается.
-//   - subFilters (чипы под названием раздела) — это ЛОКАЛЬНЫЙ фильтр внутри
-//     одного конкретного раздела (Напитки/Еда/Десерты). Он меняет только то,
-//     какие товары видны в ЭТОМ разделе, остальные разделы не трогает и не
-//     превращает экран в отдельный "фильтрованный" список.
+//   'idle'                 — пользователь листает сам. Scroll-spy имеет право
+//                             определять активную категорию.
+//   'programmatic-scroll'  — сработал тап по главной категории. activeCategory
+//                             уже выставлен мгновенно; scroll-spy молчит, пока
+//                             список не доедет (onMomentumScrollEnd) или не
+//                             сработает страховочный таймаут.
+//   'subcategory-relayout' — сработал тап по под-категории. activeCategory
+//                             остаётся "приколотым" к текущему разделу, пока
+//                             список не пересчитает layout под новый фильтр и
+//                             не переякорится на заголовок раздела.
+//
+// Приоритет источников activeCategory (не наоборот!):
+//   1. Явное намерение пользователя (тап по главной категории).
+//   2. Текущий контекст релейаута (тап по под-категории).
+//   3. Scroll-spy — только когда ничего из вышеперечисленного не идёт.
+//
+// programmaticSequenceRef — токен поколения: каждый новый тап увеличивает
+// счётчик, и любой отложенный callback (setTimeout/rAF) от СТАРОГО тапа,
+// сверив токен, просто ничего не делает. Это защищает от быстрых кликов
+// "Напитки → Десерты → Еда", когда таймер от "Напитки" мог бы разблокировать
+// spy посреди поездки к "Десертам".
+//
+// Критический баг короткой последней секции (после фильтра "Шу" в Десертах
+// остаётся 3 товара) решён в два слоя:
+//   - адаптивный нижний отступ (footerSpacerHeight, см. ниже) — старается
+//     геометрически гарантировать, что заголовок последней секции физически
+//     может доехать до верха списка, даже если под ним почти нет контента;
+//   - near-bottom override в onScroll — независимая страховка: если пользователь
+//     физически долистал до конца контента, активной считается ПОСЛЕДНЯЯ
+//     большая категория, даже если оценка отступа выше оказалась неточной.
+// Оценка высоты последней секции для отступа — приблизительная (по количеству
+// строк и типовым размерам), не пиксель-точный measure — сознательный выбор:
+// getting a pixel-perfect absolute offset from a plain FlatList row would
+// require re-implementing getItemLayout for variable-height rows, что заметно
+// более хрупко. Итоговую корректность обеспечивает near-bottom override, а
+// не точность этой оценки.
 // ─────────────────────────────────────────────────────────────────────────
 
-const SEARCH_CIRCLE_SIZE = 40;
-const MAIN_CHIP_ROW_HEIGHT = 56;
+const SEARCH_CIRCLE_SIZE = 38;
+const HEADER_CONTENT_HEIGHT = 52;
+const MAIN_CHIP_ROW_HEIGHT = 52;
 
-// Верхняя строка навигации — "Все / Напитки / Еда / Десерты". Отдельный
-// компонент, чтобы держать собственный ref горизонтального списка и плавно
-// подскраливать активный чип в видимую область, когда активная категория
-// меняется не от тапа по этому ряду, а от ручного scroll-spy.
-function MainCategoryBar({ chips, activeId, onSelect, hPad }) {
+// Типовые высоты строк списка — используются только для оценки высоты
+// последней секции (footerSpacerHeight), не для реальной раскладки.
+const EST_MAIN_HEADER_H = 54;
+const EST_SUBCHIPS_H = 46;
+const EST_SUBHEADER_H = 34;
+const EST_EMPTY_ROW_H = 60;
+
+const keyExtractorRow = (item) => item.key;
+
+// Верхняя строка навигации — "Все / Напитки / Еда / Десерты". React.memo —
+// чтобы не перерисовываться, когда меняется что-то не связанное с ней самой
+// (например, открылось поле поиска).
+const MainCategoryBar = React.memo(function MainCategoryBar({ chips, activeId, onSelect, hPad }) {
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -88,12 +106,11 @@ function MainCategoryBar({ chips, activeId, onSelect, hPad }) {
       />
     </View>
   );
-}
+});
 
 // Строка под-категорий внутри одного раздела — второй, менее выразительный
-// уровень навигации (см. Chip small=true). Фильтрует только товары текущего
-// раздела, к остальному меню отношения не имеет.
-function SubcategoryChips({ subcats, activeSub, onSelect, hPad }) {
+// уровень навигации. Фильтрует только товары текущего раздела.
+const SubcategoryChips = React.memo(function SubcategoryChips({ subcats, activeSub, onSelect, hPad }) {
   return (
     <ScrollView
       horizontal
@@ -107,34 +124,44 @@ function SubcategoryChips({ subcats, activeSub, onSelect, hPad }) {
       ))}
     </ScrollView>
   );
-}
+});
 
 export default function MenuScreen({ route, navigation, cart = {}, products = [], onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight }) {
-  // Разделы — понятные покупателю категории (Напитки/Еда/Десерты/Магазин),
-  // размечены вручную поверх технических папок СБИС (см. lib/catalogService.js
-  // и products-menu-taxonomy.sql).
   const mainCategories = useMemo(() => buildCategoryList(products), [products]);
   const mainChips = useMemo(
     () => [{ id: 'all', label: 'Все' }, ...mainCategories.map(id => ({ id, label: id }))],
     [mainCategories]
   );
 
-  // activeCategory — подсветка текущего раздела вверху (навигация/scroll-spy,
-  // не фильтр). subFilters — локальный фильтр под-категории на каждый
-  // раздел отдельно, например { 'Напитки': 'Кофе' }; отсутствие ключа или
-  // значение 'all' означает "показать все под-категории этого раздела".
   const [activeCategory, setActiveCategory] = useState('all');
   const [subFilters, setSubFilters] = useState({});
   const [query, setQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState(0);
   const searchInputRef = useRef(null);
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const hPad = getHorizontalPadding(width);
   const columnGap = spacing.md;
   const cardWidth = (width - hPad * 2 - columnGap) / 2;
 
   const mainListRef = useRef(null);
+
+  // ── Навигационная state machine: только refs, никакого React state на
+  // каждый scroll-кадр (см. комментарий вверху файла). ────────────────────
+  const navigationModeRef = useRef('idle'); // 'idle' | 'programmatic-scroll' | 'subcategory-relayout'
+  const programmaticSequenceRef = useRef(0);
+  const unlockTimeoutRef = useRef(null);
+  const activeCategoryRef = useRef(activeCategory);
+  const mainCategoriesRef = useRef(mainCategories);
+  const listDataRef = useRef([]);
+  const lastScrollYRef = useRef(0);
+  const directionRef = useRef('down');
+  const lastSpySwitchAtRef = useRef(0);
+
+  useEffect(() => { activeCategoryRef.current = activeCategory; }, [activeCategory]);
+  useEffect(() => { mainCategoriesRef.current = mainCategories; }, [mainCategories]);
+  useEffect(() => () => { if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current); }, []);
 
   const toggleSearch = () => {
     setSearchOpen(prev => {
@@ -153,11 +180,10 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 
   const normalizedQuery = query.trim().toLowerCase();
 
-  const setSubFilter = (mainCategoryId, subId) => {
-    setSubFilters(prev => ({ ...prev, [mainCategoryId]: subId }));
-  };
-
   const listData = useMemo(() => {
+    // Зависит ТОЛЬКО от данных и фильтров — ни scrollY, ни activeCategory
+    // сюда не примешиваются: позиция скролла не имеет отношения к тому,
+    // какие товары показывать.
     const rows = [];
 
     mainCategories.forEach(mainCat => {
@@ -172,10 +198,6 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
       if (!itemsInCategory.length) return;
 
       const subcats = buildSubcategoryList(products, mainCat);
-      // Пока идёт поиск, локальный фильтр под-категории временно не
-      // применяется — иначе результат поиска мог бы "спрятаться" за
-      // выбранной ранее под-категорией, которую пользователь уже забыл, что
-      // выбирал.
       const activeSub = normalizedQuery ? 'all' : (subFilters[mainCat] || 'all');
 
       rows.push({
@@ -208,10 +230,6 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
       };
 
       if (activeSub === 'all') {
-        // Полный обзор раздела: товары сгруппированы по под-категориям, у
-        // каждой — маленькая серая подпись, чтобы иерархия читалась даже
-        // когда никакой чип не нажат. Если под-категория всего одна —
-        // подпись не нужна, она дублировала бы название самого раздела.
         subcats.forEach(subcat => {
           const subItems = itemsInCategory.filter(p => (p.menuSubcategory || mainCat) === subcat);
           if (!subItems.length) return;
@@ -221,37 +239,198 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
           pushProductRows(subItems, subcat);
         });
       } else {
-        // Выбрана конкретная под-категория — показываем только её товары,
-        // без повторной подписи (сам активный чип уже её называет).
+        // Выбрана конкретная под-категория. Если в ней 0 товаров — не ломаем
+        // геометрию секции пустотой без объяснения, показываем компактный
+        // empty state. Главная категория при этом не меняется (см. приоритет
+        // "explicit relayout context" выше выбора scroll-spy).
         const subItems = itemsInCategory.filter(p => (p.menuSubcategory || mainCat) === activeSub);
-        pushProductRows(subItems, activeSub);
+        if (subItems.length) {
+          pushProductRows(subItems, activeSub);
+        } else {
+          rows.push({ type: 'sectionEmpty', key: `empty-${mainCat}-${activeSub}`, groupId: mainCat, label: 'В этой подкатегории пока нет позиций' });
+        }
       }
     });
 
     return rows;
   }, [normalizedQuery, products, mainCategories, subFilters]);
 
-  // Тап по главной категории — прокрутка к её началу, ничего не скрывает и
-  // не фильтрует остальной список.
-  const jumpToCategory = (id) => {
+  useEffect(() => { listDataRef.current = listData; }, [listData]);
+
+  // ── Адаптивный нижний отступ: последняя большая секция должна физически
+  // иметь возможность доехать своим заголовком до верха списка, даже если в
+  // ней остался один товар после фильтра под-категории. См. комментарий
+  // вверху файла про то, почему оценка приблизительная, а не measure. ─────
+  const footerSpacerHeight = useMemo(() => {
+    const base = tabBarHeight + spacing.xl;
+    if (!mainCategories.length || !viewportHeight) return base;
+    const lastCat = mainCategories[mainCategories.length - 1];
+    let mainHeaderCount = 0;
+    let subchipsCount = 0;
+    let subheaderCount = 0;
+    let rowCount = 0;
+    let emptyCount = 0;
+    listData.forEach(row => {
+      if (row.groupId !== lastCat) return;
+      if (row.type === 'mainHeader') mainHeaderCount += 1;
+      else if (row.type === 'subchips') subchipsCount += 1;
+      else if (row.type === 'subheader') subheaderCount += 1;
+      else if (row.type === 'row') rowCount += 1;
+      else if (row.type === 'sectionEmpty') emptyCount += 1;
+    });
+    const estimatedRowHeight = cardWidth / 1.15 + 108;
+    const estimatedLastSectionHeight =
+      mainHeaderCount * EST_MAIN_HEADER_H +
+      subchipsCount * EST_SUBCHIPS_H +
+      subheaderCount * EST_SUBHEADER_H +
+      rowCount * estimatedRowHeight +
+      emptyCount * EST_EMPTY_ROW_H;
+    const needed = viewportHeight - estimatedLastSectionHeight + 24;
+    return Math.max(base, needed);
+  }, [listData, mainCategories, viewportHeight, cardWidth, tabBarHeight]);
+
+  const contentContainerStyle = useMemo(
+    () => ({ paddingBottom: footerSpacerHeight, paddingTop: spacing.md }),
+    [footerSpacerHeight]
+  );
+
+  const onFlatListLayout = useCallback((e) => {
+    setViewportHeight(e.nativeEvent.layout.height);
+  }, []);
+
+  // ── PRIORITY 1: явный тап по главной категории. Подсветка меняется
+  // мгновенно, scroll-spy полностью блокируется до конца поездки. ────────
+  const jumpToCategory = useCallback((id) => {
+    programmaticSequenceRef.current += 1;
+    const seq = programmaticSequenceRef.current;
+    navigationModeRef.current = 'programmatic-scroll';
     setActiveCategory(id);
+
     if (id === 'all') {
       mainListRef.current?.scrollToOffset?.({ offset: 0, animated: true });
+    } else {
+      const index = listDataRef.current.findIndex(row => row.type === 'mainHeader' && row.groupId === id);
+      if (index >= 0) {
+        mainListRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0 });
+      }
+    }
+
+    if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current);
+    // Страховочный таймаут — на случай, если onMomentumScrollEnd не придёт
+    // (например, список уже был в нужном месте и momentum не запустился).
+    unlockTimeoutRef.current = setTimeout(() => {
+      if (seq !== programmaticSequenceRef.current) return; // устаревший вызов — уже другой тап
+      navigationModeRef.current = 'idle';
+    }, 800);
+  }, []);
+
+  // ── PRIORITY 2: тап по под-категории. Главная категория "приколота" к
+  // текущему разделу и не пересчитывается заново — мы и так точно знаем,
+  // какой это раздел. ─────────────────────────────────────────────────────
+  const setSubFilter = useCallback((mainCategoryId, subId) => {
+    programmaticSequenceRef.current += 1;
+    const seq = programmaticSequenceRef.current;
+    navigationModeRef.current = 'subcategory-relayout';
+    setActiveCategory(mainCategoryId);
+    setSubFilters(prev => ({ ...prev, [mainCategoryId]: subId }));
+
+    // Двойной requestAnimationFrame — ждём, пока React закоммитит новый
+    // layout после смены фильтра, прежде чем переякориться на заголовок
+    // раздела. Не единственная защита: onScrollToIndexFailed на самом
+    // FlatList — резервный вариант, если этого кадра не хватило.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (seq !== programmaticSequenceRef.current) return;
+        const index = listDataRef.current.findIndex(row => row.type === 'mainHeader' && row.groupId === mainCategoryId);
+        if (index >= 0) {
+          // animated:false — пользователь уже находится в этом разделе, мы
+          // всего лишь компенсируем изменение высоты секции, а не катаем его
+          // по экрану заново.
+          mainListRef.current?.scrollToIndex?.({ index, animated: false, viewPosition: 0 });
+        }
+        if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current);
+        unlockTimeoutRef.current = setTimeout(() => {
+          if (seq !== programmaticSequenceRef.current) return;
+          navigationModeRef.current = 'idle';
+        }, 150);
+      });
+    });
+  }, []);
+
+  const onScrollToIndexFailed = useCallback(({ index }) => {
+    setTimeout(() => mainListRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0 }), 120);
+  }, []);
+
+  // ── Пользователь взял скролл в руки — программный режим немедленно
+  // отменяется, приоритет всегда у живого жеста. ──────────────────────────
+  const onScrollBeginDrag = useCallback(() => {
+    if (navigationModeRef.current !== 'idle') {
+      programmaticSequenceRef.current += 1;
+      navigationModeRef.current = 'idle';
+      if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current);
+    }
+  }, []);
+
+  const onMomentumScrollEnd = useCallback(() => {
+    if (navigationModeRef.current === 'programmatic-scroll') {
+      if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current);
+      navigationModeRef.current = 'idle';
+    }
+  }, []);
+
+  // ── PRIORITY 3: scroll-spy — работает только в режиме idle. Помимо
+  // обычной viewability-логики есть два дешёвых пограничных случая прямо в
+  // onScroll: "почти в самом верху" -> Все, и "почти у самого низа" ->
+  // последняя категория. Второй — прямая защита от бага короткой последней
+  // секции (см. комментарий вверху файла): даже если оценка отступа неточна,
+  // физическое приближение к концу контента однозначно означает, что
+  // пользователь смотрит на последний раздел. ─────────────────────────────
+  const onScroll = useCallback((e) => {
+    const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+    const y = contentOffset.y;
+    directionRef.current = y > lastScrollYRef.current ? 'down' : y < lastScrollYRef.current ? 'up' : directionRef.current;
+    lastScrollYRef.current = y;
+
+    if (navigationModeRef.current !== 'idle') return;
+
+    const cats = mainCategoriesRef.current;
+    if (!cats.length) return;
+
+    if (y <= 24) {
+      if (activeCategoryRef.current !== 'all') setActiveCategory('all');
       return;
     }
-    const index = listData.findIndex(row => row.type === 'mainHeader' && row.groupId === id);
-    if (index >= 0) {
-      mainListRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0 });
-    }
-  };
 
-  // scroll-spy: пока пользователь листает список руками, верхний ряд сам
-  // подсвечивает раздел, который сейчас на экране — берём раздел первой
-  // видимой строки. minimumViewTime защищает от дёрганья на границе секций.
-  const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 1, minimumViewTime: 120 });
+    const distanceFromBottom = contentSize.height - (y + layoutMeasurement.height);
+    if (distanceFromBottom < 32) {
+      const last = cats[cats.length - 1];
+      if (activeCategoryRef.current !== last) setActiveCategory(last);
+    }
+  }, []);
+
+  // viewabilityConfig/callback создаются ОДИН раз (useRef), а не при каждом
+  // render — иначе FlatList считает список "изменившимся" и теряет часть
+  // оптимизаций виртуализации.
+  const viewabilityConfigRef = useRef({ itemVisiblePercentThreshold: 55, minimumViewTime: 50 });
   const onViewableItemsChangedRef = useRef(({ viewableItems }) => {
-    const firstReal = viewableItems.find(v => v.item?.groupId);
-    if (firstReal) setActiveCategory(prev => (prev === firstReal.item.groupId ? prev : firstReal.item.groupId));
+    if (navigationModeRef.current !== 'idle') return;
+
+    // Берём ПОСЛЕДНИЙ прошедший порог видимости элемент с groupId (а не
+    // первый попавшийся) — так частично видимый хвост предыдущей секции не
+    // побеждает только что появившийся заголовок следующей.
+    let candidate = null;
+    for (let i = 0; i < viewableItems.length; i += 1) {
+      const item = viewableItems[i]?.item;
+      if (item?.groupId) candidate = item.groupId;
+    }
+    if (!candidate || candidate === activeCategoryRef.current) return;
+
+    // Небольшая "мёртвая зона" по времени — не даёт chip дёргаться туда-сюда
+    // ровно на границе двух секций при медленном скролле.
+    const now = Date.now();
+    if (now - lastSpySwitchAtRef.current < 180) return;
+    lastSpySwitchAtRef.current = now;
+    setActiveCategory(candidate);
   });
 
   useEffect(() => {
@@ -263,32 +442,126 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [route?.params?.category, mainChips]);
 
-  const goProduct = (product) => navigation.navigate('Product', { product });
-  const defaultQty = (productId) => cart[cartKey(productId)]?.qty || 0;
-  const incrementDefault = (product) => onAddToCart(product);
-  const decrementDefault = (productId) => onDecrement?.(cartKey(productId));
+  // ── renderItem и всё, что ему передаётся, стабилизированы через
+  // useCallback/useMemo с точными зависимостями — так смена activeCategory
+  // (просто подсветка чипа наверху) НЕ входит в зависимости и не заставляет
+  // FlatList (PureComponent) перерисовывать все карточки товаров. ─────────
+  const goProduct = useCallback((product) => navigation.navigate('Product', { product }), [navigation]);
+
+  const renderItem = useCallback(({ item }) => {
+    if (item.type === 'mainHeader') {
+      return (
+        <View style={[styles.mainHeaderRow, { paddingHorizontal: hPad }]}>
+          <Text style={styles.mainHeaderTitle}>{item.label}</Text>
+          <Text style={styles.mainHeaderCount}>
+            {item.count} {item.count === 1 ? 'позиция' : item.count < 5 ? 'позиции' : 'позиций'}
+          </Text>
+        </View>
+      );
+    }
+    if (item.type === 'subchips') {
+      return (
+        <SubcategoryChips
+          subcats={item.subcats}
+          activeSub={item.activeSub}
+          onSelect={(subId) => setSubFilter(item.groupId, subId)}
+          hPad={hPad}
+        />
+      );
+    }
+    if (item.type === 'subheader') {
+      return (
+        <View style={{ paddingHorizontal: hPad }}>
+          <Text style={styles.subsectionTitle}>{item.label}</Text>
+        </View>
+      );
+    }
+    if (item.type === 'sectionEmpty') {
+      return (
+        <View style={[styles.sectionEmptyBox, { paddingHorizontal: hPad }]}>
+          <Text style={styles.sectionEmptyText}>{item.label}</Text>
+        </View>
+      );
+    }
+    const productA = item.items[0];
+    const productB = item.items[1];
+    const qtyA = cart[cartKey(productA.id)]?.qty || 0;
+    const qtyB = productB ? (cart[cartKey(productB.id)]?.qty || 0) : 0;
+    return (
+      <View style={[styles.gridRow, { paddingHorizontal: hPad, gap: columnGap }]}>
+        <QuickProductCard
+          product={productA}
+          width={cardWidth}
+          onPress={goProduct}
+          onAdd={onAddToCart}
+          qty={qtyA}
+          onIncrement={() => onAddToCart(productA)}
+          onDecrement={() => onDecrement?.(cartKey(productA.id))}
+          isFavorite={favoriteIds.includes(productA.id)}
+          onToggleFavorite={onToggleFavorite}
+        />
+        {productB ? (
+          <QuickProductCard
+            product={productB}
+            width={cardWidth}
+            onPress={goProduct}
+            onAdd={onAddToCart}
+            qty={qtyB}
+            onIncrement={() => onAddToCart(productB)}
+            onDecrement={() => onDecrement?.(cartKey(productB.id))}
+            isFavorite={favoriteIds.includes(productB.id)}
+            onToggleFavorite={onToggleFavorite}
+          />
+        ) : (
+          <View style={{ width: cardWidth }} />
+        )}
+      </View>
+    );
+  }, [hPad, columnGap, cardWidth, cart, favoriteIds, goProduct, onAddToCart, onDecrement, onToggleFavorite, setSubFilter]);
+
+  const listEmptyComponent = useMemo(() => (
+    <View style={{ paddingHorizontal: hPad, paddingTop: spacing.xl }}>
+      <EmptyState
+        icon={products.length ? 'search-outline' : 'cafe-outline'}
+        title={products.length ? 'Ничего не найдено' : 'Меню загружается'}
+        subtitle={
+          !products.length
+            ? 'Если меню долго не появляется — проверьте подключение к интернету.'
+            : query ? `По запросу «${query}» ничего нет` : 'В этой категории пока пусто'
+        }
+        action={products.length ? <PrimaryButton label="Сбросить поиск" onPress={() => setQuery('')} /> : undefined}
+      />
+    </View>
+  ), [hPad, products.length, query]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header — фиксированная чёрная шторка, не часть скролла. Круглая
-          кнопка поиска слева (16px от края), бренд по центру. */}
+      {/* Header — фиксированная чёрная шторка, не часть скролла. Внутренний
+          ряд имеет собственную фиксированную высоту (HEADER_CONTENT_HEIGHT),
+          а paddingTop только у внешнего контейнера отвечает за safe area. */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerSide}>
-          <TouchableOpacity
-            onPress={toggleSearch}
-            style={styles.searchCircle}
-            accessibilityRole="button"
-            accessibilityLabel={searchOpen ? 'Закрыть поиск' : 'Открыть поиск'}
-            hitSlop={6}
-          >
-            <Ionicons name={searchOpen ? 'close' : 'search'} size={18} color={colors.accent} />
-          </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <View style={styles.headerSide}>
+            <TouchableOpacity
+              onPress={toggleSearch}
+              style={styles.searchCircle}
+              accessibilityRole="button"
+              accessibilityLabel={searchOpen ? 'Закрыть поиск' : 'Открыть поиск'}
+              hitSlop={8}
+              activeOpacity={0.75}
+            >
+              <Ionicons name={searchOpen ? 'close' : 'search'} size={17} color={colors.accent} style={styles.searchIcon} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.brandRow}>
+            <Image source={require('../assets/logo-mark.png')} style={styles.brandLogo} resizeMode="contain" />
+            <View style={styles.brandTextCol}>
+              <Text style={styles.brandTitle}>SBL</Text>
+              <Text style={styles.brandSubtitle}>COFFEE</Text>
+            </View>
+          </View>
+          <View style={styles.headerSide} />
         </View>
-        <View style={styles.brandRow}>
-          <Image source={require('../assets/logo-mark.png')} style={styles.brandLogo} resizeMode="contain" />
-          <Text style={styles.brandText}>SBL COFFEE</Text>
-        </View>
-        <View style={styles.headerSide} />
       </View>
 
       {searchOpen && (
@@ -311,98 +584,29 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
         </View>
       )}
 
-      {/* Category bar — фиксированный ряд главных категорий, не часть
-          скролла, отдельно от header (не наложен и не перекрыт им). */}
       <MainCategoryBar chips={mainChips} activeId={activeCategory} onSelect={jumpToCategory} hPad={hPad} />
 
       <FlatList
         ref={mainListRef}
         data={listData}
-        keyExtractor={item => item.key}
+        keyExtractor={keyExtractorRow}
+        renderItem={renderItem}
         viewabilityConfig={viewabilityConfigRef.current}
         onViewableItemsChanged={onViewableItemsChangedRef.current}
-        contentContainerStyle={{ paddingBottom: tabBarHeight + spacing.xl, paddingTop: spacing.md }}
+        onScroll={onScroll}
+        onScrollBeginDrag={onScrollBeginDrag}
+        onMomentumScrollEnd={onMomentumScrollEnd}
+        onLayout={onFlatListLayout}
+        scrollEventThrottle={16}
+        contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        onScrollToIndexFailed={({ index }) => {
-          // Пока список не измерил все строки (карточки с фото грузятся
-          // асинхронно), scrollToIndex может не попасть с первого раза —
-          // пробуем ещё раз чуть позже.
-          setTimeout(() => mainListRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0 }), 120);
-        }}
-        ListEmptyComponent={
-          <View style={{ paddingHorizontal: hPad, paddingTop: spacing.xl }}>
-            <EmptyState
-              icon={products.length ? 'search-outline' : 'cafe-outline'}
-              title={products.length ? 'Ничего не найдено' : 'Меню загружается'}
-              subtitle={
-                !products.length
-                  ? 'Если меню долго не появляется — проверьте подключение к интернету.'
-                  : query ? `По запросу «${query}» ничего нет` : 'В этой категории пока пусто'
-              }
-              action={products.length ? <PrimaryButton label="Сбросить поиск" onPress={() => setQuery('')} /> : undefined}
-            />
-          </View>
-        }
-        renderItem={({ item }) => {
-          if (item.type === 'mainHeader') {
-            return (
-              <View style={[styles.mainHeaderRow, { paddingHorizontal: hPad }]}>
-                <Text style={styles.mainHeaderTitle}>{item.label}</Text>
-                <Text style={styles.mainHeaderCount}>
-                  {item.count} {item.count === 1 ? 'позиция' : item.count < 5 ? 'позиции' : 'позиций'}
-                </Text>
-              </View>
-            );
-          }
-          if (item.type === 'subchips') {
-            return (
-              <SubcategoryChips
-                subcats={item.subcats}
-                activeSub={item.activeSub}
-                onSelect={(subId) => setSubFilter(item.groupId, subId)}
-                hPad={hPad}
-              />
-            );
-          }
-          if (item.type === 'subheader') {
-            return (
-              <View style={{ paddingHorizontal: hPad }}>
-                <Text style={styles.subsectionTitle}>{item.label}</Text>
-              </View>
-            );
-          }
-          return (
-            <View style={[styles.gridRow, { paddingHorizontal: hPad, gap: columnGap }]}>
-              <QuickProductCard
-                product={item.items[0]}
-                width={cardWidth}
-                onPress={goProduct}
-                onAdd={onAddToCart}
-                qty={defaultQty(item.items[0].id)}
-                onIncrement={() => incrementDefault(item.items[0])}
-                onDecrement={() => decrementDefault(item.items[0].id)}
-                isFavorite={favoriteIds.includes(item.items[0].id)}
-                onToggleFavorite={onToggleFavorite}
-              />
-              {item.items[1] ? (
-                <QuickProductCard
-                  product={item.items[1]}
-                  width={cardWidth}
-                  onPress={goProduct}
-                  onAdd={onAddToCart}
-                  qty={defaultQty(item.items[1].id)}
-                  onIncrement={() => incrementDefault(item.items[1])}
-                  onDecrement={() => decrementDefault(item.items[1].id)}
-                  isFavorite={favoriteIds.includes(item.items[1].id)}
-                  onToggleFavorite={onToggleFavorite}
-                />
-              ) : (
-                <View style={{ width: cardWidth }} />
-              )}
-            </View>
-          );
-        }}
+        onScrollToIndexFailed={onScrollToIndexFailed}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        windowSize={7}
+        updateCellsBatchingPeriod={40}
+        ListEmptyComponent={listEmptyComponent}
       />
     </View>
   );
@@ -411,14 +615,23 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 const styles = StyleSheet.create({
   header: {
     backgroundColor: colors.surface3,
+    paddingHorizontal: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 8,
+    zIndex: 2,
+  },
+  headerRow: {
+    height: HEADER_CONTENT_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
   },
   headerSide: {
     width: SEARCH_CIRCLE_SIZE,
     alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   searchCircle: {
     width: SEARCH_CIRCLE_SIZE,
@@ -428,23 +641,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  searchIcon: {
+    marginLeft: 1,
+    marginTop: 1,
+  },
   brandRow: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 9,
   },
   brandLogo: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     tintColor: '#fff',
   },
-  brandText: {
-    fontSize: 14,
+  brandTextCol: {
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  brandTitle: {
+    fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 3,
+    lineHeight: 16,
     color: colors.textOnDark,
+  },
+  brandSubtitle: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 3,
+    lineHeight: 11,
+    marginTop: 2,
+    color: 'rgba(255,255,255,0.5)',
   },
   searchBox: {
     backgroundColor: colors.surface1,
@@ -461,9 +691,8 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   categoryBar: {
-    backgroundColor: colors.surface1,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   subchipRow: {
     marginTop: spacing.sm,
@@ -494,6 +723,15 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     marginTop: spacing.md,
     marginBottom: spacing.sm,
+  },
+  sectionEmptyBox: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+  },
+  sectionEmptyText: {
+    fontSize: 13,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   gridRow: {
     flexDirection: 'row',

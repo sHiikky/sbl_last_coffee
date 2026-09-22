@@ -7,7 +7,12 @@ import ProductImage from './ProductImage';
 import { colors, shadow } from '../theme/tokens';
 import { formatPrice } from '../data/products';
 
-export default function QuickProductCard({ product, width = 152, onPress, onAdd, qty = 0, onIncrement, onDecrement, isFavorite = false, onToggleFavorite }) {
+// React.memo — карточка не должна перерисовываться просто потому, что
+// экран Menu перерисовался из-за смены активной категории наверху или
+// открытия поиска. Реально нужный ре-рендер (изменилось qty/избранное для
+// этого конкретного товара, а не активная категория) по-прежнему проходит
+// через обычное сравнение пропсов.
+function QuickProductCard({ product, width = 152, onPress, onAdd, qty = 0, onIncrement, onDecrement, isFavorite = false, onToggleFavorite }) {
   const handleAdd = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onAdd?.(product);
@@ -168,3 +173,5 @@ const styles = StyleSheet.create({
   stepperPlus: { fontSize: 16, color: '#fff', lineHeight: 17 },
   stepperQty: { fontSize: 13, fontWeight: '700', minWidth: 16, textAlign: 'center', color: colors.textPrimary },
 });
+
+export default React.memo(QuickProductCard);
