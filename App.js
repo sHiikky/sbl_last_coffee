@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ActivityIndicator, Easing, Dimensions } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, ActivityIndicator, Easing, Dimensions, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -25,8 +25,12 @@ import { fetchVisibleProducts } from './lib/catalogService';
 import useLoyaltyState from './loyalty/useLoyaltyState';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
 import { ensureAnonymousSession, getUserOrThrow, supabase } from './lib/supabaseClient';
-
-const ACTIVE_ORDER_FINAL_STATUSES = ['completed', 'cancelled'];
+import {
+  recoverPendingCheckoutOnce,
+  scheduleBoundedCheckoutRecoveryRetries,
+  ORDER_FINAL_STATUSES,
+  CHECKOUT_RECOVERY_OUTCOME,
+} from './lib/orderService';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -90,6 +94,10 @@ function Tabs({
   activeOrder,
   onOpenActiveOrder,
   onActiveOrderFinished,
+  checkoutRecoveryNotice,
+  onDismissCheckoutRecoveryNotice,
+  onRequestCheckoutRecovery,
+  onCheckoutAttemptUncertain,
 }) {
   const insets = useSafeAreaInsets();
   const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
@@ -188,6 +196,10 @@ function Tabs({
             tabBarHeight={tabBarHeight}
             loyaltyState={loyaltyState}
             onRedeemReward={onRedeemReward}
+            checkoutRecoveryNotice={checkoutRecoveryNotice}
+            onDismissCheckoutRecoveryNotice={onDismissCheckoutRecoveryNotice}
+            onRequestCheckoutRecovery={onRequestCheckoutRecovery}
+            onCheckoutAttemptUncertain={onCheckoutAttemptUncertain}
           />
         )}
       </Tab.Screen>
@@ -227,6 +239,10 @@ function RootStack({
   activeOrder,
   onOpenActiveOrder,
   onActiveOrderFinished,
+  checkoutRecoveryNotice,
+  onDismissCheckoutRecoveryNotice,
+  onRequestCheckoutRecovery,
+  onCheckoutAttemptUncertain,
 }) {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -249,6 +265,10 @@ function RootStack({
             activeOrder={activeOrder}
             onOpenActiveOrder={onOpenActiveOrder}
             onActiveOrderFinished={onActiveOrderFinished}
+            checkoutRecoveryNotice={checkoutRecoveryNotice}
+            onDismissCheckoutRecoveryNotice={onDismissCheckoutRecoveryNotice}
+            onRequestCheckoutRecovery={onRequestCheckoutRecovery}
+            onCheckoutAttemptUncertain={onCheckoutAttemptUncertain}
           />
         )}
       </Stack.Screen>
@@ -309,7 +329,123 @@ export default function App() {
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
   const [products, setProducts] = useState([]);
+  // Block 1.4: заполняется, только если recovery авторитетно выяснил, что
+  // предыдущая попытка НЕ привела к заказу — либо uncertainty window истёк
+  // и lookup уверенно не нашёл заказ (NOT_FOUND_FINAL), либо retention TTL
+  // истёк, пока сеть была недоступна (LOOKUP_FAILED_RETENTION_EXPIRED). НЕ
+  // на каждый "пока не знаем" (см. applyCheckoutRecoveryResult ниже).
+  const [checkoutRecoveryNotice, setCheckoutRecoveryNotice] = useState(null);
   const loyalty = useLoyaltyState(orderHistory);
+
+  // Block 1.3, п.2: recovery теперь запускается из нескольких мест (старт,
+  // AppState foreground, фокус экрана корзины, bounded-retry таймеры) — все
+  // они должны видеть АКТУАЛЬНУЮ корзину, а не ту, что была на момент
+  // подписки эффекта/колбэка. cartRef всегда синхронизирован с cart.
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+
+  // Отменяет ещё не сработавшие таймеры bounded-retry recovery (Block 1.3,
+  // п.3) — на случай размонтирования (в реальности App живёт всё время
+  // работы приложения, но это защищает от утечки таймеров при hot reload
+  // в разработке и просто хорошая гигиена).
+  const uncertaintyRetryCancelersRef = useRef([]);
+  useEffect(() => () => {
+    uncertaintyRetryCancelersRef.current.forEach(cancel => cancel());
+    uncertaintyRetryCancelersRef.current = [];
+  }, []);
+
+  // Единая интерпретация результата recoverPendingCheckoutOnce — ВСЕГДА
+  // выполняется здесь, независимо от того, какой триггер вызвал recovery
+  // (старт, foreground, фокус корзины, bounded-retry, conflict-check перед
+  // новым заказом). CartScreen (см. onRequestCheckoutRecovery,
+  // onCheckoutAttemptUncertain) только СИГНАЛИЗИРУЕТ о событиях, при
+  // которых стоит проверить recovery — сам lookup, его интерпретация и все
+  // побочные эффекты (setActiveOrder/setCart/уведомление) остаются
+  // централизованными здесь, в единственном controller'е (Block 1.4, п.3).
+  const applyCheckoutRecoveryResult = (result) => {
+    switch (result?.outcome) {
+      case CHECKOUT_RECOVERY_OUTCOME.FOUND_ACTIVE: {
+        setActiveOrder({ id: result.order.id, orderNumber: result.order.order_number, status: result.order.status });
+        // Корзину чистим, только если она не изменилась с момента исходной
+        // попытки — иначе есть риск стереть то, что пользователь добавил
+        // уже после сбоя и никак не связанное с восстановленным заказом.
+        if (result.matchesCurrentCart) setCart({});
+        break;
+      }
+      case CHECKOUT_RECOVERY_OUTCOME.FOUND_TERMINAL: {
+        // Заказ найден, но уже в финальном статусе (completed/cancelled) —
+        // баннер "новый"/"готовится" не имеет смысла, activeOrder не
+        // поднимаем. Попытка при этом всё равно разрешена (уже удалена из
+        // AsyncStorage — см. recoverPendingCheckoutOnce). Cart cleanup — та
+        // же логика, что и для активного заказа: сами товары были списаны
+        // в заказ независимо от его текущего статуса.
+        if (result.matchesCurrentCart) setCart({});
+        break;
+      }
+      case CHECKOUT_RECOVERY_OUTCOME.NOT_FOUND_FINAL: {
+        // Block 1.4, п.1: uncertainty window истёк, lookup уверенно не
+        // нашёл заказ — считаем исходную попытку несостоявшейся
+        // ОКОНЧАТЕЛЬНО. Попытка уже удалена (recoverPendingCheckoutOnce),
+        // новый checkout доступен сразу же — НЕ через 2 часа. Уведомление
+        // чисто информационное.
+        setCheckoutRecoveryNotice('Предыдущий заказ не удалось подтвердить. Вы можете оформить заказ ещё раз.');
+        break;
+      }
+      case CHECKOUT_RECOVERY_OUTCOME.LOOKUP_FAILED_RETENTION_EXPIRED: {
+        // Block 1.4, п.2: сеть была недоступна дольше retention TTL — не
+        // утверждаем, что заказа точно нет (мы так и не смогли спросить
+        // сервер), но локально прекращаем отслеживать эту попытку — иначе
+        // держали бы её вечно. Новый checkout не блокируем.
+        setCheckoutRecoveryNotice('Не удалось подтвердить статус предыдущего заказа. Вы можете оформить заказ ещё раз.');
+        break;
+      }
+      case CHECKOUT_RECOVERY_OUTCOME.NOT_FOUND_UNCERTAIN:
+      case CHECKOUT_RECOVERY_OUTCOME.LOOKUP_FAILED:
+      case CHECKOUT_RECOVERY_OUTCOME.THROTTLED:
+      case CHECKOUT_RECOVERY_OUTCOME.NONE:
+      default:
+        // NOT_FOUND_UNCERTAIN (моложе uncertainty window — рано считать
+        // окончательным), LOOKUP_FAILED (сеть, retention ещё не истёк) и
+        // THROTTLED (см. RECOVERY_AUTO_CHECK_COOLDOWN_MS) — все они
+        // оставляют попытку как есть, без уведомления: возможно, запрос
+        // ещё обрабатывается или сеть скоро вернётся, следующий триггер
+        // (foreground/фокус/bounded-retry/явное действие) проверит снова.
+        break;
+    }
+  };
+
+  // Единая точка запуска recovery — используется стартовым эффектом,
+  // AppState-слушателем и (через пропс onRequestCheckoutRecovery)
+  // CartScreen.js. Сам recoverPendingCheckoutOnce всегда read-only,
+  // single-flight и idempotent (см. lib/orderService.js) — эта обёртка
+  // только применяет результат централизованно и не даёт ошибке вылететь
+  // необработанной.
+  const runCheckoutRecovery = async (cartItems, options) => {
+    try {
+      const result = await recoverPendingCheckoutOnce(cartItems, options);
+      applyCheckoutRecoveryResult(result);
+      return result;
+    } catch (error) {
+      console.warn('[order] checkout recovery failed', error);
+      return { outcome: CHECKOUT_RECOVERY_OUTCOME.LOOKUP_FAILED, error };
+    }
+  };
+
+  // Сигнал от CartScreen о том, что попытка только что перешла в UNKNOWN
+  // (сетевая ошибка/таймаут при create_order). Пока приложение остаётся
+  // открытым, есть смысл сделать ограниченную (не polling!) серию
+  // read-only проверок с bounded backoff — см.
+  // CHECKOUT_RECOVERY_BOUNDED_RETRY_DELAYS_MS в lib/orderService.js.
+  const handleCheckoutAttemptUncertain = (idempotencyKey) => {
+    const cancel = scheduleBoundedCheckoutRecoveryRetries({
+      idempotencyKey,
+      getCartItems: () => Object.values(cartRef.current || {}),
+      onResult: applyCheckoutRecoveryResult,
+    });
+    uncertaintyRetryCancelersRef.current.push(cancel);
+  };
 
   const productsById = useMemo(() => {
     const map = {};
@@ -349,7 +485,7 @@ export default function App() {
         .from('orders')
         .select('id, order_number, status')
         .eq('customer_id', user.id)
-        .not('status', 'in', `(${ACTIVE_ORDER_FINAL_STATUSES.join(',')})`)
+        .not('status', 'in', `(${ORDER_FINAL_STATUSES.join(',')})`)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -382,6 +518,68 @@ export default function App() {
         setIsReady(true);
       }
     });
+  }, []);
+
+  // Recovery незавершённого checkout после (пере)запуска приложения — один
+  // из нескольких bounded-триггеров (Block 1.3, п.2; см. также AppState-
+  // эффект ниже и фокус-эффект в CartScreen.js). Централизованная
+  // интерпретация результата (applyCheckoutRecoveryResult выше) остаётся
+  // единой независимо от того, что именно инициировало проверку.
+  //
+  // КРИТИЧНО отличается от Block 1.1: здесь НЕ вызывается create_order().
+  // Наличие незавершённой попытки означает лишь "клиент не знает исход
+  // предыдущего запроса" — это НЕ согласие пользователя оформить заказ
+  // сейчас. recoverPendingCheckoutOnce() делает только READ-ONLY lookup
+  // (get_order_by_idempotency_key); если сервер уже создал заказ, мы о нём
+  // узнаём и показываем, если нет — ничего не создаём автоматически,
+  // пользователь должен сам нажать "Оформить заказ" ещё раз.
+  useEffect(() => {
+    if (!isReady) return;
+    (async () => {
+      try {
+        await getUserOrThrow();
+        await runCheckoutRecovery(Object.values(cart), { auto: true });
+      } catch (error) {
+        console.warn('[order] checkout recovery failed on startup', error);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady]);
+
+  // "app foreground" bounded recovery trigger: пользователь мог свернуть
+  // приложение прямо во время сомнительного checkout (сеть пропала/на
+  // грани) и вернуться спустя время — при РЕАЛЬНОМ возврате на передний
+  // план имеет смысл (но не в цикле — { auto: true } применяет cooldown,
+  // см. RECOVERY_AUTO_CHECK_COOLDOWN_MS) проверить, не разрешилась ли
+  // ситуация без перезапуска всего приложения.
+  //
+  // Block 1.4, п.6: срабатывает ТОЛЬКО на настоящий переход
+  // background/inactive -> active, а не на любое 'change'-событие (и не на
+  // начальную подписку — AppState.addEventListener не вызывает колбэк для
+  // текущего состояния в момент подписки). appStateRef хранит предыдущее
+  // значение, чтобы отличить реальный переход от повторного 'active' или
+  // прочих транзиций (active -> inactive и т.п.), которые нас не касаются.
+  //
+  // NetInfo (реальный "network reconnect" триггер) в проекте пока не
+  // используется и не добавляется этим блоком, чтобы не расширять scope
+  // новой зависимостью — но это единственная точка, к которой стоит
+  // подключить его listener в будущем (тот же runCheckoutRecovery с
+  // { auto: true }).
+  const appStateRef = useRef(AppState.currentState);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', nextState => {
+      const prevState = appStateRef.current;
+      appStateRef.current = nextState;
+
+      const cameToForeground = (prevState === 'background' || prevState === 'inactive') && nextState === 'active';
+      if (!cameToForeground) return;
+
+      getUserOrThrow()
+        .then(() => runCheckoutRecovery(Object.values(cartRef.current || {}), { auto: true }))
+        .catch(error => console.warn('[order] checkout recovery on foreground failed', error));
+    });
+    return () => subscription.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -544,6 +742,10 @@ export default function App() {
     setActiveOrder(null);
   };
 
+  const dismissCheckoutRecoveryNotice = () => {
+    setCheckoutRecoveryNotice(null);
+  };
+
   // DEV-only помощники для ручного тестирования серии посещений без ожидания
   // реальных 10 дней (см. loyalty/loyaltyDev.js). Никогда не вызываются вне __DEV__.
   const devSimulateToday = () => {
@@ -599,6 +801,10 @@ export default function App() {
             activeOrder={activeOrder}
             onOpenActiveOrder={openActiveOrder}
             onActiveOrderFinished={finishActiveOrder}
+            checkoutRecoveryNotice={checkoutRecoveryNotice}
+            onDismissCheckoutRecoveryNotice={dismissCheckoutRecoveryNotice}
+            onRequestCheckoutRecovery={runCheckoutRecovery}
+            onCheckoutAttemptUncertain={handleCheckoutAttemptUncertain}
           />
         )}
       </NavigationContainer>
