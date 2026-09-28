@@ -1,100 +1,65 @@
+// components/ProductCard.js
+// Единая карточка товара для Меню, Главной, подборок и «С этим берут» в
+// корзине. Светлая высокая карточка: товар «висит» без плашки под фото,
+// название слева в две строки, цена внизу, справа внизу шеврон «›» (открывает
+// товар — добавление в корзину и в избранное на его экране). Если товар уже в
+// корзине, вместо шеврона компактный степпер. Сердечка на карточке нет.
+// QuickProductCard — реэкспорт этого компонента.
+//
+// React.memo — карточка не должна перерисовываться просто потому, что экран
+// Menu перерисовался из-за смены активной категории наверху или открытия
+// поиска. Реально нужный ре-рендер (изменилось qty/избранное для этого
+// товара) по-прежнему проходит через обычное сравнение пропсов.
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PressableCard from './PressableCard';
 import ProductImage from './ProductImage';
 import Badge from './Badge';
-import { colors, radius, spacing, shadow } from '../theme/tokens';
+import QuantityStepper from './QuantityStepper';
+import { colors, radius, shadow } from '../theme/tokens';
 import { formatPrice } from '../data/products';
 
-export default function ProductCard({ product, width, onPress, onAdd, qty = 0, onIncrement, onDecrement, isFavorite = false, onToggleFavorite }) {
-  const handleAdd = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onAdd(product);
-  };
+const CARD_PADDING = 12;
 
-  const handleIncrement = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onIncrement?.();
-  };
-
-  const handleDecrement = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    onDecrement?.();
-  };
+function ProductCard({ product, width = 152, onPress, qty = 0, onIncrement, onDecrement }) {
+  const name = product.displayName || product.name;
 
   return (
     <PressableCard
       onPress={() => onPress(product)}
-      style={[styles.card, { width }, shadow.card]}
-      accessibilityLabel={product.name + ', ' + formatPrice(product.price)}
+      style={[styles.card, { width }]}
+      accessibilityLabel={`${product.name}, ${formatPrice(product.price)}`}
     >
-      <View>
+      <View style={styles.photoWrap}>
         <ProductImage
           source={product.image}
           category={product.category}
-          aspectRatio={1.42}
+          aspectRatio={1}
           borderRadius={0}
-          contentFit={product.cardFit || 'cover'}
+          transparent
+          contentFit={product.cardContentFit || 'contain'}
           contentPosition={product.imagePosition || 'center'}
-          zoom={product.cardZoom || product.imageZoom || 1}
+          zoom={product.quickZoom || product.cardZoom || product.imageZoom || 1}
         />
         {product.badge && <Badge type={product.badge} />}
-        {onToggleFavorite && (
-          <TouchableOpacity
-            onPress={() => onToggleFavorite(product.id)}
-            hitSlop={8}
-            style={styles.favoriteButton}
-            accessibilityRole="button"
-            accessibilityLabel={isFavorite ? `Убрать ${product.name} из избранного` : `Добавить ${product.name} в избранное`}
-          >
-            <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={21} color={isFavorite ? colors.accent : colors.textPrimary} />
-          </TouchableOpacity>
-        )}
       </View>
+
       <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={2}>{product.displayName || product.name}</Text>
-        {!!product.sizeLabel && (
-          <Text style={styles.sizeLabel} numberOfLines={1}>{product.sizeLabel}</Text>
-        )}
-        {!!product.shortDescription && (
-          <Text style={styles.desc} numberOfLines={1}>{product.shortDescription}</Text>
-        )}
+        <View>
+          <Text style={styles.title} numberOfLines={2}>{name}</Text>
+          {!!product.sizeLabel && <Text style={styles.sizeLabel} numberOfLines={1}>{product.sizeLabel}</Text>}
+        </View>
         <View style={styles.footer}>
-          <Text style={styles.price}>{formatPrice(product.price)}</Text>
+          <Text style={styles.price} numberOfLines={1}>{formatPrice(product.price)}</Text>
           {qty > 0 && onIncrement && onDecrement ? (
-            <View style={styles.stepper}>
-              <TouchableOpacity
-                onPress={handleDecrement}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={'Убрать ' + product.name}
-                style={styles.stepperBtn}
-              >
-                <Text style={styles.stepperMinus}>−</Text>
-              </TouchableOpacity>
-              <Text style={styles.stepperQty}>{qty}</Text>
-              <TouchableOpacity
-                onPress={handleIncrement}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel={'Добавить ещё ' + product.name}
-                style={[styles.stepperBtn, styles.stepperBtnAccent]}
-              >
-                <Text style={styles.stepperPlus}>+</Text>
-              </TouchableOpacity>
-            </View>
+            <QuantityStepper compact qty={qty} onIncrement={onIncrement} onDecrement={onDecrement} />
           ) : (
-            <TouchableOpacity
-              onPress={handleAdd}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel={'Добавить ' + product.name + ' в корзину'}
-              style={styles.addButton}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
+            // Просто иконка: нажатие обрабатывает вся карточка. Отдельная кнопка
+            // внутри кнопки-карточки даёт вложенные <button> в вебе.
+            <View style={styles.chevronHit} pointerEvents="none">
+              <Ionicons name="chevron-forward" size={20} color="rgba(12,12,12,0.3)" />
+            </View>
           )}
         </View>
       </View>
@@ -105,46 +70,19 @@ export default function ProductCard({ product, width, onPress, onAdd, qty = 0, o
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface2,
-    borderRadius: radius.xlarge,
+    borderRadius: radius.large,
     overflow: 'hidden',
-    marginBottom: spacing.md,
-    ...shadow.level2,
+    ...shadow.level1,
   },
-  favoriteButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 41,
-    height: 41,
-    borderRadius: 20.5,
-    backgroundColor: 'rgba(255,255,255,0.88)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(12,12,12,0.06)',
-  },
-  body: { padding: 10 },
-  title: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 3, lineHeight: 20, height: 40, textAlign: 'center' },
-  sizeLabel: { color: colors.textMuted, marginBottom: 4, fontSize: 12, textAlign: 'center' },
-  desc: { color: colors.textMuted, marginBottom: 4, lineHeight: 13, fontSize: 12 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  price: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  addButton: {
-    width: 38, height: 38, borderRadius: 19, backgroundColor: colors.accent,
-    alignItems: 'center', justifyContent: 'center',
-    ...shadow.button,
-  },
-  stepper: {
-    flexDirection: 'row', alignItems: 'center', gap: 2,
-    backgroundColor: colors.background, borderRadius: radius.pill, padding: 3,
-  },
-  stepperBtn: {
-    width: 26, height: 26, borderRadius: 13,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  stepperBtnAccent: { backgroundColor: colors.accent, ...shadow.button },
-  stepperMinus: { fontSize: 15, color: colors.textPrimary, lineHeight: 16 },
-  stepperPlus: { fontSize: 16, color: '#fff', lineHeight: 17 },
-  stepperQty: { fontSize: 13, fontWeight: '700', minWidth: 20, textAlign: 'center', color: colors.textPrimary },
+  photoWrap: { paddingTop: CARD_PADDING, paddingHorizontal: CARD_PADDING },
+  // flex: 1 + space-between: если соседняя карточка в ряду выше, нижняя
+  // строка «цена + шеврон» остаётся прижатой к низу карточки.
+  body: { flex: 1, justifyContent: 'space-between', paddingTop: 6, paddingRight: CARD_PADDING - 4, paddingBottom: 6, paddingLeft: CARD_PADDING },
+  title: { fontSize: 16, lineHeight: 20, fontWeight: '700', color: colors.textPrimary },
+  sizeLabel: { fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 1 },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  price: { flexShrink: 1, fontSize: 15, fontWeight: '800', color: colors.textPrimary },
+  chevronHit: { width: 44, height: 36, marginVertical: -4, marginRight: -6, alignItems: 'center', justifyContent: 'center' },
 });
+
+export default React.memo(ProductCard);

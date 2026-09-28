@@ -24,6 +24,10 @@ const CATEGORY_ICON = {
   compliment: 'gift-outline',
 };
 
+// Градиенты режима transparent: те же элементы в дереве, но без заливки.
+const CLEAR_GRADIENT_3 = ['rgba(255,255,255,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0)'];
+const CLEAR_GRADIENT_4 = ['rgba(255,255,255,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0)'];
+
 export default function ProductImage({
   source,
   category = 'coffee',
@@ -32,6 +36,9 @@ export default function ProductImage({
   contentFit = 'contain',
   contentPosition = 'center',
   zoom = 1,
+  // transparent — без подложки под фото: товар «висит» прямо на фоне
+  // карточки, а заглушка рисуется приглушённым тёмным по светлому.
+  transparent = false,
   style,
   accessibilityLabel,
 }) {
@@ -41,39 +48,44 @@ export default function ProductImage({
   const iconName = CATEGORY_ICON[category] || 'cafe-outline';
 
   return (
-    <View style={[styles.container, { aspectRatio, borderRadius, overflow: 'hidden' }, style]} accessibilityLabel={accessibilityLabel}>
+    <View
+      style={[styles.container, { aspectRatio, borderRadius, overflow: 'hidden' }, transparent && { backgroundColor: 'transparent' }, style]}
+      accessibilityLabel={accessibilityLabel}
+    >
       {showPlaceholder ? (
         <View style={styles.placeholder}>
           <LinearGradient
-            colors={['#FFFFFF', '#F3F4F5', '#E2E5EA', '#F9FAFB']}
+            colors={transparent ? CLEAR_GRADIENT_4 : ['#FFFFFF', '#F3F4F5', '#E2E5EA', '#F9FAFB']}
             locations={[0, 0.34, 0.72, 1]}
             start={{ x: 0.1, y: 0 }}
             end={{ x: 0.9, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
           <LinearGradient
-            colors={['rgba(255,255,255,0.7)', 'rgba(255,255,255,0)', 'rgba(12,12,12,0.035)']}
+            colors={transparent ? CLEAR_GRADIENT_3 : ['rgba(255,255,255,0.7)', 'rgba(255,255,255,0)', 'rgba(12,12,12,0.035)']}
             locations={[0, 0.42, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
           />
-          <HolographicSurface
-            variant="segment"
-            intensity={0.32}
-            animated
-            borderRadius={999}
-            style={styles.placeholderGlint}
-          />
-          <Text style={styles.monogram}>SBL</Text>
-          <View style={styles.placeholderIcon}>
+          {!transparent && (
+            <HolographicSurface
+              variant="segment"
+              intensity={0.32}
+              animated
+              borderRadius={999}
+              style={styles.placeholderGlint}
+            />
+          )}
+          <Text style={[styles.monogram, transparent && { color: 'rgba(12,12,12,0.05)' }]}>SBL</Text>
+          <View style={[styles.placeholderIcon, transparent && { backgroundColor: 'rgba(12,12,12,0.04)', borderColor: 'rgba(12,12,12,0.06)' }]}>
             <Ionicons name={iconName} size={30} color="rgba(12,12,12,0.28)" />
           </View>
         </View>
       ) : (
         <>
           <LinearGradient
-            colors={['#FFFFFF', '#F3F1ED', '#E7E5DF']}
+            colors={transparent ? CLEAR_GRADIENT_3 : ['#FFFFFF', '#F3F1ED', '#E7E5DF']}
             locations={[0, 0.62, 1]}
             start={{ x: 0.2, y: 0 }}
             end={{ x: 0.9, y: 1 }}
@@ -90,7 +102,7 @@ export default function ProductImage({
             onError={() => { setFailed(true); setLoading(false); }}
           />
           {loading && (
-            <View style={styles.loadingOverlay}>
+            <View style={[styles.loadingOverlay, transparent && { backgroundColor: 'transparent' }]}>
               <ActivityIndicator color={colors.textMuted} />
             </View>
           )}

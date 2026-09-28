@@ -1,19 +1,23 @@
 // components/Badge.js
+// Метка «Хит» / «Новинка». placement:
+// - 'card' (по умолчанию) — левый верхний угол карточки товара;
+// - 'hero' — крупная метка в левом нижнем углу фото на экране товара.
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, radius } from '../theme/tokens';
+import { colors } from '../theme/tokens';
 
 const MAP = {
   hit: { label: 'Хит', bg: colors.accent },
   new: { label: 'Новинка', bg: colors.textPrimary },
 };
 
-export default function Badge({ type }) {
+export default function Badge({ type, placement = 'card' }) {
   const cfg = MAP[type];
   if (!cfg) return null;
+  const hero = placement === 'hero';
   return (
-    <View style={[styles.badge, { backgroundColor: cfg.bg }]}>
-      <Text style={styles.text}>{cfg.label}</Text>
+    <View style={[styles.badge, hero ? styles.badgeHero : styles.badgeCard, { backgroundColor: cfg.bg }]}>
+      <Text style={[styles.text, hero && styles.textHero]}>{cfg.label}</Text>
     </View>
   );
 }
@@ -21,17 +25,32 @@ export default function Badge({ type }) {
 const styles = StyleSheet.create({
   badge: {
     position: 'absolute',
-    top: 10,
-    left: 10,
-    paddingVertical: 4,
-    paddingHorizontal: 9,
-    borderRadius: radius.small - 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeCard: {
+    top: 8,
+    left: 8,
+    height: 22,
+    paddingHorizontal: 8,
+    borderRadius: 7,
+  },
+  badgeHero: {
+    left: 16,
+    bottom: 16,
+    height: 24,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   text: {
-    color: '#fff',
-    fontSize: 9,
+    color: colors.textOnDark,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
+  },
+  textHero: {
+    fontSize: 11,
+    letterSpacing: 0.6,
   },
 });

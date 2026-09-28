@@ -178,7 +178,7 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
         </View>
 
         {favoriteProducts.length ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: hPad, gap: spacing.md }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: spacing.md, gap: spacing.md }}>
             {favoriteProducts.map(product => (
               <ProductCard
                 key={product.id}

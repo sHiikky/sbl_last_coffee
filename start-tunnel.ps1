@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference = "Stop"
 
-$projectDir = "C:\Users\User\OneDrive\Desktop\Приложение проект\cranky-yellow-cheese"
-$ngrokExe   = "C:\Users\User\OneDrive\Desktop\Приложение проект\ngrok3\ngrok.exe"
+$projectDir = $PSScriptRoot
+$ngrokExe   = Join-Path $PSScriptRoot "ngrok3\ngrok.exe"
 $qrPath     = "C:\Users\User\OneDrive\Desktop\qr-приложение.png"
 
 Set-Location $projectDir
@@ -50,4 +50,4 @@ Write-Host "Ссылка для Expo Go: $expUrl"
 Write-Host "================================================"
 Write-Host ""
 
-pnpm exec expo start --port 8081
+npx expo start --port 8081

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,8 +11,9 @@ import PrimaryButton from '../components/PrimaryButton';
 import LoyaltyRewardCartCard from '../components/loyalty/LoyaltyRewardCartCard';
 import BonusRedeemCartCard from '../components/bonus/BonusRedeemCartCard';
 import Chip from '../components/Chip';
+import ProductCard from '../components/ProductCard';
 import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/tokens';
-import { PICKUP_TIMES, PICKUP_POINTS, formatPrice } from '../data/products';
+import { PICKUP_TIMES, PICKUP_POINTS, formatPrice, cartKey } from '../data/products';
 import { getAvailableRewards, isRewardApplicable, getEligibleCartItemsForReward } from '../loyalty/loyaltyService';
 import { getUserOrThrow } from '../lib/supabaseClient';
 import {
@@ -37,6 +38,11 @@ export default function CartScreen({
   onDecrement,
   onOrder,
   tabBarHeight,
+  // Для блока «С этим берут»: каталог, добавление в корзину, избранное.
+  products = [],
+  onAddToCart,
+  favoriteIds = [],
+  onToggleFavorite,
   loyaltyState,
   onRedeemReward,
   // Block 1.2, п.3: App.js устанавливает это после того, как recovery
@@ -129,6 +135,15 @@ export default function CartScreen({
     });
     return unsubscribe;
   }, [navigation, onRequestCheckoutRecovery]);
+  // «С этим берут»: к напиткам предлагаем десерты и еду, к остальному — напитки.
+  // Товары, которые уже в корзине, не предлагаем.
+  const inCartIds = new Set(items.map(item => item.id));
+  const hasDrink = items.some(item => item.menuCategory === 'Напитки');
+  const hasDessert = items.some(item => item.menuCategory === 'Десерты');
+  const suggestionOrder = hasDrink ? (hasDessert ? ['Еда', 'Десерты'] : ['Десерты', 'Еда']) : ['Напитки'];
+  const suggestions = suggestionOrder
+    .flatMap(category => products.filter(p => p.menuCategory === category && !inCartIds.has(p.id)))
+    .slice(0, 8);
   const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
   const discount = promoState === 'ok' ? Math.round(subtotal * 0.1) : 0;
@@ -177,14 +192,7 @@ export default function CartScreen({
   // loyalty-программе и профилю) обновляется только ПОСЛЕ успешного ответа
   // сервера, чтобы локальное состояние никогда не расходилось с реальным
   // заказом.
-  const handleOrder = async () => {
-    // Двойная защита от повторного тапа: synchronous ref (мгновенно, не
-    // дожидаясь ре-рендера) + state (управляет disabled/loading кнопки).
-    // Это только UX — реальная защита от дублей ниже, на сервере.
-    if (orderingRef.current || ordering) return;
-    orderingRef.current = true;
-    setOrdering(true);
-
+  const runOrder = async () => {
     const promoCode = promoState === 'ok' ? promo.trim().toUpperCase() : null;
     const rewardRequested = rewardApplied;
     const bonusRedeem = redeemBonuses ? maxBonusRedeemable : 0;
@@ -363,6 +371,26 @@ export default function CartScreen({
     }
   };
 
+  const handleOrder = async () => {
+    // Двойная защита от повторного тапа: synchronous ref (мгновенно, не
+    // дожидаясь ре-рендера) + state (управляет disabled/loading кнопки).
+    // Это только UX — реальная защита от дублей выше, на сервере.
+    if (orderingRef.current || ordering) return;
+    orderingRef.current = true;
+    setOrdering(true);
+    try {
+      await runOrder();
+    } catch (error) {
+      // Сюда попадают сбои подготовки (AsyncStorage, recovery) до отправки
+      // заказа: без этого блока флаг оставался бы true и кнопка «мёртвой».
+      console.warn('[order] failed before submit', error);
+      Alert.alert('Не удалось оформить заказ', 'Что-то пошло не так до отправки. Попробуйте ещё раз.');
+    } finally {
+      orderingRef.current = false;
+      if (mountedRef.current) setOrdering(false);
+    }
+  };
+
   useEffect(() => () => {
     mountedRef.current = false;
   }, []);
@@ -440,6 +468,32 @@ export default function CartScreen({
         }
         ListFooterComponent={
           <View>
+            {suggestions.length > 0 && onAddToCart && (
+              <View style={styles.suggestBlock}>
+                <Text style={styles.suggestTitle}>С этим берут</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginHorizontal: -hPad }}
+                  contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: spacing.md, gap: spacing.md }}
+                >
+                  {suggestions.map(product => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onPress={item => navigation.navigate('Product', { product: item })}
+                      onAdd={onAddToCart}
+                      qty={cart[cartKey(product.id)]?.qty || 0}
+                      onIncrement={() => onAddToCart(product)}
+                      onDecrement={() => onDecrement(cartKey(product.id))}
+                      isFavorite={favoriteIds.includes(product.id)}
+                      onToggleFavorite={onToggleFavorite}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
             <View style={[styles.summaryBox, shadow.card]}>
               <Text style={styles.sectionCaption}>Точка самовывоза</Text>
               <View style={styles.chipWrap}>
@@ -536,6 +590,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
+  suggestBlock: { marginTop: spacing.lg },
+  suggestTitle: { fontSize: 19, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.md },
   infoBox: {
     backgroundColor: colors.surfaceElevated,
     borderRadius: radius.large,

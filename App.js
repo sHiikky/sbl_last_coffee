@@ -194,6 +194,10 @@ function Tabs({
             onDecrement={onDecrement}
             onOrder={onOrder}
             tabBarHeight={tabBarHeight}
+            products={products}
+            onAddToCart={onAddToCart}
+            favoriteIds={favorites}
+            onToggleFavorite={onToggleFavorite}
             loyaltyState={loyaltyState}
             onRedeemReward={onRedeemReward}
             checkoutRecoveryNotice={checkoutRecoveryNotice}
@@ -277,15 +281,20 @@ function RootStack({
         name="Product"
         options={{
           presentation: 'card',
-          animation: 'fade_from_bottom',
-          animationDuration: 220,
+          // Само открытие анимирует ProductScreen (всплытие контента), поэтому
+          // системный переход только плавно проявляет экран.
+          animation: 'fade',
+          animationDuration: 180,
           gestureEnabled: true,
         }}
       >
         {props => (
           <ProductScreen
             {...props}
+            cart={cart}
+            products={products}
             onAddToCart={onAddToCart}
+            onDecrement={onDecrement}
             onToggleFavorite={onToggleFavorite}
             favoriteIds={favorites}
           />
@@ -505,18 +514,27 @@ export default function App() {
     ]).then(entries => {
       const map = Object.fromEntries(entries);
 
-      try {
-        if (map[STORAGE_KEYS.cart]) setCart(JSON.parse(map[STORAGE_KEYS.cart]));
-        if (map[STORAGE_KEYS.favorites]) setFavoriteIds(JSON.parse(map[STORAGE_KEYS.favorites]));
-        if (map[STORAGE_KEYS.orders]) setOrderHistory(JSON.parse(map[STORAGE_KEYS.orders]));
-        // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
-        // сверит это с сервером сразу после старта и перезапишет при расхождении.
-        if (map[STORAGE_KEYS.activeOrder]) setActiveOrder(JSON.parse(map[STORAGE_KEYS.activeOrder]));
-      } catch (error) {
-        console.warn('Failed to restore local state', error);
-      } finally {
-        setIsReady(true);
-      }
+      // Каждый ключ разбираем отдельно: одна битая JSON-строка не должна
+      // ломать восстановление остальных данных.
+      const restore = (key, apply) => {
+        try {
+          if (map[key]) apply(JSON.parse(map[key]));
+        } catch (error) {
+          console.warn('Failed to restore local state:', key, error);
+        }
+      };
+      restore(STORAGE_KEYS.cart, setCart);
+      restore(STORAGE_KEYS.favorites, setFavoriteIds);
+      restore(STORAGE_KEYS.orders, setOrderHistory);
+      // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
+      // сверит это с сервером сразу после старта и перезапишет при расхождении.
+      restore(STORAGE_KEYS.activeOrder, setActiveOrder);
+      setIsReady(true);
+    }).catch(error => {
+      // Хранилище недоступно: лучше открыть приложение с пустым состоянием,
+      // чем навсегда оставить экран «Подготавливаем кофейню».
+      console.warn('Failed to read local storage', error);
+      setIsReady(true);
     });
   }, []);
 

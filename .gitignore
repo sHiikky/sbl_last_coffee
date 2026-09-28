@@ -40,3 +40,14 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# не относится к приложению / локальное
+.env.*
+!.env.example
+ngrok3/
+cranky-yellow-cheese/
+output/
+tmp/
+scripts/
+.agents/
+меню сблеском/

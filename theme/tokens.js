@@ -8,7 +8,7 @@ export const colors = {
 
   textPrimary:            '#0C0C0C',
   textSecondary:          '#777570',
-  textMuted:              '#A3A09A',
+  textMuted:              '#8A867F', // темнее прежнего #A3A09A: контраст подписей на #ECEAE5 был ~2,2:1
   textOnDark:             '#FFFFFF',
   textOnDarkMuted:        'rgba(255,255,255,0.42)',
   textOnDarkFaint:        'rgba(255,255,255,0.28)',

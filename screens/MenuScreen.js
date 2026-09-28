@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, ScrollView, Image, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ScrollView, Image, useWindowDimensions, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import QuickProductCard from '../components/QuickProductCard';
 import EmptyState from '../components/EmptyState';
-import PrimaryButton from '../components/PrimaryButton';
 import Chip from '../components/Chip';
 import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
 import { cartKey } from '../data/products';
@@ -60,9 +58,7 @@ import { buildCategoryList, buildSubcategoryList } from '../lib/catalogService';
 // не точность этой оценки.
 // ─────────────────────────────────────────────────────────────────────────
 
-const SEARCH_CIRCLE_SIZE = 38;
 const HEADER_CONTENT_HEIGHT = 52;
-const MAIN_CHIP_ROW_HEIGHT = 52;
 
 // Типовые высоты строк списка — используются только для оценки высоты
 // последней секции (footerSpacerHeight), не для реальной раскладки.
@@ -72,41 +68,6 @@ const EST_SUBHEADER_H = 34;
 const EST_EMPTY_ROW_H = 60;
 
 const keyExtractorRow = (item) => item.key;
-
-// Верхняя строка навигации — "Все / Напитки / Еда / Десерты". React.memo —
-// чтобы не перерисовываться, когда меняется что-то не связанное с ней самой
-// (например, открылось поле поиска).
-const MainCategoryBar = React.memo(function MainCategoryBar({ chips, activeId, onSelect, hPad }) {
-  const listRef = useRef(null);
-
-  useEffect(() => {
-    const index = chips.findIndex(item => item.id === activeId);
-    if (index >= 0) {
-      listRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0.5 });
-    }
-  }, [activeId, chips]);
-
-  return (
-    <View style={styles.categoryBar}>
-      <FlatList
-        ref={listRef}
-        horizontal
-        data={chips}
-        keyExtractor={item => item.id}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingLeft: hPad, paddingRight: hPad + 16, alignItems: 'center' }}
-        ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
-        style={{ height: MAIN_CHIP_ROW_HEIGHT }}
-        onScrollToIndexFailed={({ index }) => {
-          setTimeout(() => listRef.current?.scrollToIndex?.({ index, animated: true, viewPosition: 0.5 }), 80);
-        }}
-        renderItem={({ item }) => (
-          <Chip variant="main" label={item.label} active={activeId === item.id} onPress={() => onSelect(item.id)} />
-        )}
-      />
-    </View>
-  );
-});
 
 // Строка под-категорий внутри одного раздела — второй, менее выразительный
 // уровень навигации. Фильтрует только товары текущего раздела.
@@ -135,10 +96,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 
   const [activeCategory, setActiveCategory] = useState('all');
   const [subFilters, setSubFilters] = useState({});
-  const [query, setQuery] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
-  const searchInputRef = useRef(null);
   const { width, height: windowHeight } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const hPad = getHorizontalPadding(width);
@@ -163,23 +121,6 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
   useEffect(() => { mainCategoriesRef.current = mainCategories; }, [mainCategories]);
   useEffect(() => () => { if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current); }, []);
 
-  const toggleSearch = () => {
-    setSearchOpen(prev => {
-      const next = !prev;
-      if (!next) setQuery('');
-      return next;
-    });
-  };
-
-  useEffect(() => {
-    if (searchOpen) {
-      const timer = setTimeout(() => searchInputRef.current?.focus?.(), 50);
-      return () => clearTimeout(timer);
-    }
-  }, [searchOpen]);
-
-  const normalizedQuery = query.trim().toLowerCase();
-
   const listData = useMemo(() => {
     // Зависит ТОЛЬКО от данных и фильтров — ни scrollY, ни activeCategory
     // сюда не примешиваются: позиция скролла не имеет отношения к тому,
@@ -187,18 +128,11 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
     const rows = [];
 
     mainCategories.forEach(mainCat => {
-      const itemsInCategory = products.filter(product => {
-        if (product.menuCategory !== mainCat) return false;
-        if (!normalizedQuery) return true;
-        return (
-          product.name.toLowerCase().includes(normalizedQuery) ||
-          (product.description || '').toLowerCase().includes(normalizedQuery)
-        );
-      });
+      const itemsInCategory = products.filter(product => product.menuCategory === mainCat);
       if (!itemsInCategory.length) return;
 
       const subcats = buildSubcategoryList(products, mainCat);
-      const activeSub = normalizedQuery ? 'all' : (subFilters[mainCat] || 'all');
+      const activeSub = subFilters[mainCat] || 'all';
 
       rows.push({
         type: 'mainHeader',
@@ -253,7 +187,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
     });
 
     return rows;
-  }, [normalizedQuery, products, mainCategories, subFilters]);
+  }, [products, mainCategories, subFilters]);
 
   useEffect(() => { listDataRef.current = listData; }, [listData]);
 
@@ -522,17 +456,16 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
   const listEmptyComponent = useMemo(() => (
     <View style={{ paddingHorizontal: hPad, paddingTop: spacing.xl }}>
       <EmptyState
-        icon={products.length ? 'search-outline' : 'cafe-outline'}
-        title={products.length ? 'Ничего не найдено' : 'Меню загружается'}
+        icon="cafe-outline"
+        title={products.length ? 'Здесь пока пусто' : 'Меню загружается'}
         subtitle={
-          !products.length
-            ? 'Если меню долго не появляется — проверьте подключение к интернету.'
-            : query ? `По запросу «${query}» ничего нет` : 'В этой категории пока пусто'
+          products.length
+            ? 'В этой категории пока пусто'
+            : 'Если меню долго не появляется — проверьте подключение к интернету.'
         }
-        action={products.length ? <PrimaryButton label="Сбросить поиск" onPress={() => setQuery('')} /> : undefined}
       />
     </View>
-  ), [hPad, products.length, query]);
+  ), [hPad, products.length]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -541,18 +474,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
           а paddingTop только у внешнего контейнера отвечает за safe area. */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerRow}>
-          <View style={styles.headerSide}>
-            <TouchableOpacity
-              onPress={toggleSearch}
-              style={styles.searchCircle}
-              accessibilityRole="button"
-              accessibilityLabel={searchOpen ? 'Закрыть поиск' : 'Открыть поиск'}
-              hitSlop={8}
-              activeOpacity={0.75}
-            >
-              <Ionicons name={searchOpen ? 'close' : 'search'} size={17} color={colors.accent} style={styles.searchIcon} />
-            </TouchableOpacity>
-          </View>
+          <View style={styles.headerSide} />
           <View style={styles.brandRow}>
             <Image source={require('../assets/logo-mark.png')} style={styles.brandLogo} resizeMode="contain" />
             <View style={styles.brandTextCol}>
@@ -563,28 +485,6 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
           <View style={styles.headerSide} />
         </View>
       </View>
-
-      {searchOpen && (
-        <View style={[styles.searchBox, { marginHorizontal: hPad, marginTop: spacing.md }]}>
-          <Ionicons name="search-outline" size={17} color={colors.textSecondary} style={{ marginRight: spacing.sm }} />
-          <TextInput
-            ref={searchInputRef}
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Поиск напитков и блюд"
-            returnKeyType="search"
-            style={styles.searchInput}
-            placeholderTextColor={colors.textMuted}
-          />
-          {query !== '' && (
-            <TouchableOpacity onPress={() => setQuery('')} accessibilityLabel="Очистить поиск">
-              <Text style={{ color: colors.textMuted, fontSize: 18 }}>×</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-
-      <MainCategoryBar chips={mainChips} activeId={activeCategory} onSelect={jumpToCategory} hPad={hPad} />
 
       <FlatList
         ref={mainListRef}
@@ -629,21 +529,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerSide: {
-    width: SEARCH_CIRCLE_SIZE,
+    // Пустая боковая колонка, чтобы логотип оставался по центру шапки.
+    width: 38,
     alignItems: 'flex-start',
     justifyContent: 'center',
-  },
-  searchCircle: {
-    width: SEARCH_CIRCLE_SIZE,
-    height: SEARCH_CIRCLE_SIZE,
-    borderRadius: SEARCH_CIRCLE_SIZE / 2,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  searchIcon: {
-    marginLeft: 1,
-    marginTop: 1,
   },
   brandRow: {
     flex: 1,
@@ -675,24 +564,6 @@ const styles = StyleSheet.create({
     lineHeight: 11,
     marginTop: 2,
     color: 'rgba(255,255,255,0.5)',
-  },
-  searchBox: {
-    backgroundColor: colors.surface1,
-    borderRadius: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 48,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: colors.textPrimary,
-  },
-  categoryBar: {
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
   },
   subchipRow: {
     marginTop: spacing.sm,
