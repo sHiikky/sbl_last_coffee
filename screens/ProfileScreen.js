@@ -8,21 +8,16 @@ import ScreenHeader from '../components/ScreenHeader';
 import DarkProfileCard from '../components/profile/DarkProfileCard';
 import LoyaltyTeaser from '../components/profile/LoyaltyTeaser';
 import ProfileMenuGroup from '../components/profile/ProfileMenuGroup';
+import AuthPrompt from '../components/profile/AuthPrompt';
+import { formatPhone } from './LoginScreen';
 import { colors, radius, getHorizontalPadding, brand } from '../theme/tokens';
 import { getDaysUntilNextMilestone } from '../loyalty/loyaltySelectors';
 import { LOYALTY_CONFIG } from '../loyalty/loyaltyConfig';
 import useBonusAccount from '../hooks/useBonusAccount';
 
-const USER = {
-  name: 'Анна Иванова',
-  email: 'anna@mail.ru',
-  status: 'STANDARD',
-  avatarSource: null,
-};
-
-export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = [], orderHistory = [], loyaltyState }) {
+export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = [], orderHistory = [], loyaltyState, account, onLogout }) {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
   const isFocused = useIsFocused();
 
@@ -48,15 +43,18 @@ export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = 
 
   const goToLoyalty = () => navigation.navigate('Loyalty');
 
-  const onLogout = () => {
+  const handleLogout = () => {
     Haptics.selectionAsync();
+    onLogout?.();
   };
 
+  const goToLogin = () => navigation.navigate('Login');
   const goToOrderHistory = () => navigation.navigate('OrderHistory');
+  const goToFavorites = () => navigation.navigate('Favorites');
 
   const menuItems = [
     { icon: 'cube-outline', title: 'Мои заказы', subtitle: 'История и статусы', onPress: goToOrderHistory },
-    { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые напитки', badge: favoriteIds.length || undefined, onPress: onMenuItemPress },
+    { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые напитки', badge: favoriteIds.length || undefined, onPress: goToFavorites },
     { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Новинки и предложения', onPress: onMenuItemPress },
   ];
 
@@ -71,15 +69,23 @@ export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = 
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
       >
+        {!account ? (
+          // Без входа — только экран входа, ни карточки, ни меню.
+          <AuthPrompt
+            width={width}
+            height={height - tabBarHeight - insets.top - insets.bottom}
+            onPhone={goToLogin}
+          />
+        ) : (
+        <>
         <ScreenHeader title="Профиль" />
-
         <Animated.View style={{ opacity: fade, transform: [{ translateY }], paddingHorizontal: hPad }}>
           <View style={{ marginTop: 20 }}>
             <DarkProfileCard
-              name={USER.name}
-              email={USER.email}
-              status={USER.status}
-              avatarSource={USER.avatarSource}
+              name="Клиент SBL"
+              email={formatPhone(account.phone)}
+              status="STANDARD"
+              avatarSource={null}
               bonuses={bonusAccount.balance}
               loyaltyCurrent={loyaltyCurrent}
               loyaltyTarget={cycleLength}
@@ -102,7 +108,7 @@ export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = 
           <View style={styles.accountActions}>
             <TouchableOpacity
               style={styles.logoutButton}
-              onPress={onLogout}
+              onPress={handleLogout}
               accessibilityRole="button"
               accessibilityLabel="Выйти из аккаунта"
               activeOpacity={0.75}
@@ -113,6 +119,8 @@ export default function ProfileScreen({ navigation, tabBarHeight, favoriteIds = 
 
           <Text style={styles.footerSignature}>{brand.name} · {brand.tagline}</Text>
         </Animated.View>
+        </>
+        )}
       </ScrollView>
     </View>
   );

@@ -13,7 +13,6 @@ import { splitNameAndSize } from '../lib/catalogService';
 // Плавающая панель действий: 8 + кнопка 56 + 8, поднята над нижним краем на 12.
 const ACTION_BAR_HEIGHT = 72;
 const ACTION_BAR_GAP = 12;
-const SHEET_MAX_SHARE = 0.7; // шторка «Подробнее» занимает не больше 70% высоты экрана
 
 function sizeNumber(label) {
   const match = String(label || '').match(/\d+[.,]?\d*/);
@@ -28,11 +27,6 @@ function findVariants(products, product) {
   const list = same.some(p => p.id === product.id) ? same : [...same, product];
   if (list.length < 2) return [product];
   return [...list].sort((a, b) => sizeNumber(a.sizeLabel) - sizeNumber(b.sizeLabel));
-}
-
-function formatNutrition(value, unit) {
-  if (value === null) return '—';
-  return `${String(value).replace('.', ',')} ${unit}`;
 }
 
 // Раньше здесь был выбор размера/молока/температуры/добавок — в реальном
@@ -52,17 +46,14 @@ export default function ProductScreen({
   const { product: openedProduct } = route.params;
   const [selectedId, setSelectedId] = useState(openedProduct.id);
   const variants = useMemo(() => findVariants(products, openedProduct), [products, openedProduct]);
-  // Активный вариант объёма: от него зависят цена, КБЖУ и что уходит в корзину.
+  // Активный вариант объёма: от него зависят цена и что уходит в корзину.
   const product = variants.find(v => v.id === selectedId) || openedProduct;
   const insets = useSafeAreaInsets();
-  const { width, height: windowHeight } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
   const [added, setAdded] = useState(false);
-  const [sheetMounted, setSheetMounted] = useState(false);
   // Анимация открытия и закрытия экрана: контент плавно всплывает, фото слегка «оседает».
   const openAnim = useRef(new Animated.Value(0)).current;
-  // Шторка «Подробнее»: выезжает снизу вверх.
-  const sheetAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(openAnim, { toValue: 1, duration: 360, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
@@ -81,7 +72,6 @@ export default function ProductScreen({
 
   const barBottom = insets.bottom + ACTION_BAR_GAP;
   const barTotal = ACTION_BAR_HEIGHT + barBottom;
-  const sheetMaxHeight = windowHeight * SHEET_MAX_SHARE;
 
   const handleShare = () => {
     Share.share({ message: `${product.name} — ${formatPrice(price)} · SBL` }).catch(() => {});
@@ -105,21 +95,7 @@ export default function ProductScreen({
     });
   };
 
-  const openSheet = () => {
-    Haptics.selectionAsync();
-    setSheetMounted(true);
-    Animated.timing(sheetAnim, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
-  };
-
-  const closeSheet = () => {
-    Animated.timing(sheetAnim, { toValue: 0, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
-      if (finished) setSheetMounted(false);
-    });
-  };
-
   const goToCart = () => navigation.navigate('Tabs', { screen: 'CartTab' });
-
-  const nutrition = product.nutrition;
 
   return (
     <Animated.View
@@ -147,6 +123,11 @@ export default function ProductScreen({
         <View style={[styles.body, { paddingHorizontal: hPad }]}>
           {!!kicker && <Text style={styles.kicker} numberOfLines={1}>{kicker}</Text>}
           <Text style={styles.name}>{displayName}</Text>
+          {!!product.description && <Text style={styles.description}>{product.description}</Text>}
+
+          {variants.length < 2 && product.menuVolumes?.length > 1 && (
+            <Text style={styles.metaLine}>Объёмы: {product.menuVolumes.join(' / ')} мл</Text>
+          )}
 
           {variants.length > 1 && (
             <View style={styles.block}>
@@ -171,33 +152,6 @@ export default function ProductScreen({
             </View>
           )}
 
-          {/* КБЖУ: значение крупно, подпись под ним. Показывается только там, где
-              эти данные есть в СБИС. */}
-          {nutrition && (
-            <View style={styles.nutritionRow}>
-              {[
-                [formatNutrition(nutrition.calories, 'ккал'), 'энергия'],
-                [formatNutrition(nutrition.protein, 'г'), 'белки'],
-                [formatNutrition(nutrition.fat, 'г'), 'жиры'],
-                [formatNutrition(nutrition.carbs, 'г'), 'углеводы'],
-              ].map(([value, label]) => (
-                <View key={label} style={styles.nutritionCell}>
-                  <Text style={styles.nutritionValue} numberOfLines={1}>{value}</Text>
-                  <Text style={styles.nutritionLabel}>{label}</Text>
-                </View>
-              ))}
-            </View>
-          )}
-
-          <Pressable
-            onPress={openSheet}
-            style={({ pressed }) => [styles.moreButton, pressed && { opacity: 0.7 }]}
-            accessibilityRole="button"
-            accessibilityLabel="Подробнее о товаре"
-          >
-            <Text style={styles.moreText}>Подробнее</Text>
-            <Ionicons name="chevron-up" size={16} color={colors.textPrimary} />
-          </Pressable>
         </View>
       </ScrollView>
 
@@ -257,40 +211,6 @@ export default function ProductScreen({
         </Pressable>
       </View>
 
-      {/* Шторка «Подробнее»: затемнение + панель, выезжающая снизу вверх */}
-      {sheetMounted && (
-        <View style={StyleSheet.absoluteFill}>
-          <Animated.View style={[styles.backdrop, { opacity: sheetAnim }]}>
-            <Pressable style={StyleSheet.absoluteFill} onPress={closeSheet} accessibilityRole="button" accessibilityLabel="Закрыть" />
-          </Animated.View>
-          <Animated.View
-            style={[
-              styles.sheet,
-              {
-                maxHeight: sheetMaxHeight,
-                paddingHorizontal: hPad,
-                paddingBottom: insets.bottom + spacing.lg,
-                transform: [{ translateY: sheetAnim.interpolate({ inputRange: [0, 1], outputRange: [sheetMaxHeight, 0] }) }],
-              },
-            ]}
-          >
-            <View style={styles.sheetHandle} />
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle} numberOfLines={2}>{displayName}</Text>
-              <TouchableOpacity onPress={closeSheet} style={styles.sheetClose} accessibilityRole="button" accessibilityLabel="Закрыть">
-                <Ionicons name="close" size={22} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {!!product.description ? (
-                <Text style={styles.sheetText}>{product.description}</Text>
-              ) : (
-                <Text style={[styles.sheetText, { color: colors.textMuted }]}>Описание для этой позиции пока не добавлено.</Text>
-              )}
-            </ScrollView>
-          </Animated.View>
-        </View>
-      )}
     </Animated.View>
   );
 }
@@ -318,7 +238,8 @@ const styles = StyleSheet.create({
 
   body: { paddingTop: spacing.xl },
   kicker: { fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: colors.textSecondary },
-  name: { ...typography.hero, fontSize: 27, color: colors.textPrimary, fontWeight: '700', marginTop: 6, marginBottom: 14 },
+  name: { ...typography.hero, fontSize: 27, color: colors.textPrimary, fontWeight: '700', marginTop: 6, marginBottom: 8 },
+  description: { ...typography.body, lineHeight: 22, color: colors.textSecondary, marginBottom: spacing.lg },
 
   block: { marginBottom: spacing.lg },
   blockLabel: { fontSize: 12, fontWeight: '600', color: colors.textSecondary, marginBottom: spacing.sm },
@@ -343,25 +264,7 @@ const styles = StyleSheet.create({
   variantText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
   variantTextActive: { fontWeight: '700', color: colors.textPrimary },
 
-  // КБЖУ: четыре равные колонки, значение крупно, подпись мелко под ним.
-  nutritionRow: { flexDirection: 'row', marginBottom: spacing.lg },
-  nutritionCell: { flex: 1, alignItems: 'center' },
-  nutritionValue: { fontSize: 20, fontWeight: '600', color: colors.textPrimary },
-  nutritionLabel: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
-
-  moreButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 44,
-    paddingHorizontal: 18,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface2,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  moreText: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
+  metaLine: { fontSize: 14, color: colors.textSecondary, marginBottom: spacing.md },
 
   actionBar: {
     position: 'absolute',
@@ -396,29 +299,4 @@ const styles = StyleSheet.create({
     ...shadow.button,
   },
   pillText: { ...typography.cardTitle, fontSize: 17, fontWeight: '700', color: colors.textOnDark },
-
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(12,12,12,0.45)' },
-  sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: spacing.md,
-    borderTopLeftRadius: radius.xlarge,
-    borderTopRightRadius: radius.xlarge,
-    backgroundColor: colors.surface2,
-    ...shadow.level3,
-  },
-  sheetHandle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: 'rgba(12,12,12,0.15)', marginBottom: spacing.md },
-  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, marginBottom: spacing.md },
-  sheetTitle: { ...typography.sectionTitle, flex: 1, color: colors.textPrimary },
-  sheetClose: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(12,12,12,0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sheetText: { ...typography.body, lineHeight: 22.5, color: colors.textSecondary },
 });

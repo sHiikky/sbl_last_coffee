@@ -48,7 +48,6 @@ function ProductCard({ product, width = 152, onPress, qty = 0, onIncrement, onDe
       <View style={styles.body}>
         <View>
           <Text style={styles.title} numberOfLines={2}>{name}</Text>
-          {!!product.sizeLabel && <Text style={styles.sizeLabel} numberOfLines={1}>{product.sizeLabel}</Text>}
         </View>
         <View style={styles.footer}>
           <Text style={styles.price} numberOfLines={1}>{formatPrice(product.price)}</Text>
@@ -79,7 +78,6 @@ const styles = StyleSheet.create({
   // строка «цена + шеврон» остаётся прижатой к низу карточки.
   body: { flex: 1, justifyContent: 'space-between', paddingTop: 6, paddingRight: CARD_PADDING - 4, paddingBottom: 6, paddingLeft: CARD_PADDING },
   title: { fontSize: 16, lineHeight: 20, fontWeight: '700', color: colors.textPrimary },
-  sizeLabel: { fontSize: 12, lineHeight: 16, color: colors.textSecondary, marginTop: 1 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   price: { flexShrink: 1, fontSize: 15, fontWeight: '800', color: colors.textPrimary },
   chevronHit: { width: 44, height: 36, marginVertical: -4, marginRight: -6, alignItems: 'center', justifyContent: 'center' },

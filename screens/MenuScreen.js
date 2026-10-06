@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ScrollView, Image, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import QuickProductCard from '../components/QuickProductCard';
 import EmptyState from '../components/EmptyState';
+import ScreenHeader from '../components/ScreenHeader';
 import Chip from '../components/Chip';
 import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
 import { cartKey } from '../data/products';
-import { buildCategoryList, buildSubcategoryList } from '../lib/catalogService';
+import { buildCategoryList, buildSubcategoryList, collapseSizeVariants } from '../lib/catalogService';
 
 // ─────────────────────────────────────────────────────────────────────────
 // АРХИТЕКТУРА SCROLL NAVIGATION
@@ -58,11 +59,11 @@ import { buildCategoryList, buildSubcategoryList } from '../lib/catalogService';
 // не точность этой оценки.
 // ─────────────────────────────────────────────────────────────────────────
 
-const HEADER_CONTENT_HEIGHT = 52;
 
 // Типовые высоты строк списка — используются только для оценки высоты
 // последней секции (footerSpacerHeight), не для реальной раскладки.
-const EST_MAIN_HEADER_H = 54;
+const MAIN_HEADER_GAP = spacing.md;
+const EST_MAIN_HEADER_H = MAIN_HEADER_GAP;
 const EST_SUBCHIPS_H = 46;
 const EST_SUBHEADER_H = 34;
 const EST_EMPTY_ROW_H = 60;
@@ -79,9 +80,9 @@ const SubcategoryChips = React.memo(function SubcategoryChips({ subcats, activeS
       contentContainerStyle={{ paddingHorizontal: hPad, alignItems: 'center', gap: spacing.xs }}
       style={styles.subchipRow}
     >
-      <Chip small label="Все" active={activeSub === 'all'} onPress={() => onSelect('all')} />
+      <Chip small variant="main" label="Все" active={activeSub === 'all'} onPress={() => onSelect('all')} />
       {subcats.map(subcat => (
-        <Chip key={subcat} small label={subcat} active={activeSub === subcat} onPress={() => onSelect(subcat)} />
+        <Chip key={subcat} small variant="main" label={subcat} active={activeSub === subcat} onPress={() => onSelect(subcat)} />
       ))}
     </ScrollView>
   );
@@ -128,7 +129,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
     const rows = [];
 
     mainCategories.forEach(mainCat => {
-      const itemsInCategory = products.filter(product => product.menuCategory === mainCat);
+      const itemsInCategory = collapseSizeVariants(products.filter(product => product.menuCategory === mainCat));
       if (!itemsInCategory.length) return;
 
       const subcats = buildSubcategoryList(products, mainCat);
@@ -384,14 +385,9 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 
   const renderItem = useCallback(({ item }) => {
     if (item.type === 'mainHeader') {
-      return (
-        <View style={[styles.mainHeaderRow, { paddingHorizontal: hPad }]}>
-          <Text style={styles.mainHeaderTitle}>{item.label}</Text>
-          <Text style={styles.mainHeaderCount}>
-            {item.count} {item.count === 1 ? 'позиция' : item.count < 5 ? 'позиции' : 'позиций'}
-          </Text>
-        </View>
-      );
+      // Название раздела и счётчик позиций не показываем, но сама строка нужна:
+      // по ней работает прокрутка к разделу и scroll-spy. Остаётся только отступ.
+      return <View style={styles.mainHeaderGap} />;
     }
     if (item.type === 'subchips') {
       return (
@@ -469,21 +465,8 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header — фиксированная чёрная шторка, не часть скролла. Внутренний
-          ряд имеет собственную фиксированную высоту (HEADER_CONTENT_HEIGHT),
-          а paddingTop только у внешнего контейнера отвечает за safe area. */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerSide} />
-          <View style={styles.brandRow}>
-            <Image source={require('../assets/logo-mark.png')} style={styles.brandLogo} resizeMode="contain" />
-            <View style={styles.brandTextCol}>
-              <Text style={styles.brandTitle}>SBL</Text>
-              <Text style={styles.brandSubtitle}>COFFEE</Text>
-            </View>
-          </View>
-          <View style={styles.headerSide} />
-        </View>
+      <View style={{ paddingTop: insets.top }}>
+        <ScreenHeader title="Меню" />
       </View>
 
       <FlatList
@@ -513,79 +496,11 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 }
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: colors.surface3,
-    paddingHorizontal: spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 8,
-    zIndex: 2,
-  },
-  headerRow: {
-    height: HEADER_CONTENT_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerSide: {
-    // Пустая боковая колонка, чтобы логотип оставался по центру шапки.
-    width: 38,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  brandRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 9,
-  },
-  brandLogo: {
-    width: 22,
-    height: 22,
-    tintColor: '#fff',
-  },
-  brandTextCol: {
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  brandTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 3,
-    lineHeight: 16,
-    color: colors.textOnDark,
-  },
-  brandSubtitle: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 3,
-    lineHeight: 11,
-    marginTop: 2,
-    color: 'rgba(255,255,255,0.5)',
-  },
   subchipRow: {
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
   },
-  mainHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
-  },
-  mainHeaderTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.textSecondary,
-    letterSpacing: 0.2,
-  },
-  mainHeaderCount: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
+  mainHeaderGap: { height: MAIN_HEADER_GAP },
   subsectionTitle: {
     fontSize: 13,
     fontWeight: '700',

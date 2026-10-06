@@ -410,7 +410,7 @@ export default function CartScreen({
   if (items.length === 0) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
-        <ScreenHeader title="Корзина" showEyebrow={false} showLine={false} />
+        <ScreenHeader title="Корзина" />
         {recoveryNoticeBanner}
         <View style={{ flex: 1, justifyContent: 'center' }}>
           <EmptyState
@@ -427,7 +427,7 @@ export default function CartScreen({
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={{ paddingTop: insets.top }}>
-        <ScreenHeader title="Корзина" showEyebrow={false} showLine={false} />
+        <ScreenHeader title="Корзина" />
         {recoveryNoticeBanner}
       </View>
 

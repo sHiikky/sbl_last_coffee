@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppScreen from '../components/AppScreen';
 import HoloLine from '../components/HoloLine';
-import HoloRing from '../components/HoloRing';
 import ProductCard from '../components/ProductCard';
 import EmptyState from '../components/EmptyState';
 import PrimaryButton from '../components/PrimaryButton';
@@ -14,10 +13,12 @@ import ActiveOrderBanner from '../components/home/ActiveOrderBanner';
 import PromoBanner from '../components/home/PromoBanner';
 import { colors, spacing, radius, shadow, typography, getHorizontalPadding, brand } from '../theme/tokens';
 import { cartKey, getProductById } from '../data/products';
-import { buildCategoryList } from '../lib/catalogService';
 import useBonusAccount from '../hooks/useBonusAccount';
 import { getLevelProgress } from '../lib/bonusConfig';
 import { getActivePromoBanner } from '../lib/promoService';
+
+const LOGO_WIDTH = 66;
+const LOGO_HEIGHT = LOGO_WIDTH * (584 / 1233); // пропорции assets/logo-mark.png
 
 function greeting() {
   const h = new Date().getHours();
@@ -25,28 +26,6 @@ function greeting() {
   if (h < 12) return { title: 'Начнём день с блеска' };
   if (h < 18) return { title: 'Новое зерно уже ждёт вас' };
   return { title: 'Время притормозить и выпить кофе' };
-}
-
-function HomeCategoryNav({ categories, hPad, onSelectCategory }) {
-  return (
-    <View style={[styles.homeNav, { paddingHorizontal: hPad }]}>
-      {categories.map(item => {
-        const active = item.id === 'forYou';
-        return (
-          <TouchableOpacity
-            key={item.id}
-            onPress={() => onSelectCategory(item)}
-            hitSlop={8}
-            style={styles.homeNavItem}
-            accessibilityRole="button"
-            accessibilityState={{ selected: active }}
-          >
-            <Text style={[styles.homeNavText, active && styles.homeNavTextActive]}>{item.label}</Text>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
 }
 
 export default function HomeScreen({ navigation, cart = {}, products = [], onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight, loyaltyState, activeOrder, onOpenActiveOrder, onActiveOrderFinished }) {
@@ -68,12 +47,6 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
     else navigation.navigate('MenuTab');
   };
 
-  // Разделы меню — реальные категории СБИС, а не захардкоженный список.
-  const homeCategories = useMemo(() => {
-    const ids = buildCategoryList(products);
-    return [{ id: 'forYou', label: 'Для вас' }, ...ids.map(id => ({ id, label: id, targetCategory: id }))];
-  }, [products]);
-
   // "Быстрый выбор" — пока ни один товар вручную не отмечен is_quick_pick в
   // Supabase (см. schema), показываем первые товары из меню как разумную
   // заглушку, а не пустой экран.
@@ -87,20 +60,11 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
   const defaultQty = (productId) => cart[cartKey(productId)]?.qty || 0;
   const decrementDefault = (productId) => onDecrement?.(cartKey(productId));
   const goMenu = (category = 'all') => navigation.navigate('MenuTab', { category });
-  const selectHomeCategory = (item) => {
-    if (item.id === 'forYou') return;
-    goMenu(item.targetCategory);
-  };
 
   return (
     <AppScreen bottomInset={tabBarHeight}>
-      <View style={[styles.logoRow, { paddingHorizontal: hPad }]}>
+      <View style={[styles.logoRow, { paddingHorizontal: hPad, paddingTop: hPad }]}>
         <Image source={require('../assets/logo-mark.png')} style={styles.logo} resizeMode="contain" />
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileTab')} accessibilityRole="button" accessibilityLabel="Открыть профиль">
-          <HoloRing size={46}>
-            <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>АИ</Text>
-          </HoloRing>
-        </TouchableOpacity>
       </View>
 
       <View style={[styles.headerRow, { paddingHorizontal: hPad }]}>
@@ -126,10 +90,7 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
       <View style={{ height: spacing.md }} />
       <HoloLine marginHorizontal={hPad} height={5} />
 
-      <View style={{ height: spacing.xl }} />
-      <HomeCategoryNav categories={homeCategories} hPad={hPad} onSelectCategory={selectHomeCategory} />
-
-      <View style={{ marginHorizontal: hPad, marginTop: spacing.lg }}>
+      <View style={{ marginHorizontal: hPad, marginTop: spacing.xl }}>
         <HomeLoyaltyCard
           bonuses={bonusAccount.balance}
           rate={bonusLevel.rate}
@@ -208,12 +169,16 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
 
 const styles = StyleSheet.create({
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
-  logo: { width: 64, height: 30 },
+  // У PNG прозрачные поля (слева 74 из 1233 px, сверху 35 из 584 px), поэтому
+  // отрицательные отступы выравнивают именно видимые края логотипа по сетке:
+  // слева и сверху от safe area получается ровно hPad.
+  logo: {
+    width: LOGO_WIDTH,
+    height: LOGO_HEIGHT,
+    marginLeft: -LOGO_WIDTH * (74 / 1233),
+    marginTop: -LOGO_HEIGHT * (35 / 584),
+  },
   headerRow: { flexDirection: 'row' },
-  homeNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 48 },
-  homeNavItem: { alignItems: 'center', justifyContent: 'center', minWidth: 54 },
-  homeNavText: { fontSize: 14, fontWeight: '500', color: colors.textMuted },
-  homeNavTextActive: { color: colors.textPrimary, fontWeight: '600' },
   editorial: { marginTop: spacing.xl, backgroundColor: colors.surface3, borderRadius: radius.large, overflow: 'hidden' },
   editorialBody: { padding: spacing.lg, flexDirection: 'row', alignItems: 'center' },
   editorialEyebrow: { fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', marginBottom: 7, fontWeight: '700' },

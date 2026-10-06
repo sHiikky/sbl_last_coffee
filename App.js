@@ -15,12 +15,15 @@ import ProductScreen from './screens/ProductScreen';
 import CartScreen from './screens/CartScreen';
 import OrderSuccessScreen from './screens/OrderSuccessScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import FavoritesScreen from './screens/FavoritesScreen';
+import LoginScreen from './screens/LoginScreen';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import LoyaltyScreen from './screens/LoyaltyScreen';
 import LoyaltyRewardModal from './components/loyalty/LoyaltyRewardModal';
 import { HomeIcon, MenuIcon, CartIcon, ProfileIcon } from './navigation/TabIcons';
 import { colors } from './theme/tokens';
 import { cartKey, getProductById } from './data/products';
+import { getAvailableRewards } from './loyalty/loyaltyService';
 import { fetchVisibleProducts } from './lib/catalogService';
 import useLoyaltyState from './loyalty/useLoyaltyState';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
@@ -55,6 +58,7 @@ const pageSlideInterpolator = ({ current }) => ({
 const STORAGE_KEYS = {
   cart: 'sbl_cart',
   favorites: 'sbl_favorites',
+  account: 'sbl_account', // тестовый вход по телефону, см. screens/LoginScreen.js
   orders: 'sbl_orders',
   activeOrder: 'sbl_active_order',
 };
@@ -79,6 +83,8 @@ function TabBarIcon({ route, focused, cartCount }) {
 }
 
 function Tabs({
+  account,
+  onLogout,
   cart,
   favorites,
   orderHistory,
@@ -217,6 +223,8 @@ function Tabs({
             orderHistory={orderHistory}
             onRepeatOrder={onRepeatOrder}
             loyaltyState={loyaltyState}
+            account={account}
+            onLogout={onLogout}
           />
         )}
       </Tab.Screen>
@@ -225,6 +233,9 @@ function Tabs({
 }
 
 function RootStack({
+  account,
+  onLogin,
+  onLogout,
   cart,
   favorites,
   orderHistory,
@@ -254,6 +265,8 @@ function RootStack({
         {props => (
           <Tabs
             {...props}
+            account={account}
+            onLogout={onLogout}
             cart={cart}
             favorites={favorites}
             orderHistory={orderHistory}
@@ -312,6 +325,26 @@ function RootStack({
         )}
       </Stack.Screen>
 
+      <Stack.Screen name="Favorites">
+        {props => (
+          <FavoritesScreen
+            {...props}
+            favoriteIds={favorites}
+            products={products}
+            cart={cart}
+            onAddToCart={onAddToCart}
+            onDecrement={onDecrement}
+          />
+        )}
+      </Stack.Screen>
+
+      <Stack.Screen
+        name="Login"
+        options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true }}
+      >
+        {props => <LoginScreen {...props} onLogin={onLogin} />}
+      </Stack.Screen>
+
       <Stack.Screen
         name="Loyalty"
         options={{ presentation: 'card', animation: 'slide_from_right', gestureEnabled: true }}
@@ -334,6 +367,7 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [cart, setCart] = useState({});
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [account, setAccount] = useState(null);
   const [orderHistory, setOrderHistory] = useState([]);
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
@@ -345,6 +379,13 @@ export default function App() {
   // на каждый "пока не знаем" (см. applyCheckoutRecoveryResult ниже).
   const [checkoutRecoveryNotice, setCheckoutRecoveryNotice] = useState(null);
   const loyalty = useLoyaltyState(orderHistory);
+  // applyCheckoutRecoveryResult вызывается из таймеров/слушателей, созданных
+  // на прошлых рендерах, — им нужны актуальные награды и каталог, а не
+  // замкнутые в старом рендере.
+  const loyaltyRef = useRef(loyalty);
+  loyaltyRef.current = loyalty;
+  const productsRef = useRef(products);
+  productsRef.current = products;
 
   // Block 1.3, п.2: recovery теперь запускается из нескольких мест (старт,
   // AppState foreground, фокус экрана корзины, bounded-retry таймеры) — все
@@ -373,9 +414,46 @@ export default function App() {
   // которых стоит проверить recovery — сам lookup, его интерпретация и все
   // побочные эффекты (setActiveOrder/setCart/уведомление) остаются
   // централизованными здесь, в единственном controller'е (Block 1.4, п.3).
+  // Заказ создался на сервере, но ответ потерялся и нашёлся через recovery:
+  // обычный путь (CartScreen -> onRedeemReward + placeOrder) не отработал, и
+  // без этого награда осталась бы доступной повторно, а день не попал бы в
+  // серию. Делаем то же, что и при нормальном оформлении: гасим награду, если
+  // сервер её применил, и заносим заказ в локальную историю (из неё loyalty
+  // считает посещения). Повторный вызов безопасен: история дедуплицируется
+  // по id заказа, а погашенная награда больше не 'available'.
+  const applyRecoveredOrder = (result) => {
+    const order = result?.order;
+    if (!order?.id) return;
+
+    if (order.reward_applied) {
+      const reward = getAvailableRewards(loyaltyRef.current?.rewards || [])[0];
+      if (reward) loyaltyRef.current.redeemReward(reward.id);
+    }
+
+    const items = (result.attemptItems || []).map(item => ({
+      key: cartKey(item.id),
+      id: item.id,
+      qty: item.qty,
+      unitPrice: getProductById(productsRef.current, item.id)?.price ?? 0,
+    }));
+    const orderRecord = {
+      id: order.id,
+      supabaseOrderId: order.id,
+      orderNumber: order.order_number ? `№${order.order_number}` : 'Заказ',
+      createdAt: order.created_at || new Date().toISOString(),
+      total: Number(order.total || 0) - Number(order.bonus_redeemed || 0),
+      itemCount: items.reduce((sum, item) => sum + item.qty, 0),
+      items,
+    };
+    setOrderHistory(prev => (
+      prev.some(existing => existing.id === orderRecord.id) ? prev : [orderRecord, ...prev].slice(0, 12)
+    ));
+  };
+
   const applyCheckoutRecoveryResult = (result) => {
     switch (result?.outcome) {
       case CHECKOUT_RECOVERY_OUTCOME.FOUND_ACTIVE: {
+        applyRecoveredOrder(result);
         setActiveOrder({ id: result.order.id, orderNumber: result.order.order_number, status: result.order.status });
         // Корзину чистим, только если она не изменилась с момента исходной
         // попытки — иначе есть риск стереть то, что пользователь добавил
@@ -384,6 +462,7 @@ export default function App() {
         break;
       }
       case CHECKOUT_RECOVERY_OUTCOME.FOUND_TERMINAL: {
+        applyRecoveredOrder(result);
         // Заказ найден, но уже в финальном статусе (completed/cancelled) —
         // баннер "новый"/"готовится" не имеет смысла, activeOrder не
         // поднимаем. Попытка при этом всё равно разрешена (уже удалена из
@@ -487,6 +566,19 @@ export default function App() {
       });
   }, []);
 
+  // Тестовый вход по телефону (screens/LoginScreen.js): аккаунт только локальный.
+  // Выход не трогает корзину, избранное и историю — они привязаны к устройству,
+  // а не к аккаунту; Supabase-сессия покупателя анонимная и остаётся прежней.
+  const handleLogin = (nextAccount) => {
+    setAccount(nextAccount);
+    AsyncStorage.setItem(STORAGE_KEYS.account, JSON.stringify(nextAccount)).catch(() => {});
+  };
+
+  const handleLogout = () => {
+    setAccount(null);
+    AsyncStorage.removeItem(STORAGE_KEYS.account).catch(() => {});
+  };
+
   async function refreshActiveOrder() {
     try {
       const user = await getUserOrThrow();
@@ -511,6 +603,7 @@ export default function App() {
       STORAGE_KEYS.favorites,
       STORAGE_KEYS.orders,
       STORAGE_KEYS.activeOrder,
+      STORAGE_KEYS.account,
     ]).then(entries => {
       const map = Object.fromEntries(entries);
 
@@ -525,6 +618,7 @@ export default function App() {
       };
       restore(STORAGE_KEYS.cart, setCart);
       restore(STORAGE_KEYS.favorites, setFavoriteIds);
+      restore(STORAGE_KEYS.account, setAccount);
       restore(STORAGE_KEYS.orders, setOrderHistory);
       // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
       // сверит это с сервером сразу после старта и перезапишет при расхождении.
@@ -690,15 +784,19 @@ export default function App() {
         key,
         id: item.id,
         qty: item.qty,
-        unitPrice: item.unitPrice,
+        // Текущая цена из каталога, а не цена на момент прошлой покупки.
+        unitPrice: product.price,
         image: product.image,
         imageFit: product.imageFit,
         imagePosition: product.imagePosition,
         category: product.category,
+        menuCategory: product.menuCategory,
         name: product.name,
       };
     });
 
+    // Все позиции исчезли из меню — не стираем текущую корзину пустой.
+    if (!Object.keys(nextCart).length) return;
     setCart(nextCart);
   };
 
@@ -801,6 +899,9 @@ export default function App() {
           />
         ) : (
           <RootStack
+            account={account}
+            onLogin={handleLogin}
+            onLogout={handleLogout}
             cart={cart}
             favorites={favoriteIds}
             orderHistory={orderHistory}
