@@ -35,7 +35,7 @@ export default function OrderSuccessScreen({ order, onDone, onFinished }) {
   }, []);
 
   const { status: liveStatus, orderNumber: liveOrderNumber } = useOrderStatus(order?.supabaseOrderId, {
-    initialStatus: 'new',
+    initialStatus: order?.status || 'new',
     onFinished,
   });
   const status = liveStatus || 'new';

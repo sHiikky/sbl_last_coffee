@@ -35,6 +35,7 @@ export default function OrderHistoryCard({ order, products = [], onRepeat }) {
   const firstItem = order.items?.[0];
   const firstProduct = firstItem ? getProductById(products, firstItem.id) : null;
   const itemCount = order.itemCount ?? 0;
+  const statusLabels = { new: 'Принят', accepted: 'Подтверждён', preparing: 'Готовится', ready: 'Готов к выдаче', completed: 'Выдан', cancelled: 'Отменён' };
 
   return (
     <View style={styles.wrap}>
@@ -56,11 +57,12 @@ export default function OrderHistoryCard({ order, products = [], onRepeat }) {
 
         <View style={{ flex: 1, marginLeft: spacing.md }}>
           <Text style={styles.productLine} numberOfLines={1}>
-            {firstProduct?.name || 'Напиток SBL'}{itemCount ? ` · ${itemCount} ${pluralPositions(itemCount)}` : ''}
+            {firstProduct?.displayName || firstProduct?.name || firstItem?.name || 'Заказ SBL'}{itemCount ? ` · ${itemCount} ${pluralPositions(itemCount)}` : ''}
           </Text>
+          {!!statusLabels[order.status] && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: 5 }}>{statusLabels[order.status]}</Text>}
 
           <View style={styles.footerRow}>
-            <Text style={styles.price}>{order.total.toLocaleString('ru-RU')} ₽</Text>
+            <Text style={styles.price}>{Number(order.total || 0).toLocaleString('ru-RU')} ₽</Text>
             <Animated.View style={{ transform: [{ scale }] }}>
               <TouchableOpacity
                 style={styles.repeatButton}

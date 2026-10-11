@@ -1,0 +1,44 @@
+Integration updated 2026-10-12 (Asia/Tomsk).
+
+Working combined project: this directory, with the friend's visual design.
+Authoritative backend source was copied from APPPP/sbl_last_coffee-main:
+all six 20261005 migrations, Edge Function sources, config and current cashier.
+Old 20260911120000 migration is retained only in the ignored local backup.
+No remote migrations, function deployment, SQL writes or purchases were run.
+
+Real API integration:
+- public visible/available catalog; periodic and foreground refresh;
+- six-parameter create_order with quote, same-key retry and read-only recovery;
+- latest 100 server orders with server names/prices/items and current statuses;
+- shared bonus account, auth isolation, reconnect/foreground/periodic refresh;
+- server loyalty/entitlement snapshot, server-owned gift consumption;
+- unique order channels, missed-event recovery and terminal status protection;
+- accepted order stays successful if local attempt cleanup fails;
+- new cart quantities added during checkout survive its completion;
+- web errors are visible and recoverable without automatic purchases.
+
+Phone LoginScreen preserved byte-for-byte at owner's request. It remains a
+local placeholder accepting any code. No SMS or account recovery by phone.
+Customer API identity is the persistent anonymous Supabase session.
+
+Validation:
+- npm run check:integration: eight suites covering session concurrency,
+  shared reads, stale responses, offline/reconnect, customer order mapping,
+  order statuses, checkout double taps/storage failures, quote and recovery,
+  availability and loyalty. PASS.
+- Root runtime dependency versions match package-lock.json pinned versions.
+- Live API field probes for products/orders+order_items/bonus_accounts/promos
+  succeeded with GET limit=0. No customer records were exported.
+- Browser smoke: real catalog, product, add-to-cart, promo 210 -> 189, profile
+  and placeholder route, reload restoring cart; no console errors.
+- npm run build:check exports Web/Android/iOS JavaScript/Hermes bundles.
+
+Limits:
+No real production test order was created. Success/error checkout paths used
+controlled API doubles; cashier fulfilment/bonus settlement were not exercised
+against production in this session. SQL regressions require a running Docker
+engine; it is currently unavailable. Existing migration bytes are unchanged.
+Exporting bundles does not produce signed APK/IPA or test a physical device.
+
+Recovery backup: work/integration-backups/20261012-001127 (ignored by Git).
+Publication is recorded in the repository Git history.

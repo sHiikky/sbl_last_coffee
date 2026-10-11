@@ -5,7 +5,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "check:integration": "node work/verify-integration.cjs",
+    "build:check": "expo export --platform all --output-dir dist-integration"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -210,9 +210,17 @@
       <svg class="on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
       <svg class="off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
     </button>
+    <button class="logout-btn" id="stopListBtn">Стоп-лист</button>
     <button class="logout-btn" id="logoutBtn">Выйти</button>
   </div>
 
+  <section id="stopListPanel" class="hidden" style="padding:24px; background:var(--card)">
+    <h2>Доступность меню</h2>
+    <input id="stopListSearch" placeholder="Найти товар" aria-label="Найти товар" style="padding:12px;margin:12px 0;width:100%;max-width:400px">
+    <button id="stopListRefresh" class="logout-btn">Обновить</button>
+    <p id="stopListError" role="status"></p>
+    <div id="stopListRows"></div>
+  </section>
   <div class="board">
     <div>
       <div class="column-head new">
@@ -241,6 +249,38 @@
   var SUPABASE_KEY = 'sb_publishable_OD1Fh_a_qhnjKeMd30RQRA_WgpOXZwq';
   var db = null;
   var libReady = false;
+  var stopProducts = [];
+  var stopPanel = document.getElementById('stopListPanel');
+  var stopError = document.getElementById('stopListError');
+  async function loadStopList(){
+    stopError.textContent = 'Загружаем…';
+    var res = await db.from('products').select('id,name,display_name,is_available').eq('is_visible',true).eq('is_modifier',false).order('name');
+    if(res.error){ stopError.textContent = 'Не удалось загрузить меню.'; return; }
+    stopProducts = res.data || []; stopError.textContent = ''; renderStopList();
+  }
+  function renderStopList(){
+    var rows = document.getElementById('stopListRows'); rows.replaceChildren();
+    var query = document.getElementById('stopListSearch').value.toLowerCase();
+    stopProducts.filter(function(p){return (p.display_name || p.name).toLowerCase().includes(query);}).forEach(function(p){
+      var row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px;border-bottom:1px solid #ddd';
+      var label = document.createElement('span'); label.textContent = p.display_name || p.name;
+      var button = document.createElement('button'); button.className = 'logout-btn';
+      button.textContent = p.is_available ? 'В продаже — поставить в стоп' : 'В стоп-листе — вернуть в продажу';
+      button.onclick = async function(){
+        button.disabled = true; stopError.textContent = '';
+        try {
+          var res = await db.rpc('set_product_availability',{p_product_id:p.id,p_available:!p.is_available,p_expected:p.is_available});
+          if(res.error) throw res.error;
+          await loadStopList();
+        } catch(error){ stopError.textContent = 'Не удалось изменить доступность. Проверьте права сотрудника и обновите список.'; }
+        finally { button.disabled = false; }
+      };
+      row.append(label,button); rows.append(row);
+    });
+  }
+  document.getElementById('stopListBtn').onclick = function(){ stopPanel.classList.toggle('hidden'); if(!stopPanel.classList.contains('hidden')) loadStopList(); };
+  document.getElementById('stopListRefresh').onclick = loadStopList;
+  document.getElementById('stopListSearch').oninput = renderStopList;
 
   var muted = false;
   var audioCtx = null;
@@ -350,6 +390,7 @@
   });
 
   logoutBtn.addEventListener('click', async function(){
+    stopPanel.classList.add('hidden'); stopProducts = []; document.getElementById('stopListRows').replaceChildren();
     if (channel) db.removeChannel(channel);
     await db.auth.signOut();
     boardView.classList.add('hidden');

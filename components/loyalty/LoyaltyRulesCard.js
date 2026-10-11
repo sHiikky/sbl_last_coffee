@@ -6,9 +6,10 @@ import { colors, spacing, radius } from '../../theme/tokens';
 import { LOYALTY_CONFIG } from '../../loyalty/loyaltyConfig';
 
 const RULES = [
-  { icon: 'cafe-outline', text: '1 покупка в день = 1 отметка' },
+  { icon: 'cafe-outline', text: 'Выданный заказ = отметка за день. Несколько заказов в день дают одну отметку' },
   { icon: 'flame-outline', text: 'Не пропускай дни, чтобы сохранить серию' },
-  { icon: 'gift-outline', text: `${LOYALTY_CONFIG.milestones[0]?.streakDays ?? 10} дней подряд = награда` },
+  { icon: 'gift-outline', text: `Каждые ${LOYALTY_CONFIG.cycleLength} дней подряд — десерт в подарок. Серия продолжается без ограничения` },
+  { icon: 'time-outline', text: 'День считается по времени Томска. Подарок действует 30 суток' },
 ];
 
 export default function LoyaltyRulesCard() {

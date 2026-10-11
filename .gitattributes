@@ -1,0 +1,2 @@
+# Preserve validated migration bytes and SHA-256 hashes on every platform.
+supabase/migrations/*.sql -text

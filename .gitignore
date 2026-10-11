@@ -2,10 +2,15 @@
 
 # dependencies
 node_modules/
+work/integration-backups/
+work/production-backups/
+work/cashier-local.html
+work/merged-web-preview/
 
 # Expo
 .expo/
 dist/
+dist-integration/
 web-build/
 expo-env.d.ts
 

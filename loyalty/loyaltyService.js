@@ -34,7 +34,8 @@ import { DESSERT_CATEGORY } from '../data/products.js';
  * реальный статус заказа (или backend), достаточно поменять эту функцию.
  */
 export function isOrderQualifyingForLoyalty(order, config = LOYALTY_CONFIG) {
-  if (!order || !order.createdAt) return false;
+  if (!order || !(order.loyaltyQualifiedAt || order.completedAt)) return false;
+  if (order.status !== config.qualification.requiredOrderStatus) return false;
   if (order.cancelled === true || order.refunded === true) return false;
   if (order.status && ['cancelled', 'refunded', 'failed', 'draft'].includes(order.status)) return false;
 
@@ -51,7 +52,7 @@ export function deriveVisitedDaysFromOrders(orders = [], config = LOYALTY_CONFIG
 
   orders.forEach(order => {
     if (!isOrderQualifyingForLoyalty(order, config)) return;
-    const dayKey = getBusinessDayKey(order.createdAt, timezone);
+    const dayKey = getBusinessDayKey(order.loyaltyQualifiedAt || order.completedAt, timezone);
     if (dayKey) set.add(dayKey);
   });
 
@@ -172,6 +173,14 @@ export function deriveLoyaltyStateFromOrders(orders = [], config = LOYALTY_CONFI
 // ---------------------------------------------------------------------------
 
 export function getReachedMilestones(currentStreak, config = LOYALTY_CONFIG) {
+  // Pure simulation helper only. Production grants come from get_loyalty_state.
+  if (config.recurringRewards) {
+    const template = config.milestones[0];
+    if (!template) return [];
+    return Array.from({ length: Math.floor(currentStreak / config.cycleLength) }, (_, index) => ({
+      ...template, streakDays: (index + 1) * config.cycleLength,
+    }));
+  }
   return config.milestones.filter(m => currentStreak >= m.streakDays);
 }
 

@@ -16,6 +16,7 @@ import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/
 import { PICKUP_TIMES, PICKUP_POINTS, formatPrice, cartKey } from '../data/products';
 import { getAvailableRewards, isRewardApplicable, getEligibleCartItemsForReward } from '../loyalty/loyaltyService';
 import { getUserOrThrow } from '../lib/supabaseClient';
+import { buildCheckoutQuote, money } from '../lib/checkoutQuote';
 import {
   createOrder,
   generateIdempotencyKey,
@@ -31,11 +32,17 @@ import {
 import useBonusAccount from '../hooks/useBonusAccount';
 import { getBonusLevel, maxRedeemable } from '../lib/bonusConfig';
 
+function showMessage(title, message) {
+  if (Platform.OS === 'web') globalThis.alert(`${title}\n${message}`);
+  else Alert.alert(title, message);
+}
+
 export default function CartScreen({
   navigation,
   cart,
   onIncrement,
   onDecrement,
+  onRefreshCheckout,
   onOrder,
   tabBarHeight,
   // Для блока «С этим берут»: каталог, добавление в корзину, избранное.
@@ -146,7 +153,7 @@ export default function CartScreen({
     .slice(0, 8);
   const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-  const discount = promoState === 'ok' ? Math.round(subtotal * 0.1) : 0;
+  const discount = promoState === 'ok' ? money(subtotal * 0.1) : 0;
 
   const availableReward = getAvailableRewards(loyaltyState?.rewards || [])[0] || null;
   const rewardApplicable = availableReward ? isRewardApplicable(availableReward, cart) : false;
@@ -162,7 +169,7 @@ export default function CartScreen({
   // части total; сколько просить деньгами на кассе = total - bonusRedeemed.
   const maxBonusRedeemable = maxRedeemable(total, bonusAccount.balance);
   const bonusRedeemed = redeemBonuses ? maxBonusRedeemable : 0;
-  const payTotal = total - bonusRedeemed;
+  const payTotal = money(total - bonusRedeemed);
 
   // Кэшбек начисляется бэкендом только с денежной части (см. миграцию) —
   // эта оценка только для UI, реальную сумму и уровень всегда считает триггер.
@@ -196,7 +203,8 @@ export default function CartScreen({
     const promoCode = promoState === 'ok' ? promo.trim().toUpperCase() : null;
     const rewardRequested = rewardApplied;
     const bonusRedeem = redeemBonuses ? maxBonusRedeemable : 0;
-    const attemptSignature = buildRequestFingerprint({ items, promoCode, rewardRequested, bonusRedeem });
+    const expectedQuote = buildCheckoutQuote(items, payTotal);
+    const attemptSignature = buildRequestFingerprint({ items, promoCode, rewardRequested, bonusRedeem, expectedQuote });
 
     // НЕЛЬЗЯ молча затереть ЕЩЁ не разрешённую попытку (Block 1.3, п.1).
     // Источник истины здесь — то, что реально лежит в AsyncStorage (а не
@@ -239,7 +247,7 @@ export default function CartScreen({
         // foreground/focus-триггер, см. App.js, может успеть сам разрешить
         // старую попытку — а как только пройдёт uncertainty window, тот же
         // lookup станет NOT_FOUND_FINAL и разблокирует checkout сам).
-        Alert.alert(
+        showMessage(
           'Не удалось подтвердить предыдущий заказ',
           'Проверьте подключение к интернету и повторите оформление через несколько секунд — сначала нужно выяснить судьбу предыдущей попытки.'
         );
@@ -281,6 +289,7 @@ export default function CartScreen({
       promoCode,
       rewardRequested,
       bonusRedeem,
+      expectedQuote,
       state: CHECKOUT_ATTEMPT_STATE.SUBMITTING,
     });
 
@@ -298,20 +307,23 @@ export default function CartScreen({
         promoCode,
         rewardRequested,
         bonusRedeem,
+        expectedQuote,
       });
 
       // reward_applied — решение СЕРВЕРА (он же выбрал, к какому именно
       // товару его применить), а не то, что до вызова считал клиент.
-      if (order.reward_applied && availableReward) {
-        onRedeemReward?.(availableReward.id);
-        setAppliedRewardId(null);
-      }
+      void loyaltyState?.refresh?.();
+      void bonusAccount.refresh();
+      setAppliedRewardId(null);
       setRedeemBonuses(false);
       // Заказ успешно создан — эта попытка закрыта, следующий заказ (даже
       // с тем же составом корзины, если он ещё не очистился) получит новый
       // idempotency key.
       checkoutAttemptRef.current = { key: null, signature: null };
-      await clearPendingCheckoutAttempt();
+      // An accepted server order remains successful even if local cleanup fails.
+      // Its persisted attempt can be recovered read-only after a restart.
+      try { await clearPendingCheckoutAttempt(); }
+      catch (storageError) { console.warn('[order] accepted order cache cleanup failed', storageError); }
 
       const serverTotal = Number(order.total || 0);
       const serverBonusRedeemed = Number(order.bonus_redeemed || 0);
@@ -327,6 +339,9 @@ export default function CartScreen({
         itemCount,
         supabaseOrderId: order.id,
         supabaseOrderNumber: order.order_number,
+        serverStatus: order.status,
+        createdAt: order.created_at,
+        orderedItems: items,
       });
     } catch (error) {
       console.warn('[order] failed to create order via RPC', error);
@@ -343,7 +358,8 @@ export default function CartScreen({
         // Сервер ответил окончательно — этим ключом больше нечего
         // проверять при следующем запуске, попытка закрыта.
         checkoutAttemptRef.current = { key: null, signature: null };
-        await clearPendingCheckoutAttempt();
+        try { await clearPendingCheckoutAttempt(); }
+        catch (storageError) { console.warn('[order] rejected attempt cache cleanup failed', storageError); }
       } else {
         // Неизвестно, дошёл ли запрос до сервера — НЕ удаляем попытку,
         // помечаем её UNKNOWN, чтобы App.js мог позже (в т.ч. после
@@ -351,7 +367,8 @@ export default function CartScreen({
         // при этом не сбрасываем: повторное нажатие с тем же составом
         // корзины уйдёт с тем же ключом, и если сервер всё-таки успел
         // создать заказ, create_order() просто вернёт его вместо второго.
-        await markPendingCheckoutAttemptState(idempotencyKey, CHECKOUT_ATTEMPT_STATE.UNKNOWN);
+        try { await markPendingCheckoutAttemptState(idempotencyKey, CHECKOUT_ATTEMPT_STATE.UNKNOWN); }
+        catch (storageError) { console.warn('[order] uncertain attempt cache update failed', storageError); }
         // Block 1.3, п.2/п.3: пока приложение остаётся открытым, есть смысл
         // в ограниченной (bounded, не polling) серии read-only проверок —
         // см. scheduleBoundedCheckoutRecoveryRetries в lib/orderService.js,
@@ -359,7 +376,31 @@ export default function CartScreen({
         onCheckoutAttemptUncertain?.(idempotencyKey);
       }
 
-      Alert.alert(
+      if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
+        setAppliedRewardId(null);
+        setRedeemBonuses(false);
+        let refreshed = false;
+        try {
+          await onRefreshCheckout?.();
+          await loyaltyState?.refresh?.();
+          await bonusAccount.refresh();
+          refreshed = true;
+        } catch (refreshError) {
+          console.warn('[checkout] price refresh failed', refreshError);
+        }
+        const unavailable = classification.code === 'PRODUCT_NOT_AVAILABLE';
+        const benefitsChanged = !['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE'].includes(classification.code);
+        const message = benefitsChanged
+          ? 'Подарок или доступные бонусы изменились. Проверьте итог и выберите их заново перед оформлением. Заказ не создан.'
+          : unavailable
+          ? (refreshed ? 'Некоторые товары сейчас недоступны и удалены из корзины. Проверьте состав и итог перед повторным оформлением. Заказ не создан.' : 'Некоторые товары сейчас недоступны. Заказ не создан. Проверьте подключение и обновите корзину.')
+          : refreshed
+          ? 'Цены или скидки изменились. Корзина обновлена. Проверьте итог, при необходимости примените подарок и бонусы заново и нажмите «Оформить заказ» ещё раз. Заказ не создан.'
+          : 'Цены или скидки изменились. Заказ не создан. Не удалось загрузить новые цены — проверьте подключение и повторите попытку.';
+        showMessage(benefitsChanged ? 'Бонусы и награды обновились' : unavailable ? 'Товар недоступен' : 'Сумма заказа изменилась', message);
+        return;
+      }
+      showMessage(
         'Не удалось оформить заказ',
         isIdempotencyConflict
           ? 'Похоже, состав заказа изменился во время оформления. Попробуйте оформить ещё раз.'
@@ -384,15 +425,16 @@ export default function CartScreen({
       // Сюда попадают сбои подготовки (AsyncStorage, recovery) до отправки
       // заказа: без этого блока флаг оставался бы true и кнопка «мёртвой».
       console.warn('[order] failed before submit', error);
-      Alert.alert('Не удалось оформить заказ', 'Что-то пошло не так до отправки. Попробуйте ещё раз.');
+      showMessage('Не удалось оформить заказ', 'Не удалось подготовить заказ. Проверьте подключение и повторите попытку.');
     } finally {
       orderingRef.current = false;
       if (mountedRef.current) setOrdering(false);
     }
   };
 
-  useEffect(() => () => {
-    mountedRef.current = false;
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
 
   const recoveryNoticeBanner = checkoutRecoveryNotice ? (

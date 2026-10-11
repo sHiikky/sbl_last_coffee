@@ -18,10 +18,7 @@ export const LOYALTY_CONFIG = {
   qualification: {
     maxMarksPerDay: 1,
     minimumOrderAmount: 0,
-    // В проекте пока нет реальных статусов оплаты/заказа — единственное,
-    // что попадает в orderHistory, это уже успешно оформленный заказ
-    // (см. App.js -> placeOrder). Поле оставлено для будущего backend,
-    // где появятся промежуточные статусы (draft/failed/cancelled).
+    // Отметку выдаёт сервер при первом переходе в completed («Выдан»).
     requiredOrderStatus: 'completed',
   },
 
@@ -33,6 +30,7 @@ export const LOYALTY_CONFIG = {
   // Длина одного "этапа" карты (10-дневная карта). currentStreak может расти
   // бесконечно, cycleLength — только про то, как он режется на этапы для UI.
   cycleLength: 10,
+  recurringRewards: true,
 
   // Конфигурируемые milestone'ы. Чтобы добавить награду за 3/5/7/20/30 дней —
   // достаточно дописать объект сюда, менять логику не требуется.

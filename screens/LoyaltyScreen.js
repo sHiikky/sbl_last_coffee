@@ -91,7 +91,12 @@ export default function LoyaltyScreen({ navigation, loyaltyState, devSimulateTod
         contentContainerStyle={{ paddingHorizontal: hPad, paddingTop: spacing.xl, paddingBottom: insets.bottom + spacing.xxl }}
         showsVerticalScrollIndicator={false}
       >
-        {!loyaltyState.ready ? (
+        {loyaltyState.error ? (
+          <View>
+            <Text style={styles.statusBody}>Не удалось обновить серию. Проверьте подключение к интернету.</Text>
+            <PrimaryButton label="Обновить" onPress={loyaltyState.refresh} />
+          </View>
+        ) : !loyaltyState.ready ? (
           <View style={styles.skeleton} />
         ) : (
           <>
@@ -115,7 +120,7 @@ export default function LoyaltyScreen({ navigation, loyaltyState, devSimulateTod
               <LoyaltyRulesCard />
             </View>
 
-            {__DEV__ && (
+            {__DEV__ && loyaltyState.localSimulationEnabled && (
               <View style={styles.devPanel}>
                 <Text style={styles.devTitle}>DEV: тестирование серии</Text>
                 <View style={styles.devRow}>

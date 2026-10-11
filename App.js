@@ -25,9 +25,12 @@ import { colors } from './theme/tokens';
 import { cartKey, getProductById } from './data/products';
 import { getAvailableRewards } from './loyalty/loyaltyService';
 import { fetchVisibleProducts } from './lib/catalogService';
+import { refreshCartPrices } from './lib/checkoutQuote';
 import useLoyaltyState from './loyalty/useLoyaltyState';
+import useCustomerOrders from './hooks/useCustomerOrders';
+import useBonusAccount from './hooks/useBonusAccount';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
-import { ensureAnonymousSession, getUserOrThrow, supabase } from './lib/supabaseClient';
+import { getUserOrThrow } from './lib/supabaseClient';
 import {
   recoverPendingCheckoutOnce,
   scheduleBoundedCheckoutRecoveryRetries,
@@ -92,6 +95,7 @@ function Tabs({
   onAddToCart,
   onIncrement,
   onDecrement,
+  onRefreshCheckout,
   onOrder,
   onToggleFavorite,
   onRepeatOrder,
@@ -163,6 +167,7 @@ function Tabs({
             products={products}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
             onRepeatOrder={onRepeatOrder}
             onToggleFavorite={onToggleFavorite}
             favoriteIds={favorites}
@@ -184,6 +189,7 @@ function Tabs({
             products={products}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
             onToggleFavorite={onToggleFavorite}
             favoriteIds={favorites}
             tabBarHeight={tabBarHeight}
@@ -198,6 +204,7 @@ function Tabs({
             cart={cart}
             onIncrement={onIncrement}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
             onOrder={onOrder}
             tabBarHeight={tabBarHeight}
             products={products}
@@ -243,6 +250,7 @@ function RootStack({
   onAddToCart,
   onIncrement,
   onDecrement,
+  onRefreshCheckout,
   onOrder,
   onToggleFavorite,
   onRepeatOrder,
@@ -274,6 +282,7 @@ function RootStack({
             onAddToCart={onAddToCart}
             onIncrement={onIncrement}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
             onOrder={onOrder}
             onToggleFavorite={onToggleFavorite}
             onRepeatOrder={onRepeatOrder}
@@ -308,6 +317,7 @@ function RootStack({
             products={products}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
             onToggleFavorite={onToggleFavorite}
             favoriteIds={favorites}
           />
@@ -334,6 +344,7 @@ function RootStack({
             cart={cart}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
+            onRefreshCheckout={onRefreshCheckout}
           />
         )}
       </Stack.Screen>
@@ -372,6 +383,19 @@ export default function App() {
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
   const [products, setProducts] = useState([]);
+  const [catalogError, setCatalogError] = useState(null);
+  const catalogRevision = useRef(0);
+  const catalogRefresh = useRef(() => {});
+  const customerOrders = useCustomerOrders(isReady);
+  const bonusAccount = useBonusAccount();
+  useEffect(() => {
+    if (!isReady || !customerOrders.loaded || customerOrders.error) return;
+    setOrderHistory(customerOrders.data);
+    const active = customerOrders.data.find(order => !ORDER_FINAL_STATUSES.includes(order.status));
+    setActiveOrder(active ? {
+      id: active.id, orderNumber: active.orderNumber.replace(/^№/, ''), status: active.status,
+    } : null);
+  }, [isReady, customerOrders.data, customerOrders.loaded, customerOrders.error]);
   // Block 1.4: заполняется, только если recovery авторитетно выяснил, что
   // предыдущая попытка НЕ привела к заказу — либо uncertainty window истёк
   // и lookup уверенно не нашёл заказ (NOT_FOUND_FINAL), либо retention TTL
@@ -546,11 +570,23 @@ export default function App() {
   // outputs"). Пока список не пришёл, экраны получают пустой массив — это
   // сознательно (см. HomeScreen/MenuScreen), а не считается ошибкой.
   useEffect(() => {
-    fetchVisibleProducts()
-      .then(setProducts)
-      .catch(error => {
-        console.warn('[catalog] failed to load products from Supabase', error);
-      });
+    let active = true;
+    const refreshCatalog = async () => {
+      const request = ++catalogRevision.current;
+      try {
+        const rows = await fetchVisibleProducts();
+        if (active && request === catalogRevision.current) { setProducts(rows); setCatalogError(null); }
+      } catch (error) {
+        if (active && request === catalogRevision.current) setCatalogError(error);
+      }
+    };
+    catalogRefresh.current = refreshCatalog;
+    refreshCatalog();
+    const timer = setInterval(refreshCatalog, 30000);
+    const listener = AppState.addEventListener('change', state => {
+      if (state === 'active') refreshCatalog();
+    });
+    return () => { active = false; clearInterval(timer); listener.remove(); };
   }, []);
 
   // Тихий анонимный вход в Supabase, затем сверяем с сервером, есть ли у
@@ -558,13 +594,7 @@ export default function App() {
   // даже после полного перезапуска приложения, а не только пока App.js жив
   // в памяти. Кэш в AsyncStorage (ниже) используется только для мгновенной
   // отрисовки до ответа сервера — источник истины всегда Supabase.
-  useEffect(() => {
-    ensureAnonymousSession()
-      .then(() => refreshActiveOrder())
-      .catch(error => {
-        console.warn('[supabase] anonymous sign-in failed on startup', error);
-      });
-  }, []);
+  // Server reads start only after cache hydration in useCustomerOrders.
 
   // Тестовый вход по телефону (screens/LoginScreen.js): аккаунт только локальный.
   // Выход не трогает корзину, избранное и историю — они привязаны к устройству,
@@ -578,24 +608,6 @@ export default function App() {
     setAccount(null);
     AsyncStorage.removeItem(STORAGE_KEYS.account).catch(() => {});
   };
-
-  async function refreshActiveOrder() {
-    try {
-      const user = await getUserOrThrow();
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id, order_number, status')
-        .eq('customer_id', user.id)
-        .not('status', 'in', `(${ORDER_FINAL_STATUSES.join(',')})`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      setActiveOrder(data ? { id: data.id, orderNumber: data.order_number, status: data.status } : null);
-    } catch (error) {
-      console.warn('[order] failed to refresh active order', error);
-    }
-  }
 
   useEffect(() => {
     AsyncStorage.multiGet([
@@ -619,10 +631,10 @@ export default function App() {
       restore(STORAGE_KEYS.cart, setCart);
       restore(STORAGE_KEYS.favorites, setFavoriteIds);
       restore(STORAGE_KEYS.account, setAccount);
-      restore(STORAGE_KEYS.orders, setOrderHistory);
+      restore(STORAGE_KEYS.orders, value => setOrderHistory(Array.isArray(value) ? value : []));
       // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
       // сверит это с сервером сразу после старта и перезапишет при расхождении.
-      restore(STORAGE_KEYS.activeOrder, setActiveOrder);
+      restore(STORAGE_KEYS.activeOrder, value => setActiveOrder(value?.id ? value : null));
       setIsReady(true);
     }).catch(error => {
       // Хранилище недоступно: лучше открыть приложение с пустым состоянием,
@@ -723,7 +735,7 @@ export default function App() {
   // корзины, без выбора опций поверх цены (раньше это делали sizeId/milkId/
   // temperatureId/addonIds, теперь не нужны).
   const addToCart = (product) => {
-    if (!product) return;
+    if (!product || product.isAvailable === false) return;
     const key = cartKey(product.id);
 
     setCart(prev => {
@@ -753,6 +765,12 @@ export default function App() {
     });
   };
 
+  const refreshCheckoutPrices = async () => {
+    const request = ++catalogRevision.current;
+    const latestProducts = await fetchVisibleProducts();
+    if (request === catalogRevision.current) { setProducts(latestProducts); setCatalogError(null); }
+    setCart(previous => refreshCartPrices(previous, latestProducts));
+  };
   const decrementCart = (key) => {
     setCart(prev => {
       const existing = prev[key];
@@ -805,10 +823,10 @@ export default function App() {
   // CartScreen ПОСЛЕ того, как заказ уже реально создан в Supabase (orders +
   // order_items), поэтому localOrderHistory (используется loyalty-программой,
   // профилем и историей заказов) всегда соответствует реальному заказу в БД.
-  const placeOrder = ({ pickupTime, pickupPoint, total, earnedBonuses, itemCount, supabaseOrderId, supabaseOrderNumber }) => {
-    const items = Object.values(cart);
+  const placeOrder = ({ pickupTime, pickupPoint, total, earnedBonuses, itemCount, supabaseOrderId, supabaseOrderNumber, serverStatus, createdAt: serverCreatedAt, orderedItems }) => {
+    const items = orderedItems || Object.values(cart);
     const orderNumber = supabaseOrderNumber ? `№${supabaseOrderNumber}` : `SBL-${Math.floor(1000 + Math.random() * 9000)}`;
-    const createdAt = new Date().toISOString();
+    const createdAt = serverCreatedAt || new Date().toISOString();
 
     const orderRecord = {
       id: supabaseOrderId || createdAt,
@@ -820,6 +838,7 @@ export default function App() {
       total,
       itemCount,
       earnedBonuses,
+      status: serverStatus || 'new',
       items: items.map(item => ({
         key: item.key,
         id: item.id,
@@ -828,8 +847,18 @@ export default function App() {
       })),
     };
 
-    setOrderHistory(prev => [orderRecord, ...prev].slice(0, 12));
-    setCart({});
+    setOrderHistory(prev => [orderRecord, ...prev.filter(order => order.id !== orderRecord.id)].slice(0, 100));
+    // Edits made while the request was running must survive its completion.
+    setCart(previous => {
+      const next = { ...previous };
+      for (const item of items) {
+        const key = cartKey(item.id);
+        if (!next[key]) continue;
+        if (next[key].qty <= item.qty) delete next[key];
+        else next[key] = { ...next[key], qty: next[key].qty - item.qty };
+      }
+      return next;
+    });
     setOrderComplete({
       orderNumber,
       supabaseOrderId,
@@ -838,12 +867,14 @@ export default function App() {
       itemCount,
       total,
       earnedBonuses,
+      status: serverStatus || 'new',
     });
     // Баннер на Главной должен появиться сразу, не дожидаясь следующего
     // refreshActiveOrder() — заказ только что реально создан в Supabase.
-    if (supabaseOrderId) {
-      setActiveOrder({ id: supabaseOrderId, orderNumber: supabaseOrderNumber, status: 'new' });
+    if (supabaseOrderId && !ORDER_FINAL_STATUSES.includes(serverStatus)) {
+      setActiveOrder({ id: supabaseOrderId, orderNumber: supabaseOrderNumber, status: serverStatus || 'new' });
     }
+    void customerOrders.refresh();
   };
 
   const openActiveOrder = () => {
@@ -851,11 +882,13 @@ export default function App() {
     setOrderComplete({
       orderNumber: activeOrder.orderNumber ? `№${activeOrder.orderNumber}` : null,
       supabaseOrderId: activeOrder.id,
+      status: activeOrder.status,
     });
   };
 
   const finishActiveOrder = () => {
     setActiveOrder(null);
+    void customerOrders.refresh();
   };
 
   const dismissCheckoutRecoveryNotice = () => {
@@ -909,6 +942,7 @@ export default function App() {
             onAddToCart={addToCart}
             onIncrement={(item) => addToCart(productsById[item.id])}
             onDecrement={decrementCart}
+            onRefreshCheckout={refreshCheckoutPrices}
             onOrder={placeOrder}
             onToggleFavorite={toggleFavorite}
             onRepeatOrder={repeatOrder}
@@ -933,6 +967,12 @@ export default function App() {
         onClaim={loyalty.dismissCelebration}
         onDismiss={loyalty.dismissCelebration}
       />
+      {!!(catalogError || customerOrders.error || bonusAccount.error || loyalty.error) && (
+        <View style={{ position: 'absolute', top: 52, left: 16, right: 16, zIndex: 100, backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 14 }}>
+          <Text style={{ color: colors.textPrimary, fontSize: 13 }}>Не удалось обновить {catalogError ? 'меню' : customerOrders.error ? 'заказы' : 'бонусы и награды'}. Проверьте подключение к интернету.</Text>
+          <Text accessibilityRole="button" onPress={() => { void catalogRefresh.current(); void customerOrders.refresh(); void bonusAccount.refresh(); void loyalty.refresh(); }} style={{ color: colors.accent, fontWeight: '700', marginTop: 8 }}>Повторить</Text>
+        </View>
+      )}
     </SafeAreaProvider>
   );
 }

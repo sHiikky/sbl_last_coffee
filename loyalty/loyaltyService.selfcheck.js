@@ -33,7 +33,7 @@ function assertEqual(actual, expected, label) {
 }
 
 function order(dateKey, hour = '10:00:00') {
-  return { createdAt: `${dateKey}T${hour}.000Z`, total: 300 };
+  return { createdAt: `${dateKey}T${hour}.000Z`, completedAt: `${dateKey}T${hour}.000Z`, status: 'completed', total: 300 };
 }
 
 const CONFIG = {
