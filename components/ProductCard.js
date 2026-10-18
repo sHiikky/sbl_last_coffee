@@ -46,13 +46,13 @@ function ProductCard({ product, width = 152, onPress, qty = 0, onIncrement, onDe
       </View>
 
       <View style={styles.body}>
-        <View>
-          <Text style={styles.title} numberOfLines={2}>{name}</Text>
-        </View>
+        <Text style={styles.title} numberOfLines={2}>{name}</Text>
         <View style={styles.footer}>
           <Text style={styles.price} numberOfLines={1}>{formatPrice(product.price)}</Text>
           {qty > 0 && onIncrement && onDecrement ? (
-            <QuantityStepper compact qty={qty} onIncrement={onIncrement} onDecrement={onDecrement} />
+            <View style={styles.stepperWrap}>
+              <QuantityStepper compact qty={qty} onIncrement={onIncrement} onDecrement={onDecrement} />
+            </View>
           ) : (
             // Просто иконка: нажатие обрабатывает вся карточка. Отдельная кнопка
             // внутри кнопки-карточки даёт вложенные <button> в вебе.
@@ -76,11 +76,14 @@ const styles = StyleSheet.create({
   photoWrap: { paddingTop: CARD_PADDING, paddingHorizontal: CARD_PADDING },
   // flex: 1 + space-between: если соседняя карточка в ряду выше, нижняя
   // строка «цена + шеврон» остаётся прижатой к низу карточки.
-  body: { flex: 1, justifyContent: 'space-between', paddingTop: 6, paddingRight: CARD_PADDING - 4, paddingBottom: 6, paddingLeft: CARD_PADDING },
-  title: { fontSize: 16, lineHeight: 20, fontWeight: '700', color: colors.textPrimary },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  price: { flexShrink: 1, fontSize: 15, fontWeight: '800', color: colors.textPrimary },
-  chevronHit: { width: 44, height: 36, marginVertical: -4, marginRight: -6, alignItems: 'center', justifyContent: 'center' },
+  // Название и цена по центру, цена крупная и внизу; у названия минимальная
+  // высота в две строки, чтобы цены соседних карточек стояли на одной линии.
+  body: { flex: 1, justifyContent: 'space-between', paddingTop: 6, paddingHorizontal: CARD_PADDING, paddingBottom: 10 },
+  title: { minHeight: 40, fontSize: 16, lineHeight: 20, fontWeight: '700', color: colors.textPrimary, textAlign: 'center' },
+  footer: { alignItems: 'center', justifyContent: 'center', marginTop: 12, minHeight: 28 },
+  price: { fontSize: 20, lineHeight: 26, fontWeight: '800', color: colors.textPrimary, textAlign: 'center' },
+  stepperWrap: { marginTop: 8 },
+  chevronHit: { position: 'absolute', right: -8, bottom: -4, width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default React.memo(ProductCard);

@@ -21,6 +21,7 @@ import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import LoyaltyScreen from './screens/LoyaltyScreen';
 import LoyaltyRewardModal from './components/loyalty/LoyaltyRewardModal';
 import { HomeIcon, MenuIcon, CartIcon, ProfileIcon } from './navigation/TabIcons';
+import RoundedTabBar, { TAB_BAR_HEIGHT } from './navigation/RoundedTabBar';
 import { colors } from './theme/tokens';
 import { cartKey, getProductById } from './data/products';
 import { getAvailableRewards } from './loyalty/loyaltyService';
@@ -41,7 +42,6 @@ import {
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-const TAB_BAR_HEIGHT = 54;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // Полноценный горизонтальный "перелист" между табами: текущий экран уезжает
@@ -75,12 +75,12 @@ function LoadingScreen() {
   );
 }
 
-function TabBarIcon({ route, focused, cartCount }) {
+function TabBarIcon({ route, focused, color, cartCount }) {
   switch (route.name) {
-    case 'HomeTab': return <HomeIcon focused={focused} />;
-    case 'MenuTab': return <MenuIcon focused={focused} />;
-    case 'CartTab': return <CartIcon focused={focused} count={cartCount} />;
-    case 'ProfileTab': return <ProfileIcon focused={focused} />;
+    case 'HomeTab': return <HomeIcon focused={focused} color={color} />;
+    case 'MenuTab': return <MenuIcon focused={focused} color={color} />;
+    case 'CartTab': return <CartIcon focused={focused} color={color} count={cartCount} />;
+    case 'ProfileTab': return <ProfileIcon focused={focused} color={color} />;
     default: return null;
   }
 }
@@ -115,6 +115,7 @@ function Tabs({
 
   return (
     <Tab.Navigator
+      tabBar={(props) => <RoundedTabBar {...props} />}
       screenOptions={({ route }) => ({
         headerShown: false,
         sceneStyleInterpolator: pageSlideInterpolator,
@@ -125,33 +126,8 @@ function Tabs({
             easing: Easing.out(Easing.cubic),
           },
         },
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.accent,
-        // Было слишком светлое (#B0AEA8) — на белом фоне неактивные иконки/
-        // подписи почти не читались. Взяли более контрастный нейтральный серый.
-        tabBarInactiveTintColor: '#8A8780',
-        tabBarStyle: {
-          height: tabBarHeight,
-          paddingTop: 4,
-          paddingBottom: Math.max(insets.bottom, 4),
-          backgroundColor: 'rgba(255,255,255,0.96)',
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -8 },
-          shadowOpacity: 0.045,
-          shadowRadius: 18,
-          elevation: 8,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 0,
-        },
-        tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          lineHeight: 14,
-        },
-        tabBarIcon: ({ focused }) => <TabBarIcon route={route} focused={focused} cartCount={cartCount} />,
+        // Вид панели (скруглённые верхние углы) — navigation/RoundedTabBar.js.
+        tabBarIcon: ({ focused, color }) => <TabBarIcon route={route} focused={focused} color={color} cartCount={cartCount} />,
       })}
       screenListeners={({ navigation }) => ({
         tabPress: () => {
