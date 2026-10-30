@@ -1,20 +1,22 @@
 // data/menuData.js
-// СГЕНЕРИРОВАНО из таблицы «Меню для дизайнера (1).xlsx» (листы «Напитки» и «Еда»).
-// КБЖУ, составы и объёмы берутся строго из таблицы. В таблице КБЖУ указан на ПОЛНЫЙ
-// объём напитка; для меньшего объёма (volumes[].calculated === true) значения
+// Базовая версия сгенерирована из «Меню для дизайнера (1).xlsx» (scripts/gen-menu-data.py).
+// 18.10.2026 обновлено scripts/update-menu-data-2026-10.py под меню «осень-зима 2026»:
+// названия и цены — по прайсу СБИС, КБЖУ напитков и еды — с фото-меню (на порцию).
+// В справочник попадают только позиции с КБЖУ; остальное (сладости, добавки, товары)
+// остаётся данными СБИС. Для меньшего объёма (volumes[].calculated === true) значения
 // посчитаны пропорционально объёму. nutritionVariants — варианты на другом молоке/
 // добавке (первый — основной).
 
 export const MENU_ITEMS = [
   {
-    "title": "Доппио",
+    "title": "Эспрессо (доппио)",
     "section": null,
     "kind": "drink",
     "description": "Кофейное зерно",
     "volumes": [
       {
         "ml": 40,
-        "price": 180,
+        "price": 150,
         "nutrition": {
           "calories": 4,
           "protein": 2.6,
@@ -124,7 +126,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Раф с сиропом",
+    "title": "Раф классика",
     "section": null,
     "kind": "drink",
     "description": "Кофейное зерно, сливки 10 %, молоко 3,2, сироп",
@@ -188,7 +190,7 @@ export const MENU_ITEMS = [
     "volumes": [
       {
         "ml": 180,
-        "price": 240,
+        "price": 250,
         "nutrition": {
           "calories": 283,
           "protein": 8.6,
@@ -209,10 +211,10 @@ export const MENU_ITEMS = [
         "ml": 300,
         "price": 250,
         "nutrition": {
-          "calories": 173.7,
-          "protein": 7.9,
-          "fat": 8.2,
-          "carbs": 15.8
+          "calories": 201,
+          "protein": 9,
+          "fat": 9,
+          "carbs": 18
         },
         "calculated": false
       }
@@ -248,10 +250,10 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 520,
         "nutrition": {
-          "calories": 258.8,
-          "protein": 13.74,
-          "fat": 21.2,
-          "carbs": 13.46
+          "calories": 354,
+          "protein": 8,
+          "fat": 27,
+          "carbs": 21
         },
         "calculated": false
       }
@@ -267,10 +269,10 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 370,
         "nutrition": {
-          "calories": 198.8,
-          "protein": 9.4,
-          "fat": 16.4,
-          "carbs": 11.4
+          "calories": 243,
+          "protein": 4,
+          "fat": 10,
+          "carbs": 13
         },
         "calculated": false
       }
@@ -287,10 +289,10 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 310,
         "nutrition": {
-          "calories": 149,
-          "protein": 2.6,
-          "fat": 2.8,
-          "carbs": 27.1
+          "calories": 196,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 45
         },
         "calculated": false
       }
@@ -304,12 +306,12 @@ export const MENU_ITEMS = [
     "volumes": [
       {
         "ml": 400,
-        "price": 350,
+        "price": 390,
         "nutrition": {
-          "calories": 113,
-          "protein": 4.4,
-          "fat": 3.2,
-          "carbs": 21.9
+          "calories": 151,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 35
         },
         "calculated": false
       }
@@ -325,10 +327,10 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 260,
         "nutrition": {
-          "calories": 43.4,
-          "protein": 2.7,
-          "fat": 2.8,
-          "carbs": 9.08
+          "calories": 55,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 11
         },
         "calculated": false
       }
@@ -344,17 +346,17 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 280,
         "nutrition": {
-          "calories": 147,
-          "protein": 9,
-          "fat": 9.2,
-          "carbs": 15.1
+          "calories": 233,
+          "protein": 14,
+          "fat": 14,
+          "carbs": 23
         },
         "calculated": false
       }
     ]
   },
   {
-    "title": "Американо юдзу",
+    "title": "Юдзу американо",
     "section": "Кофе",
     "kind": "drink",
     "description": "Кофейное зерно, пюре юдзу монин, газированная вода, лимон кружок, лед",
@@ -363,10 +365,10 @@ export const MENU_ITEMS = [
         "ml": 400,
         "price": 250,
         "nutrition": {
-          "calories": 95.2,
-          "protein": 2.68,
-          "fat": 2.8,
-          "carbs": 22.44
+          "calories": 133,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 30
         },
         "calculated": false
       }
@@ -376,55 +378,26 @@ export const MENU_ITEMS = [
     "title": "Матча Латте",
     "section": "Не кофе",
     "kind": "drink",
-    "nutritionVariants": [
-      {
-        "label": "на кокосовом молоке",
-        "nutrition": {
-          "calories": 123.48,
-          "protein": 2.41,
-          "fat": 6.11,
-          "carbs": 14.91
-        }
-      },
-      {
-        "label": "на миндальном молоке",
-        "nutrition": {
-          "calories": 126.48,
-          "protein": 2.71,
-          "fat": 6.11,
-          "carbs": 15.51
-        }
-      },
-      {
-        "label": "на безлактозном молоке",
-        "nutrition": {
-          "calories": 147.48,
-          "protein": 9.61,
-          "fat": 5.51,
-          "carbs": 14.91
-        }
-      }
-    ],
     "volumes": [
       {
         "ml": 200,
         "price": 250,
         "nutrition": {
-          "calories": 61.7,
-          "protein": 1.2,
-          "fat": 3.1,
-          "carbs": 7.5
+          "calories": 137,
+          "protein": 6,
+          "fat": 6,
+          "carbs": 12
         },
-        "calculated": true
+        "calculated": false
       },
       {
         "ml": 400,
         "price": 340,
         "nutrition": {
-          "calories": 123.48,
-          "protein": 2.41,
-          "fat": 6.11,
-          "carbs": 14.91
+          "calories": 197,
+          "protein": 8,
+          "fat": 8,
+          "carbs": 21
         },
         "calculated": false
       }
@@ -432,58 +405,29 @@ export const MENU_ITEMS = [
     "description": "Мачта порошок, матча порошок. Молоко: кокосовое, миндальное или безлактозное."
   },
   {
-    "title": "Матча Сблеском",
+    "title": "Матча Blue Sbleskom",
     "section": "Не кофе",
     "kind": "drink",
-    "nutritionVariants": [
-      {
-        "label": "на кокосовом молоке",
-        "nutrition": {
-          "calories": 118,
-          "protein": 1.82,
-          "fat": 6.02,
-          "carbs": 14.45
-        }
-      },
-      {
-        "label": "на миндальном молоке",
-        "nutrition": {
-          "calories": 121,
-          "protein": 2.12,
-          "fat": 6.02,
-          "carbs": 15.05
-        }
-      },
-      {
-        "label": "на безлактозном молоке",
-        "nutrition": {
-          "calories": 142,
-          "protein": 9.02,
-          "fat": 5.42,
-          "carbs": 14.45
-        }
-      }
-    ],
     "volumes": [
       {
         "ml": 200,
         "price": 250,
         "nutrition": {
-          "calories": 59,
-          "protein": 0.9,
-          "fat": 3,
-          "carbs": 7.2
+          "calories": 137,
+          "protein": 6,
+          "fat": 6,
+          "carbs": 12
         },
-        "calculated": true
+        "calculated": false
       },
       {
         "ml": 400,
         "price": 340,
         "nutrition": {
-          "calories": 118,
-          "protein": 1.82,
-          "fat": 6.02,
-          "carbs": 14.45
+          "calories": 197,
+          "protein": 8,
+          "fat": 8,
+          "carbs": 21
         },
         "calculated": false
       }
@@ -494,55 +438,26 @@ export const MENU_ITEMS = [
     "title": "Убе Латте",
     "section": "Не кофе",
     "kind": "drink",
-    "nutritionVariants": [
-      {
-        "label": "на кокосовом молоке",
-        "nutrition": {
-          "calories": 133,
-          "protein": 1.84,
-          "fat": 6.34,
-          "carbs": 17.3
-        }
-      },
-      {
-        "label": "на миндальном молоке",
-        "nutrition": {
-          "calories": 136,
-          "protein": 2.14,
-          "fat": 6.34,
-          "carbs": 17.9
-        }
-      },
-      {
-        "label": "на безлактозном молоке",
-        "nutrition": {
-          "calories": 157,
-          "protein": 9.04,
-          "fat": 5.74,
-          "carbs": 17.3
-        }
-      }
-    ],
     "volumes": [
       {
         "ml": 200,
         "price": 250,
         "nutrition": {
-          "calories": 66.5,
-          "protein": 0.9,
-          "fat": 3.2,
-          "carbs": 8.7
+          "calories": 137,
+          "protein": 6,
+          "fat": 6,
+          "carbs": 12
         },
-        "calculated": true
+        "calculated": false
       },
       {
         "ml": 400,
         "price": 340,
         "nutrition": {
-          "calories": 133,
-          "protein": 1.84,
-          "fat": 6.34,
-          "carbs": 17.3
+          "calories": 197,
+          "protein": 8,
+          "fat": 8,
+          "carbs": 21
         },
         "calculated": false
       }
@@ -550,7 +465,7 @@ export const MENU_ITEMS = [
     "description": "Порошок убе, порошок таро. Молоко: кокосовое, миндальное или безлактозное."
   },
   {
-    "title": "Фисташковый матча латте",
+    "title": "Фисташковая Матча Латте",
     "section": "Не кофе",
     "kind": "drink",
     "description": "Матча порошок, молоко 3,2, урбеч фисташковый, сироп",
@@ -558,10 +473,10 @@ export const MENU_ITEMS = [
       {
         "label": "на молоке 3,2%",
         "nutrition": {
-          "calories": 256.92,
-          "protein": 11.12,
-          "fat": 15.56,
-          "carbs": 20.18
+          "calories": 243,
+          "protein": 10,
+          "fat": 16,
+          "carbs": 16
         }
       },
       {
@@ -579,10 +494,10 @@ export const MENU_ITEMS = [
         "ml": 300,
         "price": 390,
         "nutrition": {
-          "calories": 256.92,
-          "protein": 11.12,
-          "fat": 15.56,
-          "carbs": 20.18
+          "calories": 243,
+          "protein": 10,
+          "fat": 16,
+          "carbs": 16
         },
         "calculated": false
       }
@@ -597,10 +512,10 @@ export const MENU_ITEMS = [
       {
         "label": "молоко 3,2",
         "nutrition": {
-          "calories": 204.8,
-          "protein": 9.78,
-          "fat": 10.12,
-          "carbs": 17.18
+          "calories": 201,
+          "protein": 9,
+          "fat": 9,
+          "carbs": 18
         }
       },
       {
@@ -616,12 +531,12 @@ export const MENU_ITEMS = [
     "volumes": [
       {
         "ml": 300,
-        "price": 300,
+        "price": 320,
         "nutrition": {
-          "calories": 204.8,
-          "protein": 9.78,
-          "fat": 10.12,
-          "carbs": 17.18
+          "calories": 201,
+          "protein": 9,
+          "fat": 9,
+          "carbs": 18
         },
         "calculated": false
       }
@@ -732,10 +647,10 @@ export const MENU_ITEMS = [
         "ml": 350,
         "price": 360,
         "nutrition": {
-          "calories": 161.6,
-          "protein": 2.63,
-          "fat": 0.66,
-          "carbs": 33.88
+          "calories": 154,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 35
         },
         "calculated": false
       }
@@ -769,10 +684,10 @@ export const MENU_ITEMS = [
       {
         "label": "молоко 3,2",
         "nutrition": {
-          "calories": 144,
-          "protein": 6.4,
-          "fat": 6.4,
-          "carbs": 15.2
+          "calories": 191,
+          "protein": 8,
+          "fat": 8,
+          "carbs": 21
         }
       },
       {
@@ -790,10 +705,10 @@ export const MENU_ITEMS = [
         "ml": 300,
         "price": 280,
         "nutrition": {
-          "calories": 144,
-          "protein": 6.4,
-          "fat": 6.4,
-          "carbs": 15.2
+          "calories": 191,
+          "protein": 8,
+          "fat": 8,
+          "carbs": 21
         },
         "calculated": false
       }
@@ -838,7 +753,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Чайник Малина-мята",
+    "title": "Чай Малина-мята",
     "section": "Чайники",
     "kind": "drink",
     "description": "Малина св/м, сахар, чай черный, вода горячая, мята свежая",
@@ -857,7 +772,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Чайник Малина-розмарин",
+    "title": "Чай Малина-Розмарин",
     "section": "Чайники",
     "kind": "drink",
     "description": "Малина св/м, сахар, чай черный, вода горячая, розмарин",
@@ -866,17 +781,17 @@ export const MENU_ITEMS = [
         "ml": 500,
         "price": 320,
         "nutrition": {
-          "calories": 102,
-          "protein": 0.8,
-          "fat": 0.3,
-          "carbs": 23.4
+          "calories": 134,
+          "protein": 1,
+          "fat": 1,
+          "carbs": 32
         },
         "calculated": false
       }
     ]
   },
   {
-    "title": "Чайник Облепиха-имбирь",
+    "title": "Чай Облепиха-имбирь",
     "section": "Чайники",
     "kind": "drink",
     "description": "Облепиха св\\м, имбирь (фреш), мед, чай черный, розмарин, вода горячая",
@@ -885,17 +800,17 @@ export const MENU_ITEMS = [
         "ml": 500,
         "price": 320,
         "nutrition": {
-          "calories": 107.8,
-          "protein": 0.97,
-          "fat": 1.18,
-          "carbs": 23.02
+          "calories": 182,
+          "protein": 1,
+          "fat": 3,
+          "carbs": 26
         },
         "calculated": false
       }
     ]
   },
   {
-    "title": "Чайник Витамин от управляющей",
+    "title": "Чай витамин от Управляющей",
     "section": "Чайники",
     "kind": "drink",
     "description": "Чай черный (чабрец), лимон (долька), мед/сироп, имбирь (фреш), вода горячая",
@@ -934,7 +849,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Ройбош Шишка-гранат",
+    "title": "Чай Ройбош Шишка-Гранат",
     "section": "Чайники",
     "kind": "drink",
     "description": "Ройбош, основа слоумо (шишка-гранат), вода горячая",
@@ -992,45 +907,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Холодный американо",
-    "section": "Освежающие",
-    "kind": "drink",
-    "description": "Кофейное зерно, вода холодная, лед",
-    "volumes": [
-      {
-        "ml": 300,
-        "price": 180,
-        "nutrition": {
-          "calories": 4,
-          "protein": 2.6,
-          "fat": 2.8,
-          "carbs": 0
-        },
-        "calculated": false
-      }
-    ]
-  },
-  {
-    "title": "Американо малина-кардамон",
-    "section": "Освежающие",
-    "kind": "drink",
-    "description": "Кофейное зерно, вода холодная, основа мс малина-кардамон, лед",
-    "volumes": [
-      {
-        "ml": 300,
-        "price": 220,
-        "nutrition": {
-          "calories": 52,
-          "protein": 2.6,
-          "fat": 2.8,
-          "carbs": 12
-        },
-        "calculated": false
-      }
-    ]
-  },
-  {
-    "title": "Эспрессо-тоник на игристом (цветочный/вишневый)",
+    "title": "Эспрессо-тоник на игристом",
     "section": "Освежающие",
     "kind": "drink",
     "description": "Кофейное зерно, игристое дринксом, лед, сироп",
@@ -1049,7 +926,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Протеиновый коктейль",
+    "title": "Протеиновый смузи",
     "section": "Освежающие",
     "kind": "drink",
     "description": "Вода, банан, порошок протеин",
@@ -1058,10 +935,10 @@ export const MENU_ITEMS = [
         "ml": 350,
         "price": 360,
         "nutrition": {
-          "calories": 237.6,
-          "protein": 25.54,
-          "fat": 1.42,
-          "carbs": 33.92
+          "calories": 208,
+          "protein": 25,
+          "fat": 1,
+          "carbs": 25
         },
         "calculated": false
       }
@@ -1120,44 +997,15 @@ export const MENU_ITEMS = [
     "section": "Освежающие",
     "kind": "drink",
     "description": "Молоко кокосовое/миндальное/безлактозное, сок земляничный, лед, клубника св/м, матча порошок",
-    "nutritionVariants": [
-      {
-        "label": "молоко кокосовое",
-        "nutrition": {
-          "calories": 108.74,
-          "protein": 1.48,
-          "fat": 3.22,
-          "carbs": 18.82
-        }
-      },
-      {
-        "label": "молоко миндальное",
-        "nutrition": {
-          "calories": 110.24,
-          "protein": 1.68,
-          "fat": 3.22,
-          "carbs": 19.12
-        }
-      },
-      {
-        "label": "молоко безлактозное",
-        "nutrition": {
-          "calories": 120.74,
-          "protein": 5.08,
-          "fat": 2.92,
-          "carbs": 18.82
-        }
-      }
-    ],
     "volumes": [
       {
         "ml": 450,
         "price": 340,
         "nutrition": {
-          "calories": 108.74,
-          "protein": 1.48,
-          "fat": 3.22,
-          "carbs": 18.82
+          "calories": 86,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 16
         },
         "calculated": false
       }
@@ -1173,10 +1021,10 @@ export const MENU_ITEMS = [
         "ml": 350,
         "price": 340,
         "nutrition": {
-          "calories": 107.3,
-          "protein": 0.7,
-          "fat": 7.7,
-          "carbs": 8.78
+          "calories": 151,
+          "protein": 0,
+          "fat": 4,
+          "carbs": 13
         },
         "calculated": false
       }
@@ -1192,29 +1040,10 @@ export const MENU_ITEMS = [
         "ml": 350,
         "price": 340,
         "nutrition": {
-          "calories": 108,
-          "protein": 0.3,
-          "fat": 8,
-          "carbs": 8.4
-        },
-        "calculated": false
-      }
-    ]
-  },
-  {
-    "title": "Лимонад Грушевое вино",
-    "section": "Освежающие",
-    "kind": "drink",
-    "description": "Основа мс (груша_жасмин), газированая вода, шиммер (золото), лед",
-    "volumes": [
-      {
-        "ml": 300,
-        "price": 260,
-        "nutrition": {
-          "calories": 40,
+          "calories": 145,
           "protein": 0,
-          "fat": 0,
-          "carbs": 10
+          "fat": 4,
+          "carbs": 12
         },
         "calculated": false
       }
@@ -1231,10 +1060,10 @@ export const MENU_ITEMS = [
         "ml": 350,
         "price": 260,
         "nutrition": {
-          "calories": 60.8,
-          "protein": 0.08,
+          "calories": 60,
+          "protein": 0,
           "fat": 0,
-          "carbs": 14.96
+          "carbs": 15
         },
         "calculated": false
       }
@@ -1254,25 +1083,6 @@ export const MENU_ITEMS = [
           "protein": 0.12,
           "fat": 0.06,
           "carbs": 10.87
-        },
-        "calculated": false
-      }
-    ]
-  },
-  {
-    "title": "Лимонад Дикие ягоды",
-    "section": "Освежающие",
-    "kind": "drink",
-    "description": "Основа мс, газированная вода, лед, ежевика (3 ягоды)",
-    "volumes": [
-      {
-        "ml": 350,
-        "price": 260,
-        "nutrition": {
-          "calories": 59.2,
-          "protein": 1.8,
-          "fat": 0.6,
-          "carbs": 9.8
         },
         "calculated": false
       }
@@ -1307,17 +1117,17 @@ export const MENU_ITEMS = [
         "ml": 300,
         "price": 310,
         "nutrition": {
-          "calories": 96.5,
-          "protein": 0.35,
-          "fat": 0.1,
-          "carbs": 25.45
+          "calories": 89,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 21
         },
         "calculated": false
       }
     ]
   },
   {
-    "title": "Мороженое Миндаль-лайм",
+    "title": "Мороженое лайм-миндаль",
     "section": "Мороженое",
     "kind": "drink",
     "description": "Мороженое сливочное, лайм (фреш 1/2), миндальны елепестки",
@@ -1336,7 +1146,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Мороженое Гранат-грецкий орех",
+    "title": "Мороженое Гранат-орех",
     "section": "Мороженое",
     "kind": "drink",
     "description": "Мороженое сливочное, соус гранат, грецкий орех",
@@ -1393,26 +1203,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Лимонад \"Расцветай!\" от Сблеском",
-    "section": "Спэшл",
-    "kind": "drink",
-    "description": "Игристое безалко, газированая вода, стироп. (бузина), лимон (сок), лед, клубника св/м, шиммер (серебро)",
-    "volumes": [
-      {
-        "ml": 350,
-        "price": 320,
-        "nutrition": {
-          "calories": 87.4,
-          "protein": 0.34,
-          "fat": 0.1,
-          "carbs": 20.26
-        },
-        "calculated": false
-      }
-    ]
-  },
-  {
-    "title": "Шмель грейпфрут-малина от Ульяны",
+    "title": "Бамбл Грейпфрут-Малина от Ульяны",
     "section": "Спэшл",
     "kind": "drink",
     "description": "Кофейное зерно, фреш грейпфрут, малина св.м, сахар, лед",
@@ -1431,7 +1222,7 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Эспрессо-тоник ПалоСанто от Валентины",
+    "title": "Эспрессо-тоник Пало санто Валентины",
     "section": "Спэшл",
     "kind": "drink",
     "description": "Кофейное зерно, тоник эвервес, основа (пало санто), лед",
@@ -1450,28 +1241,28 @@ export const MENU_ITEMS = [
     ]
   },
   {
-    "title": "Сытные пироги",
+    "title": "Сырники мсп",
     "kind": "food",
-    "description": "Сдобное тесто, варианты начинки: Капуста-куриный фарш/картофель-бекон/сыр-шпинат/сыр-грибы",
+    "description": "Сырники, сироп топинамбура, творожный сыр, вишня, сметана",
     "nutrition": {
       "calories": 304,
       "protein": 14,
       "fat": 8,
       "carbs": 45
     },
-    "price": 390
+    "price": 350
   },
   {
-    "title": "Гранола с йогуртом",
+    "title": "Гранола с кедровым орехом",
     "kind": "food",
-    "description": "Гранола: кедровый орех-клюква/семена конопли-чиа/ детская с воздушными хлопьями; термостатный йогурт, молоко доп: банан, тертый какао",
+    "description": "Гранола (кедровый орех, клюква, семена конопли и чиа, воздушные хлопья), термостатный йогурт, молоко",
     "nutrition": {
       "calories": 398,
       "protein": 11,
       "fat": 15,
       "carbs": 47
     },
-    "price": 250
+    "price": 310
   },
   {
     "title": "Бутерброд с икрой",
@@ -1486,7 +1277,7 @@ export const MENU_ITEMS = [
     "price": 990
   },
   {
-    "title": "Сэндвичи с форелью",
+    "title": "Сэндвич с форелью МСП",
     "kind": "food",
     "description": "Безглютеновые вафли на свекольномпюре, сметанный пряный соус, форель слабой соли, свежий салат и огурец",
     "nutrition": {
@@ -1498,7 +1289,7 @@ export const MENU_ITEMS = [
     "price": 550
   },
   {
-    "title": "Сэндвичи с курицей",
+    "title": "Сэндвич с курицей МСП",
     "kind": "food",
     "description": "Безглютеновые вафли на тыквенном пюре, пряный соус цезарь, курица су-вид, свежий салат и томат",
     "nutrition": {
@@ -1651,5 +1442,299 @@ export const MENU_ITEMS = [
     },
     "weight": "230 гр",
     "price": 200
+  },
+  {
+    "title": "Американо с облепиховой пеной",
+    "section": "Кофе",
+    "kind": "drink",
+    "description": "Американо, облепиховая пена",
+    "volumes": [
+      {
+        "price": 250,
+        "nutrition": {
+          "calories": 55,
+          "protein": 5,
+          "fat": 0,
+          "carbs": 6
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Американо с вишневой пеной",
+    "section": "Кофе",
+    "kind": "drink",
+    "description": "Американо, вишнёвая пена",
+    "volumes": [
+      {
+        "price": 250,
+        "nutrition": {
+          "calories": 55,
+          "protein": 5,
+          "fat": 0,
+          "carbs": 6
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Американо с малиновой пеной",
+    "section": "Кофе",
+    "kind": "drink",
+    "description": "Американо, малиновая пена",
+    "volumes": [
+      {
+        "price": 250,
+        "nutrition": {
+          "calories": 55,
+          "protein": 5,
+          "fat": 0,
+          "carbs": 6
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Раф тыква карамель",
+    "section": "Кофе",
+    "kind": "drink",
+    "description": "Эспрессо, молоко, сливки, тыква и карамель",
+    "volumes": [
+      {
+        "price": 370,
+        "nutrition": {
+          "calories": 278,
+          "protein": 6,
+          "fat": 13,
+          "carbs": 33
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Черри Латте",
+    "section": "Кофе",
+    "kind": "drink",
+    "description": "Эспрессо, молоко, вишнёвый сироп",
+    "volumes": [
+      {
+        "price": 350,
+        "nutrition": {
+          "calories": 173,
+          "protein": 6,
+          "fat": 7,
+          "carbs": 21
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Апероль",
+    "section": "Освежающие",
+    "kind": "drink",
+    "description": "Безалкогольный спритц: апельсин, газированная вода, апероль и игристое (б/а)",
+    "volumes": [
+      {
+        "price": 380,
+        "nutrition": {
+          "calories": 89,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 21
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Чай розовый жасмин",
+    "section": "Чайники",
+    "kind": "drink",
+    "description": "Зелёный чай с бутонами роз",
+    "volumes": [
+      {
+        "price": 280,
+        "nutrition": {
+          "calories": 76,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 19
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Ежевичный чай",
+    "section": "Чайники",
+    "kind": "drink",
+    "description": "Ежевика, чай, сироп",
+    "volumes": [
+      {
+        "price": 390,
+        "nutrition": {
+          "calories": 105,
+          "protein": 1,
+          "fat": 0,
+          "carbs": 25
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Малиновый пунш",
+    "section": "Согревающие",
+    "kind": "drink",
+    "description": "Малина, имбирь, перец для пунша, сироп",
+    "volumes": [
+      {
+        "price": 320,
+        "nutrition": {
+          "calories": 69,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 14
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Шиповник ягодный",
+    "section": "Согревающие",
+    "kind": "drink",
+    "description": "Малина, ягоды шиповника",
+    "volumes": [
+      {
+        "price": 290,
+        "nutrition": {
+          "calories": 58,
+          "protein": 0,
+          "fat": 0,
+          "carbs": 6
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Какао грог",
+    "section": "Не кофе",
+    "kind": "drink",
+    "description": "Молоко, какао, грецкий орех, сироп",
+    "volumes": [
+      {
+        "price": 320,
+        "nutrition": {
+          "calories": 251,
+          "protein": 9,
+          "fat": 12,
+          "carbs": 22
+        },
+        "calculated": false
+      }
+    ]
+  },
+  {
+    "title": "Яичный рулет с жульеном",
+    "kind": "food",
+    "description": "Яйцо куриное, мука рисовая, творожный сыр, шампиньоны, филе курицы, лук, соевый соус",
+    "nutrition": {
+      "calories": 410,
+      "protein": 34,
+      "fat": 20,
+      "carbs": 23
+    },
+    "price": 420
+  },
+  {
+    "title": "Боул с креветкой мсп",
+    "kind": "food",
+    "description": "Кускус, морковь, капуста, огурец, манго, креветки, яйцо куриное, соус азиатский",
+    "nutrition": {
+      "calories": 416,
+      "protein": 18,
+      "fat": 12,
+      "carbs": 62
+    },
+    "price": 550
+  },
+  {
+    "title": "Боул с курицей мсп",
+    "kind": "food",
+    "description": "Кускус, морковь, капуста, огурец, кукуруза, филе курицы, яйцо куриное, соус азиатский",
+    "nutrition": {
+      "calories": 436,
+      "protein": 26,
+      "fat": 12,
+      "carbs": 58
+    },
+    "price": 450
+  },
+  {
+    "title": "+ хлеб 1 кус",
+    "kind": "food",
+    "description": "Багет ржано-пшеничный",
+    "nutrition": {
+      "calories": 31,
+      "protein": 1,
+      "fat": 0,
+      "carbs": 7
+    },
+    "price": 30
+  },
+  {
+    "title": "+ сыр 20 гр",
+    "kind": "food",
+    "description": "Сыр для завтрака",
+    "nutrition": {
+      "calories": 72,
+      "protein": 6,
+      "fat": 6,
+      "carbs": 0
+    },
+    "price": 45
+  },
+  {
+    "title": "+яйцо 1шт.",
+    "kind": "food",
+    "description": "Яйцо всмятку",
+    "nutrition": {
+      "calories": 85,
+      "protein": 8,
+      "fat": 6,
+      "carbs": 0.5
+    },
+    "price": 50
+  },
+  {
+    "title": "+ конфитюр 40 гр",
+    "kind": "food",
+    "description": "Конфитюр",
+    "nutrition": {
+      "calories": 76,
+      "protein": 1,
+      "fat": 0,
+      "carbs": 18
+    },
+    "price": 70
+  },
+  {
+    "title": "+икра лососевая 25 гр",
+    "kind": "food",
+    "description": "Икра лососевая",
+    "nutrition": {
+      "calories": 58,
+      "protein": 8,
+      "fat": 3,
+      "carbs": 0
+    },
+    "price": 450
   }
 ];

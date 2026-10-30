@@ -65,3 +65,4 @@ work/product-concepts/palette-pixels.json
 # Downloaded third-party webpage mirrors and local build logs
 work/product-concepts/style-lab/font-research/
 work/product-sheet-*.log
+work/.release-local/
