@@ -3,12 +3,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const routes = [
-  ['/product-concepts/', path.join(__dirname, 'product-concepts')],
   ['/photo-editor/', path.join(__dirname, 'photo-editor')],
-  ['/launch-concepts/', path.join(__dirname, 'launch-concepts')],
   ['/cashier/', path.join(root, 'kassa-terminal')],
   ['/brand-assets/', path.join(root, 'assets')],
 ];
+// Optional local sketches are ignored by Git; a fresh checkout serves only the active tools.
+for (const name of ['product-concepts', 'launch-concepts']) {
+  const directory = path.join(__dirname, name);
+  if (fs.existsSync(directory)) routes.push([`/${name}/`, directory]);
+}
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
 http.createServer((req, res) => {
   if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
@@ -26,4 +29,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': mime[path.extname(file).toLowerCase()], 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
     if (req.method === 'HEAD') res.end(); else fs.createReadStream(file).pipe(res);
   });
-}).listen(8096, '127.0.0.1', () => console.log('SBL design tools: http://127.0.0.1:8096/photo-editor/ | /launch-concepts/ | /cashier/'));
+}).listen(8096, '127.0.0.1', () => console.log('SBL tools: http://127.0.0.1:8096/photo-editor/ | /cashier/'));

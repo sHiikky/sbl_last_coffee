@@ -1,0 +1,25 @@
+SBL — brand assets, 2026-10-29
+
+Source supplied by owner: photo_2026-10-29_13-40-37.jpg, outdoor squirrel/SBL sign.
+Built-in imagegen used for restoration, transparent alpha background.
+Project asset: assets/brand/sbl-restored-full.png (RGBA, 1774x887).
+The compact mark and full lock-up BOTH display this same artwork. BrandLogo
+frames select the squirrel/SBL or squirrel/SBL/tagline; no separately generated
+mark is used. Original photos and database URLs are unchanged.
+
+Native app-icon.png (1024 square) and splash-full.png (480x184) are exact browser
+renders of that same restored artwork with product background/tint. Sources:
+historical local generators (not required by the application build).
+
+Final restoration prompt:
+Use case: background-extraction / identity-preserving logo restoration. Edit target: attached photograph of the outdoor SBL sign. Extract ONLY the original black squirrel silhouette + hand-lettered SBL wordmark and the exact secondary Russian line "УКРАШЕНИЯ & КОФЕ". Restore as a crisp, high resolution flat black brand logo on genuine transparent alpha background. Straighten the perspective to a perfectly front-facing horizontal logo. Keep the original squirrel profile, raised head, large curled bushy tail, paws and exact organic S B L letter shapes faithfully; do not redesign or substitute another logo. Keep the secondary line in thin uppercase sans lettering centered below, with all Cyrillic characters correct: УКРАШЕНИЯ & КОФЕ. Remove the white signboard entirely, building, pipes, branches, dirt, photo shadows and all surrounding scene. Solid black logo shapes, smooth precise contours, no texture/shadows/glow/3D, generous but not excessive transparent margins. The squirrel and SBL on one horizontal line; the tagline directly beneath. Output one restored logo only.
+
+The owner selected flame option В, "Янтарное стекло", by screenshot on2026-10-29.
+Bundled source: assets/brand/flame-amber-source.png (RGBA,1330x1182). components/FlameIcon.js clips the exact
+selected frame [174,585,445,562]; other alternatives remain outside the frame.
+No second generation, redraw or material change is used for the selected icon.
+Built-in imagegen created one comparison board with four materials. Cropped
+display frames show each choice large and at 27px; source alpha is preserved.
+
+Final flame comparison prompt:
+Use case: ui-mockup / icon material comparison board. One transparent PNG comparison sheet, exactly FOUR different premium 3D flame icons in a precisely aligned 2 by 2 grid with equal square cells and generous clear space; no text, no labels, no borders. Each icon centered in its own quadrant and fully contained there, identical visual size, recognizable at 24 pixels. These are icon alternatives for a sophisticated coffee + jewelry brand SBL, not game emojis. Upper left: smooth polished orange enamel flame, rounded sculptural silhouette with one elegant curled tip, cream inner inset, restrained specular highlight. Upper right: sculpted liquid chrome silver flame with warm orange interior, elegant reflective jewelry charm, crisp readable edges. Lower left: translucent amber and softly iridescent glass flame, clear orange body with soft pale lilac rim reflection, refined and luminous, no neon. Lower right: soft tactile warm terracotta ceramic flame with pale peach core, compact distinctive rounded three-dimensional shape, sophisticated satin finish. Camera straight frontal with just enough depth, soft studio highlights, no cast shadow outside icons, no bases, no logos or faces, no cartoon emoji expressions, no smoky effects, no sparks. Genuine transparent alpha background throughout the space between all four icons. This is one material-comparison board rather than a finished app screen.

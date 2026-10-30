@@ -66,3 +66,39 @@ work/product-concepts/palette-pixels.json
 work/product-concepts/style-lab/font-research/
 work/product-sheet-*.log
 work/.release-local/
+
+# Local design history and downloaded audit material; kept on the owner's PC
+/Claude outputs/
+/work/product-concepts/
+/work/launch-concepts/
+/work/photo-audit/
+/work/special-menu-photos/
+/work/design-review/
+/work/brand-refresh/
+/work/product-sheet/
+/work/ux-20261029/
+/work/photo-editor/qa/
+/work/pickup-checkout/preview/
+/work/pickup-checkout/combined-results.txt
+/work/pickup-checkout/concurrency-results.json
+/work/DATABASE_VERIFICATION.txt
+/work/FRONTEND_INTEGRATION.txt
+/work/GITHUB_RELEASE_20261030.txt
+/work/SBIS_INTEGRATION_STATUS.txt
+/work/sbis-catalog-67-audit.json
+/work/sanitize-legacy-sbis.cjs
+/work/typography-onest/RESULT.txt
+/work/typography-onest/adopt-text.cjs
+/work/**/*.png
+/work/**/*.jpg
+/work/**/*.jpeg
+/work/.photo-cache/
+/work/photo-tools/palette-pixels.json
+
+# Superseded app artwork (current resources live in assets/brand)
+/assets/adaptive-icon.png
+/assets/favicon.png
+/assets/icon.png
+/assets/logo-launch.png
+/assets/logo-mark.png
+/assets/splash-icon-dark.png

@@ -35,7 +35,7 @@ assert.equal(catalog.buildCategoryList([]).length, 0);
 assert.equal(products.length, 7); // Complete ordering catalog is not mutated.
 assert.equal(products[5].isModifier, true);
 const fs = require('node:fs'), path = require('node:path');
-const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, 'special-menu-photos/catalog-current.json')));
+const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures/menu-photo-catalog.json')));
 const current = snapshot.rows.filter(p => p.is_visible && p.is_available && !p.is_modifier).map(row => ({
   ...row, isModifier: row.is_modifier, image: { uri: row.image_override_url || row.image_url },
   menuCategory: row.menu_category, menuSubcategory: row.menu_subcategory,
