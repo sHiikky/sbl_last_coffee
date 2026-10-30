@@ -1,0 +1,2425 @@
+{
+  "readOnly": true,
+  "pointId": 240,
+  "priceListId": 67,
+  "priceListName": "осень зима 2026",
+  "capturedDate": "2026-10-18",
+  "totalRows": 206,
+  "folders": 19,
+  "uniqueProducts": 180,
+  "uniquePricedProducts": 176,
+  "duplicates": [
+    {
+      "id": 164,
+      "identical": true
+    },
+    {
+      "id": 36,
+      "identical": true
+    },
+    {
+      "id": 773,
+      "identical": true
+    },
+    {
+      "id": 901,
+      "identical": true
+    },
+    {
+      "id": 683,
+      "identical": true
+    },
+    {
+      "id": 856,
+      "identical": true
+    },
+    {
+      "id": 787,
+      "identical": true
+    }
+  ],
+  "requiredModifierProducts": [
+    {
+      "id": 29,
+      "name": "Кофе Капучино большой",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "name": "Кофе Капучино маленький",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "name": "Кофе Латте большой",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "name": "Кофе Латте маленький",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "name": "Кофе Флэт",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 165,
+      "name": "Айс Латте",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 253,
+      "name": "Юдзу американо",
+      "groups": [
+        {
+          "name": "основа",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 305,
+      "name": "Пинк дринк",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 308,
+      "name": "Пинк дринк Матча",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "name": "Какао 300 мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 828,
+      "name": "Какао \"Горячая\" вишня",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "name": "Матча Blue Sbleskom",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 294,
+      "name": "Матча Blue Sbleskom 350 мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "name": "Матча латте",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 293,
+      "name": "Матча латте 350мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 193,
+      "name": "Матча-тоник",
+      "groups": [
+        {
+          "name": "Матча",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 487,
+      "name": "Убе Латте",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 489,
+      "name": "Убе Латте 350 мл",
+      "groups": [
+        {
+          "name": "Молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 641,
+      "name": "Фисташковая Матча Латте 300 мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 890,
+      "name": "Ходжича латте 250 мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 889,
+      "name": "Ходжича латте 400 мл",
+      "groups": [
+        {
+          "name": "молоко",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    },
+    {
+      "id": 742,
+      "name": "Ежевичный чай",
+      "groups": [
+        {
+          "name": "Опции",
+          "minCount": 1,
+          "maxCount": 1
+        }
+      ]
+    }
+  ],
+  "publicProductComparison": {
+    "fetchedRows": 142,
+    "explicitlyVisibleRows": 83,
+    "missingFromNewMenu": [
+      {
+        "sbisId": 402,
+        "name": "Маршеллоу порц 25гр",
+        "visible": false
+      },
+      {
+        "sbisId": 562,
+        "name": "-молоко кокосовое 200 мл",
+        "visible": false
+      },
+      {
+        "sbisId": 563,
+        "name": "-молоко миндальное 200 мл",
+        "visible": false
+      },
+      {
+        "sbisId": 564,
+        "name": "-молоко безлактозное 200мл",
+        "visible": false
+      },
+      {
+        "sbisId": 566,
+        "name": "-молоко миндальное 300 мл",
+        "visible": false
+      },
+      {
+        "sbisId": 567,
+        "name": "-молоко кокосовое 300 мл",
+        "visible": false
+      },
+      {
+        "sbisId": 568,
+        "name": "-молоко безлактозное 300мл",
+        "visible": false
+      },
+      {
+        "sbisId": 580,
+        "name": "Кофе в зернах 100гр",
+        "visible": false
+      },
+      {
+        "sbisId": 581,
+        "name": "Декаф в зернах  100гр",
+        "visible": false
+      },
+      {
+        "sbisId": 595,
+        "name": "Картошка праздничная",
+        "visible": true
+      },
+      {
+        "sbisId": 613,
+        "name": "Газ. вода Coca Cola, шт",
+        "visible": false
+      },
+      {
+        "sbisId": 614,
+        "name": "Тирамису",
+        "visible": true
+      },
+      {
+        "sbisId": 632,
+        "name": "Конфета Дубайский шоколад",
+        "visible": true
+      },
+      {
+        "sbisId": 635,
+        "name": "Печенье маленькое",
+        "visible": true
+      },
+      {
+        "sbisId": 690,
+        "name": "Холодный Американо",
+        "visible": true
+      },
+      {
+        "sbisId": 722,
+        "name": "Протеиновый  латте от Анисьи",
+        "visible": false
+      },
+      {
+        "sbisId": 728,
+        "name": "+ сыр 20 гр",
+        "visible": false
+      },
+      {
+        "sbisId": 729,
+        "name": "+ хлеб 1 кус",
+        "visible": false
+      },
+      {
+        "sbisId": 730,
+        "name": "+ конфитюр 40 гр",
+        "visible": false
+      },
+      {
+        "sbisId": 737,
+        "name": "Тарт ягодный",
+        "visible": true
+      },
+      {
+        "sbisId": 739,
+        "name": "Пирожное Чизкейк манго-маракуйя",
+        "visible": true
+      },
+      {
+        "sbisId": 766,
+        "name": "Какао Widen",
+        "visible": false
+      },
+      {
+        "sbisId": 777,
+        "name": "Шот Витамин",
+        "visible": true
+      },
+      {
+        "sbisId": 779,
+        "name": "Чай Мандарин-Розмарин 500 мл",
+        "visible": true
+      },
+      {
+        "sbisId": 781,
+        "name": "Флэт на цикории",
+        "visible": true
+      },
+      {
+        "sbisId": 783,
+        "name": "Кедровый латте с клубникой",
+        "visible": true
+      },
+      {
+        "sbisId": 796,
+        "name": "Шоковзлёт",
+        "visible": false
+      },
+      {
+        "sbisId": 797,
+        "name": "Кедровая сказка",
+        "visible": false
+      },
+      {
+        "sbisId": 800,
+        "name": "Очень странные дела по-сибирски",
+        "visible": false
+      },
+      {
+        "sbisId": 802,
+        "name": "Какао с малиновым шармом",
+        "visible": false
+      },
+      {
+        "sbisId": 804,
+        "name": "Протеиновый батончик",
+        "visible": true
+      },
+      {
+        "sbisId": 810,
+        "name": "Чечевичный суп",
+        "visible": true
+      },
+      {
+        "sbisId": 811,
+        "name": "Тыквенный суп",
+        "visible": true
+      },
+      {
+        "sbisId": 820,
+        "name": "Плетенка с яблоком",
+        "visible": true
+      },
+      {
+        "sbisId": 822,
+        "name": "Зернобон с творогом и клюквой",
+        "visible": true
+      },
+      {
+        "sbisId": 825,
+        "name": "Латте фисташка-карамель с цедрой",
+        "visible": true
+      },
+      {
+        "sbisId": 827,
+        "name": "Матча латте протеин",
+        "visible": true
+      },
+      {
+        "sbisId": 830,
+        "name": "Конфета Для любимых",
+        "visible": true
+      },
+      {
+        "sbisId": 833,
+        "name": "Цветы Амариллис луковица",
+        "visible": false
+      }
+    ],
+    "noPriceInNewMenu": [
+      {
+        "sbisId": 787,
+        "name": "-матча порошок 2 гр",
+        "visible": false
+      },
+      {
+        "sbisId": 812,
+        "name": "Завтрак конструктор",
+        "visible": true
+      }
+    ],
+    "changedPrices": [
+      {
+        "sbisId": 40,
+        "name": "Фреш апельсин",
+        "visible": false,
+        "oldPrice": 360,
+        "newPrice": 315
+      },
+      {
+        "sbisId": 54,
+        "name": "Латте «миндаль»",
+        "visible": false,
+        "oldPrice": 370,
+        "newPrice": 390
+      },
+      {
+        "sbisId": 56,
+        "name": "Раф «кедровый»",
+        "visible": false,
+        "oldPrice": 420,
+        "newPrice": 520
+      },
+      {
+        "sbisId": 164,
+        "name": "Эспрессо-тоник",
+        "visible": false,
+        "oldPrice": 310,
+        "newPrice": 260
+      },
+      {
+        "sbisId": 193,
+        "name": "Матча-тоник",
+        "visible": true,
+        "oldPrice": 280,
+        "newPrice": 260
+      },
+      {
+        "sbisId": 212,
+        "name": "Банановый какао",
+        "visible": true,
+        "oldPrice": 300,
+        "newPrice": 340
+      },
+      {
+        "sbisId": 253,
+        "name": "Юдзу американо",
+        "visible": true,
+        "oldPrice": 300,
+        "newPrice": 250
+      },
+      {
+        "sbisId": 258,
+        "name": "Апельсиновый пунш 300мл",
+        "visible": false,
+        "oldPrice": 380,
+        "newPrice": 360
+      },
+      {
+        "sbisId": 345,
+        "name": "Бутерброд с икрой",
+        "visible": true,
+        "oldPrice": 900,
+        "newPrice": 990
+      },
+      {
+        "sbisId": 375,
+        "name": "Мороженое 50гр",
+        "visible": false,
+        "oldPrice": 70,
+        "newPrice": 100
+      },
+      {
+        "sbisId": 406,
+        "name": "Гранатовый кофе",
+        "visible": true,
+        "oldPrice": 360,
+        "newPrice": 310
+      },
+      {
+        "sbisId": 495,
+        "name": "Какао Шмель",
+        "visible": false,
+        "oldPrice": 380,
+        "newPrice": 350
+      },
+      {
+        "sbisId": 574,
+        "name": "Глинтвейн грейпфрут",
+        "visible": true,
+        "oldPrice": 340,
+        "newPrice": 290
+      },
+      {
+        "sbisId": 577,
+        "name": "Френч пресс декаф",
+        "visible": true,
+        "oldPrice": 300,
+        "newPrice": 350
+      },
+      {
+        "sbisId": 608,
+        "name": "Чай витамин от Управляющей",
+        "visible": false,
+        "oldPrice": 220,
+        "newPrice": 280
+      },
+      {
+        "sbisId": 648,
+        "name": "Гранола с кедровым орехом",
+        "visible": true,
+        "oldPrice": 250,
+        "newPrice": 310
+      },
+      {
+        "sbisId": 683,
+        "name": "Завтрак с яйцами",
+        "visible": true,
+        "oldPrice": 450,
+        "newPrice": 320
+      },
+      {
+        "sbisId": 697,
+        "name": "Протеиновый смузи",
+        "visible": false,
+        "oldPrice": 320,
+        "newPrice": 360
+      },
+      {
+        "sbisId": 735,
+        "name": "Бамбл Грейпфрут-Малина от Ульяны",
+        "visible": true,
+        "oldPrice": 390,
+        "newPrice": 420
+      },
+      {
+        "sbisId": 765,
+        "name": "Фреш яблочный",
+        "visible": true,
+        "oldPrice": 360,
+        "newPrice": 320
+      },
+      {
+        "sbisId": 773,
+        "name": "Имбирный Юдзу 300 мл",
+        "visible": true,
+        "oldPrice": 220,
+        "newPrice": 240
+      },
+      {
+        "sbisId": 775,
+        "name": "Шиповник с апельсином 300 мл",
+        "visible": true,
+        "oldPrice": 220,
+        "newPrice": 210
+      },
+      {
+        "sbisId": 778,
+        "name": "Чай Ройбош Шишка-Гранат 500мл",
+        "visible": false,
+        "oldPrice": 320,
+        "newPrice": 280
+      }
+    ],
+    "requiredModifierProducts": [
+      {
+        "sbisId": 29,
+        "name": "Кофе Капучино большой",
+        "visible": false,
+        "groups": [
+          "Молоко"
+        ]
+      },
+      {
+        "sbisId": 33,
+        "name": "Кофе Латте маленький",
+        "visible": false,
+        "groups": [
+          "Молоко"
+        ]
+      },
+      {
+        "sbisId": 34,
+        "name": "Кофе Флэт",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 36,
+        "name": "Матча латте",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 37,
+        "name": "Матча Blue Sbleskom",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 41,
+        "name": "Какао 300 мл",
+        "visible": false,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 45,
+        "name": "Кофе Капучино маленький",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 46,
+        "name": "Кофе Латте большой",
+        "visible": true,
+        "groups": [
+          "Молоко"
+        ]
+      },
+      {
+        "sbisId": 165,
+        "name": "Айс Латте",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 193,
+        "name": "Матча-тоник",
+        "visible": true,
+        "groups": [
+          "Матча"
+        ]
+      },
+      {
+        "sbisId": 253,
+        "name": "Юдзу американо",
+        "visible": true,
+        "groups": [
+          "основа"
+        ]
+      },
+      {
+        "sbisId": 293,
+        "name": "Матча латте 350мл",
+        "visible": false,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 294,
+        "name": "Матча Blue Sbleskom 350 мл",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 487,
+        "name": "Убе Латте",
+        "visible": true,
+        "groups": [
+          "Молоко"
+        ]
+      },
+      {
+        "sbisId": 489,
+        "name": "Убе Латте 350 мл",
+        "visible": true,
+        "groups": [
+          "Молоко"
+        ]
+      },
+      {
+        "sbisId": 641,
+        "name": "Фисташковая Матча Латте 300 мл",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      },
+      {
+        "sbisId": 828,
+        "name": "Какао \"Горячая\" вишня",
+        "visible": true,
+        "groups": [
+          "молоко"
+        ]
+      }
+    ],
+    "hierarchyChanges": [
+      {
+        "sbisId": 18,
+        "name": "Кофе Эспрессо",
+        "visible": false,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 28,
+        "name": "Кофе Американо",
+        "visible": false,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 29,
+        "name": "Кофе Капучино большой",
+        "visible": false,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 33,
+        "name": "Кофе Латте маленький",
+        "visible": false,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 34,
+        "name": "Кофе Флэт",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 36,
+        "name": "Матча латте",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 37,
+        "name": "Матча Blue Sbleskom",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 40,
+        "name": "Фреш апельсин",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 41,
+        "name": "Какао 300 мл",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 42,
+        "name": "Чай гречишный 500 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 43,
+        "name": "Чай зеленый 500мл",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 44,
+        "name": "Чай черный 500мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 45,
+        "name": "Кофе Капучино маленький",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 46,
+        "name": "Кофе Латте большой",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 49,
+        "name": "-молоко альтер. 100 мл",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 50,
+        "name": "Сироп 10 мл",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 53,
+        "name": "Латте «кокос арахис»",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 54,
+        "name": "Латте «миндаль»",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 56,
+        "name": "Раф «кедровый»",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 82,
+        "name": "Кардамон/Можжевельник 2 гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 120,
+        "name": "Раф классика",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 149,
+        "name": "Паста арахисовая 20гр.",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 150,
+        "name": "Урбеч миндальный 20гр.",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 151,
+        "name": "Урбеч кедровый 20гр.",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 158,
+        "name": "Молоко 100мл.",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 159,
+        "name": "Сливки 50мл.",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 161,
+        "name": "Молоко 50 мл",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 163,
+        "name": "Шмель/Бамбл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 164,
+        "name": "Эспрессо-тоник",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 165,
+        "name": "Айс Латте",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 193,
+        "name": "Матча-тоник",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 212,
+        "name": "Банановый какао",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 253,
+        "name": "Юдзу американо",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 254,
+        "name": "Лимонад Юдзу",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 258,
+        "name": "Апельсиновый пунш 300мл",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 293,
+        "name": "Матча латте 350мл",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 294,
+        "name": "Матча Blue Sbleskom 350 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 345,
+        "name": "Бутерброд с икрой",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Завтраки"
+        ]
+      },
+      {
+        "sbisId": 375,
+        "name": "Мороженое 50гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 381,
+        "name": "Макаронс в ассорт.",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 401,
+        "name": "Содовая 100 мл",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 406,
+        "name": "Гранатовый кофе",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 478,
+        "name": "Сибирский чай с корицей 300мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 487,
+        "name": "Убе Латте",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 489,
+        "name": "Убе Латте 350 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 495,
+        "name": "Какао Шмель",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 513,
+        "name": "Конфета Кедровый грильяж",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 514,
+        "name": "Конфета Метелица/Маска",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 515,
+        "name": "Печенье Блонди",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 516,
+        "name": "Печенье Брауни",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 519,
+        "name": "Пирожное Сникерс",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 520,
+        "name": "Мед 20гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 521,
+        "name": "Имбирный фреш 15 мл",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 574,
+        "name": "Глинтвейн грейпфрут",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 575,
+        "name": "Чай Облепиха-имбирь 500 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 576,
+        "name": "Френч пресс",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 577,
+        "name": "Френч пресс декаф",
+        "visible": true,
+        "oldCategory": "Напитки Классика",
+        "newPath": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 583,
+        "name": "Чай 6 гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 600,
+        "name": "Сэндвич с рваным брискетом (говядина)",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 601,
+        "name": "Сэндвич с курицей",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 602,
+        "name": "Круассан с лососем",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 603,
+        "name": "Круассан с ветчиной и сыром",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 608,
+        "name": "Чай витамин от Управляющей",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "5.Коллаб"
+        ]
+      },
+      {
+        "sbisId": 633,
+        "name": "Ириска Зерно",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 641,
+        "name": "Фисташковая Матча Латте 300 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 648,
+        "name": "Гранола с кедровым орехом",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Завтраки"
+        ]
+      },
+      {
+        "sbisId": 651,
+        "name": "Чай ромашковый",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 652,
+        "name": "Город не бесит Не открытки 1 шт набор",
+        "visible": false,
+        "oldCategory": "Город не бесит Не открытки 1 шт набор",
+        "newPath": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 654,
+        "name": "Печенье овсяное Зерно",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 655,
+        "name": "Пирог сытный",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 683,
+        "name": "Завтрак с яйцами",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Завтраки"
+        ]
+      },
+      {
+        "sbisId": 695,
+        "name": "Лимонад Дюшес",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 697,
+        "name": "Протеиновый смузи",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 726,
+        "name": "Мусс Васюганские болота",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 735,
+        "name": "Бамбл Грейпфрут-Малина от Ульяны",
+        "visible": true,
+        "oldCategory": "Спэшл меню",
+        "newPath": [
+          "5.Коллаб"
+        ]
+      },
+      {
+        "sbisId": 738,
+        "name": "Птичье молоко",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 748,
+        "name": "-какао порошок EXTRA BRUTE 5 гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 753,
+        "name": "Шу сливочный",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Фара"
+        ]
+      },
+      {
+        "sbisId": 754,
+        "name": "Шу Соленая карамель",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Фара"
+        ]
+      },
+      {
+        "sbisId": 755,
+        "name": "Шу лимонный курд",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Фара"
+        ]
+      },
+      {
+        "sbisId": 756,
+        "name": "Мадлен",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Фара"
+        ]
+      },
+      {
+        "sbisId": 765,
+        "name": "Фреш яблочный",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 773,
+        "name": "Имбирный Юдзу 300 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 775,
+        "name": "Шиповник с апельсином 300 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 778,
+        "name": "Чай Ройбош Шишка-Гранат 500мл",
+        "visible": false,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 780,
+        "name": "Чай Малина-Розмарин 500 мл",
+        "visible": true,
+        "oldCategory": "Авторские",
+        "newPath": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 787,
+        "name": "-матча порошок 2 гр",
+        "visible": false,
+        "oldCategory": "Добавки",
+        "newPath": [
+          "-добавки"
+        ]
+      },
+      {
+        "sbisId": 789,
+        "name": "Мадлен в шоколаде",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Фара"
+        ]
+      },
+      {
+        "sbisId": 803,
+        "name": "Десерт Манго-кокос",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 805,
+        "name": "Трюфель vegan",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 806,
+        "name": "Кекс банановый vegan",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 807,
+        "name": "Медовик низкокалорийный",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 808,
+        "name": "Сэндвич с форелью МСП",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 809,
+        "name": "Сэндвич с курицей МСП",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 812,
+        "name": "Завтрак конструктор",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Завтраки"
+        ]
+      },
+      {
+        "sbisId": 817,
+        "name": "Эклеры в ассортименте",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 821,
+        "name": "Булочка сахарная,70 гр",
+        "visible": true,
+        "oldCategory": "Сытное/Десерты",
+        "newPath": [
+          "6.Сытное/десерты",
+          "Зерно"
+        ]
+      },
+      {
+        "sbisId": 824,
+        "name": "Свеча \"Сибирская береза\"",
+        "visible": false,
+        "oldCategory": "Свеча \"Сибирская береза\"",
+        "newPath": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 828,
+        "name": "Какао \"Горячая\" вишня",
+        "visible": true,
+        "oldCategory": "Спэшл меню",
+        "newPath": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 843,
+        "name": "Лимонад Малина-базилик 0.33л",
+        "visible": false,
+        "oldCategory": "Лимонад Малина-базилик 0.33л",
+        "newPath": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 849,
+        "name": "Ваза «Береза» XL (размер 25,5 см)",
+        "visible": false,
+        "oldCategory": "Ваза «Береза» XL (размер 25,5 см)",
+        "newPath": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 850,
+        "name": "Ваза «Береза» M (размер 22,5 см)",
+        "visible": false,
+        "oldCategory": "Ваза «Береза» M (размер 22,5 см)",
+        "newPath": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 851,
+        "name": "Ваза «Береза» S ( размер 12,5 см)",
+        "visible": false,
+        "oldCategory": "Ваза «Береза» S ( размер 12,5 см)",
+        "newPath": [
+          "Товары"
+        ]
+      }
+    ],
+    "newPricedProducts": [
+      {
+        "sbisId": 700,
+        "name": "Аффогато",
+        "price": 250,
+        "path": [
+          "1.Кофе",
+          "Классика"
+        ]
+      },
+      {
+        "sbisId": 986,
+        "name": "Американо Катя любит",
+        "price": 260,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 956,
+        "name": "Американо с вишневой пеной",
+        "price": 250,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 954,
+        "name": "Американо с малиновой пеной",
+        "price": 250,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 955,
+        "name": "Американо с облепиховой пеной",
+        "price": 250,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 947,
+        "name": "Раф тыква карамель",
+        "price": 370,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 985,
+        "name": "Черри Латте",
+        "price": 350,
+        "path": [
+          "1.Кофе"
+        ]
+      },
+      {
+        "sbisId": 432,
+        "name": "Апероль",
+        "price": 380,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 859,
+        "name": "Земляничный убе",
+        "price": 340,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 862,
+        "name": "Лимонад Земляничный",
+        "price": 260,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 864,
+        "name": "Лимонад Розовый лимон",
+        "price": 310,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 866,
+        "name": "Матча Жасмин",
+        "price": 340,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 921,
+        "name": "Москито",
+        "price": 310,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 923,
+        "name": "Облепиховый ромарио",
+        "price": 360,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 305,
+        "name": "Пинк дринк",
+        "price": 290,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 308,
+        "name": "Пинк дринк Матча",
+        "price": 340,
+        "path": [
+          "2.Освежающие"
+        ]
+      },
+      {
+        "sbisId": 945,
+        "name": "Какао грог",
+        "price": 320,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 693,
+        "name": "Матча Мятный пломбир",
+        "price": 450,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 692,
+        "name": "Матча Фисташковый пломбир",
+        "price": 450,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 694,
+        "name": "Убе Ежевичный пломбир",
+        "price": 450,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 890,
+        "name": "Ходжича латте 250 мл",
+        "price": 250,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 889,
+        "name": "Ходжича латте 400 мл",
+        "price": 340,
+        "path": [
+          "3.Не кофе"
+        ]
+      },
+      {
+        "sbisId": 742,
+        "name": "Ежевичный чай",
+        "price": 390,
+        "path": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 482,
+        "name": "Чай Малина-мята 500 мл",
+        "price": 320,
+        "path": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 953,
+        "name": "Чай розовый жасмин",
+        "price": 280,
+        "path": [
+          "4.Согревающие",
+          "Чайники"
+        ]
+      },
+      {
+        "sbisId": 949,
+        "name": "Малиновый пунш",
+        "price": 320,
+        "path": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 952,
+        "name": "Шиповник ягодный",
+        "price": 290,
+        "path": [
+          "4.Согревающие"
+        ]
+      },
+      {
+        "sbisId": 278,
+        "name": "Лимонад Расцветай!",
+        "price": 320,
+        "path": [
+          "5.Коллаб"
+        ]
+      },
+      {
+        "sbisId": 858,
+        "name": "Эспрессо-тоник на игристом",
+        "price": 350,
+        "path": [
+          "5.Коллаб"
+        ]
+      },
+      {
+        "sbisId": 716,
+        "name": "Эспрессо-тоник Пало санто Валентины",
+        "price": 350,
+        "path": [
+          "5.Коллаб"
+        ]
+      },
+      {
+        "sbisId": 877,
+        "name": "Боул с курицей",
+        "price": 470,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 876,
+        "name": "Боул с форелью",
+        "price": 590,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 880,
+        "name": "Греческий",
+        "price": 430,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 870,
+        "name": "Овсяная с конфитюром апельсин-ваниль",
+        "price": 200,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 872,
+        "name": "Рисовая с апельсиновым конфитюром",
+        "price": 200,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 873,
+        "name": "Рисовая с шоколадом и вишней",
+        "price": 200,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 871,
+        "name": "Рисовая с шоколадом и орехом",
+        "price": 200,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 878,
+        "name": "Роти с ветчиной и сыром",
+        "price": 390,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 879,
+        "name": "Роти с курицей и песто",
+        "price": 430,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 875,
+        "name": "Цезарь с курицей",
+        "price": 410,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 874,
+        "name": "Цезарь с лососем",
+        "price": 500,
+        "path": [
+          "6.Сытное/десерты",
+          "Вкусно"
+        ]
+      },
+      {
+        "sbisId": 901,
+        "name": "Картошка в шоколаде",
+        "price": 270,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 930,
+        "name": "Корпусное банан",
+        "price": 250,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 920,
+        "name": "Корпусное ежевика",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 927,
+        "name": "Корпусное кокос",
+        "price": 490,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 908,
+        "name": "Корпусное кофе",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 919,
+        "name": "Корпусное лимон",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 907,
+        "name": "Корпусное малина",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 909,
+        "name": "Корпусное манго",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 929,
+        "name": "Корпус фисташка",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 902,
+        "name": "Набор корпусных конфет",
+        "price": 2100,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 899,
+        "name": "Наполеон ДвК",
+        "price": 250,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 900,
+        "name": "Павлова",
+        "price": 370,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 942,
+        "name": "Трайфл двк",
+        "price": 930,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 894,
+        "name": "Эклер Вишня-кола",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 893,
+        "name": "Эклер Лесные ягоды",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 897,
+        "name": "Эклер Манго-зеленый чай",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 898,
+        "name": "Эклер с жимолостью",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 895,
+        "name": "Эклер Смородина",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 896,
+        "name": "Эклер фисташка",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 892,
+        "name": "Эклер Черника-лаванда",
+        "price": 230,
+        "path": [
+          "6.Сытное/десерты",
+          "Дело в креме"
+        ]
+      },
+      {
+        "sbisId": 931,
+        "name": "Зефир ПП",
+        "price": 105,
+        "path": [
+          "6.Сытное/десерты",
+          "Моменты"
+        ]
+      },
+      {
+        "sbisId": 867,
+        "name": "Аффогато с фисташкой",
+        "price": 320,
+        "path": [
+          "6.Сытное/десерты",
+          "Мороженое"
+        ]
+      },
+      {
+        "sbisId": 686,
+        "name": "Мороженое Гранат-орех",
+        "price": 300,
+        "path": [
+          "6.Сытное/десерты",
+          "Мороженое"
+        ]
+      },
+      {
+        "sbisId": 684,
+        "name": "Мороженое лайм-миндаль",
+        "price": 300,
+        "path": [
+          "6.Сытное/десерты",
+          "Мороженое"
+        ]
+      },
+      {
+        "sbisId": 856,
+        "name": "Мороженое малина-фисташка",
+        "price": 310,
+        "path": [
+          "6.Сытное/десерты",
+          "Мороженое"
+        ]
+      },
+      {
+        "sbisId": 961,
+        "name": "Боул с креветкой мсп",
+        "price": 550,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 960,
+        "name": "Боул с курицей мсп",
+        "price": 450,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 958,
+        "name": "Сырники мсп",
+        "price": 350,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 916,
+        "name": "Фундучное печенье",
+        "price": 150,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 917,
+        "name": "Шоколадное печенье",
+        "price": 150,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 959,
+        "name": "Яичный рулет с жульеном",
+        "price": 420,
+        "path": [
+          "6.Сытное/десерты",
+          "МСП"
+        ]
+      },
+      {
+        "sbisId": 911,
+        "name": "Ваза керамическая  в форме рыбы 31 см",
+        "price": 7500,
+        "path": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 167,
+        "name": "Сумка держатель короткая ручка",
+        "price": 1290,
+        "path": [
+          "Товары"
+        ]
+      },
+      {
+        "sbisId": 250,
+        "name": "Сумочка из бусин",
+        "price": 1490,
+        "path": [
+          "Товары"
+        ]
+      }
+    ]
+  }
+}

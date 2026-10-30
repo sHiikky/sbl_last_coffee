@@ -421,7 +421,7 @@ enabled = true
 # TELEGRAM_GATEWAY_TOKEN) и нигде не вызываются из UI — см. README.md,
 # раздел "Интеграция СБИС".
 [functions.send-otp]
-enabled = true
+enabled = false
 verify_jwt = false
 import_map = "./functions/send-otp/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
@@ -432,7 +432,7 @@ entrypoint = "./functions/send-otp/index.ts"
 # static_files = [ "./functions/send-otp/*.html" ]
 
 [functions.verify-otp]
-enabled = true
+enabled = false
 verify_jwt = false
 import_map = "./functions/verify-otp/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
@@ -448,3 +448,10 @@ entrypoint = "./functions/verify-otp/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/list-sbis-price-lists/index.ts"
+
+# Handler validates a current staff JWT or the private scheduled-worker secret.
+# Deployment alone does not enable sending (ORDER_PUSH_ENABLED defaults false).
+[functions.dispatch-order-notifications]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/dispatch-order-notifications/index.ts"

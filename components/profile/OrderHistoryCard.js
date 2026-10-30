@@ -2,7 +2,8 @@
 // Карточка одного заказа в истории профиля.
 // Фото и название берём из каталога по id первого товара заказа.
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import * as Haptics from 'expo-haptics';
 import ProductImage from '../ProductImage';
 import { getProductById } from '../../data/products';
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   thumb: { width: 108 },
   productLine: { fontSize: 16, fontWeight: '600', color: colors.textPrimary },
   footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.md },
-  price: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
+  price: { fontSize: 18, fontWeight: '600', fontVariant: ['tabular-nums'], color: colors.textPrimary },
   repeatButton: {
     minHeight: 42,
     paddingHorizontal: 18,

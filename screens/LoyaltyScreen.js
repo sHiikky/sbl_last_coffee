@@ -3,10 +3,12 @@
 // 10-дневного этапа, месячный календарь посещений, правила. Вся бизнес-логика
 // вычислена заранее в loyalty/useLoyaltyState.js — здесь только рендер.
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import Text from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HoloLine from '../components/HoloLine';
+import FlameIcon from '../components/FlameIcon';
 import PrimaryButton from '../components/PrimaryButton';
 import LoyaltyPath from '../components/loyalty/LoyaltyPath';
 import LoyaltyCalendar from '../components/loyalty/LoyaltyCalendar';
@@ -24,7 +26,7 @@ function StatusBlock({ loyaltyState }) {
   if (todayStatus === 'new') {
     return (
       <View>
-        <Text style={styles.statusTitle}>🔥 Серия ещё не началась</Text>
+        <View style={styles.statusHeading}><FlameIcon size={32} /><Text style={styles.statusTitle}>Серия ещё не началась</Text></View>
         <Text style={styles.statusSubtitle}>Начни свой маршрут</Text>
         <Text style={styles.statusBody}>
           Совершай хотя бы одну покупку в день. {LOYALTY_CONFIG.milestones[0]?.streakDays ?? 10} дней подряд — награда.
@@ -47,7 +49,7 @@ function StatusBlock({ loyaltyState }) {
 
   return (
     <View>
-      <Text style={styles.statusTitle}>🔥 {currentStreak} {pluralDays(currentStreak)} подряд</Text>
+      <View style={styles.statusHeading}><FlameIcon size={32} /><Text style={styles.statusTitle}>{currentStreak} {pluralDays(currentStreak)} подряд</Text></View>
       {milestoneReached ? (
         <Text style={styles.statusSubtitle}>Награда ваша</Text>
       ) : (
@@ -147,7 +149,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 18, fontWeight: '700', color: colors.textPrimary },
-  statusTitle: { fontSize: 22, fontWeight: '800', color: colors.textPrimary },
+  statusHeading: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  statusTitle: { fontSize: 22, fontWeight: '800', color: colors.textPrimary, flexShrink: 1 },
   statusSubtitle: { fontSize: 14, fontWeight: '600', color: colors.accent, marginTop: 6 },
   statusBody: { fontSize: 13, color: colors.textSecondary, marginTop: 8, lineHeight: 19 },
   statusFootnote: { fontSize: 11.5, color: colors.textMuted, marginTop: 10 },

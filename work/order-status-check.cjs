@@ -22,5 +22,17 @@ function harness(id){const h={slots:[],cursor:0,effects:[],id,finished:0};h.rend
  [...timers][0]();await flush();assert.equal(a.render().status,'completed');assert.equal(a.finished,1);
  a.id='two';assert.equal(a.render().status,'new');await flush();assert.equal(a.render().orderId,'two');assert(channels[0].removed);
  a.stop();b.stop();assert.equal(timers.size,0);assert(channels.every(ch=>ch.removed));
+ plan=Promise.resolve({data:{status:'preparing',order_number:43,total:100,bonus_redeemed:20,pickup_at:'2026-10-29T05:00:00Z'}});
+ const c=harness('three');c.render();await flush();
+ assert.equal(c.render().details.total,100);assert.equal(c.render().details.bonus_redeemed,20);assert.equal(c.render().refreshing,false);
+ assert.equal(typeof c.render().lastUpdatedAt,'number');
+ plan=Promise.resolve({error:new Error('offline')});await c.render().refresh();await flush();
+ assert.equal(c.render().error.message,'offline');assert.equal(c.render().status,'preparing');assert.equal(c.render().details.total,100);assert.equal(c.render().refreshing,false);
+ plan=Promise.resolve({data:{status:'ready',order_number:43,total:100,bonus_redeemed:20}});await c.render().refresh();await flush();
+ assert.equal(c.render().error,null);assert.equal(c.render().status,'ready');
+ plan=Promise.resolve({error:new Error('channel offline')});channels.at(-1).status('CHANNEL_ERROR');await flush();
+ assert.equal(c.render().error.message,'channel offline');assert.equal(c.render().status,'ready');
+ c.stop();assert.equal(timers.size,0);assert(channels.every(ch=>ch.removed));
  console.log('PASS: unique channels for the same order, late GET cannot overwrite realtime, terminal status cannot reopen, new order resets state, channels/timers are cleaned');
+ console.log('PASS: server order details, explicit retry, preserved offline status, recovered errors and channel failure');
 })().catch(error=>{console.error(error);process.exitCode=1;});

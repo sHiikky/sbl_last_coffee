@@ -4,11 +4,12 @@
     "slug": "snack-2351ccc7-33bf-4c3b-9ec4-ae33a576ff1a",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": ["expo-notifications", ["expo-location", {"locationWhenInUsePermission":"Разрешите SBL показать ваше местоположение на карте кофейни.","isIosBackgroundLocationEnabled":false,"isAndroidBackgroundLocationEnabled":false,"isAndroidForegroundServiceEnabled":false}], ["expo-splash-screen", {"backgroundColor":"#050505","image":"./assets/brand/splash-full.png","imageWidth":250,"resizeMode":"contain"}]],
     "splash": {
-      "image": "./assets/splash-icon-dark.png",
+      "image": "./assets/brand/splash-full.png",
       "resizeMode": "contain",
       "backgroundColor": "#050505"
     },
@@ -19,13 +20,13 @@
     "android": {
       "package": "com.shikky.sbl",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/brand/app-icon.png",
+        "backgroundColor": "#eceae5"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/brand/app-icon.png"
     },
     "extra": {
       "eas": {

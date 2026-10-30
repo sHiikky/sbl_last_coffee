@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
+import Text from './AppText';
 import QuickProductCard from './QuickProductCard';
 import { colors, spacing } from '../theme/tokens';
 

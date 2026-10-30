@@ -1,7 +1,8 @@
 // screens/OrderHistoryScreen.js
 // Отдельный экран истории заказов — открывается из пункта "Мои заказы" в профиле.
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import Text from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import OrderHistorySection from '../components/profile/OrderHistorySection';

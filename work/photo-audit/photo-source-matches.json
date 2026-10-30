@@ -1,0 +1,1397 @@
+[
+  {
+    "file": "downloaded\\americano-berry-foam-df4ebdb93d.webp",
+    "products": [
+      {
+        "id": "95eb4a3f-ac3e-4abc-9da3-fddbe1e9855a",
+        "name": "Американо с вишневой пеной",
+        "sbisId": -264787285
+      },
+      {
+        "id": "61105853-d4d6-44e4-8b14-54143e0d1d0b",
+        "name": "Американо с облепиховой пеной",
+        "sbisId": -236086236
+      },
+      {
+        "id": "f7b3b3a1-0221-410b-b34e-37a521521a7c",
+        "name": "Американо с малиновой пеной",
+        "sbisId": -193619728
+      }
+    ],
+    "dimensions": [
+      900,
+      791
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.7749,
+        "original": "SBL Напитки\\Американо с пеной.png"
+      },
+      {
+        "meanAbsolutePixelError": 32.7894,
+        "original": "SBL Напитки\\Американо юдзу.png"
+      },
+      {
+        "meanAbsolutePixelError": 49.7721,
+        "original": "SBL Напитки\\Эспрессо тоник.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Американо с пеной.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\americano-yuzu-4446e5839f.webp",
+    "products": [
+      {
+        "id": "9b77f36e-88a6-472b-a3b6-5888e6c4774b",
+        "name": "Юдзу американо",
+        "sbisId": 253
+      }
+    ],
+    "dimensions": [
+      900,
+      768
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.8818,
+        "original": "SBL Напитки\\Американо юдзу.png"
+      },
+      {
+        "meanAbsolutePixelError": 32.8569,
+        "original": "SBL Напитки\\Американо с пеной.png"
+      },
+      {
+        "meanAbsolutePixelError": 45.4702,
+        "original": "SBL Напитки\\Эспрессо тоник.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Американо юдзу.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\aperol-6694d91eb5.webp",
+    "products": [
+      {
+        "id": "e3ded87d-820f-4979-b0d6-8d6a486771ba",
+        "name": "Апероль",
+        "sbisId": -122944030
+      }
+    ],
+    "dimensions": [
+      312,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 30.2021,
+        "original": "SBL Напитки\\Апероль шпирц.png"
+      },
+      {
+        "meanAbsolutePixelError": 43.0537,
+        "original": "SBL Напитки\\Лимонад юдзу.png"
+      },
+      {
+        "meanAbsolutePixelError": 44.3036,
+        "original": "SBL Напитки\\Лимонад розовый лимон.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Апероль шпирц.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\bowl-chicken-01d13462a7.webp",
+    "products": [
+      {
+        "id": "a18d68c8-062a-4e93-804a-008531027ae2",
+        "name": "Боул с курицей",
+        "sbisId": -266195614
+      },
+      {
+        "id": "201e84c1-ab00-446d-b61c-3068c1e014fe",
+        "name": "Боул с курицей мсп",
+        "sbisId": -24885409
+      }
+    ],
+    "dimensions": [
+      800,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 5.3823,
+        "original": "SBL Еда)\\Боул с курицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 49.4034,
+        "original": "SBL Еда)\\Цезарь с лососем.png"
+      },
+      {
+        "meanAbsolutePixelError": 51.2115,
+        "original": "SBL Еда)\\Боул с креветками.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Боул с курицей.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\bowl-shrimp-b42c496870.webp",
+    "products": [
+      {
+        "id": "3eb34c22-9830-4793-85ef-7031ef8e00b6",
+        "name": "Боул с креветкой мсп",
+        "sbisId": -160111663
+      }
+    ],
+    "dimensions": [
+      788,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.3846,
+        "original": "SBL Еда)\\Боул с креветками.png"
+      },
+      {
+        "meanAbsolutePixelError": 51.7199,
+        "original": "SBL Еда)\\Боул с курицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 52.7164,
+        "original": "SBL Еда)\\Цезарь с лососем.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Боул с креветками.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\breakfast-constructor-7736456714.webp",
+    "products": [
+      {
+        "id": "9c6afb23-a74b-44d4-9b05-acad9d99e745",
+        "name": "Завтрак конструктор",
+        "sbisId": 812
+      }
+    ],
+    "dimensions": [
+      799,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.4744,
+        "original": "SBL Еда)\\Завтрак конструктор.png"
+      },
+      {
+        "meanAbsolutePixelError": 45.6982,
+        "original": "SBL Еда)\\РОТИ КП.png"
+      },
+      {
+        "meanAbsolutePixelError": 47.154,
+        "original": "SBL Еда)\\Гранола.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Завтрак конструктор.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\bumble-02d411857f.webp",
+    "products": [
+      {
+        "id": "0e9bf916-6860-4208-b619-52936b9efe93",
+        "name": "Шмель/Бамбл",
+        "sbisId": 163
+      }
+    ],
+    "dimensions": [
+      592,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9644,
+        "original": "SBL Напитки\\Бамбл.png"
+      },
+      {
+        "meanAbsolutePixelError": 16.529,
+        "original": "SBL Напитки\\Гранатовый.png"
+      },
+      {
+        "meanAbsolutePixelError": 16.8774,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Бамбл.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\caesar-chicken-69c2c3f128.webp",
+    "products": [
+      {
+        "id": "55e5cbc6-40f9-4c2b-90ef-b518f4da2f5a",
+        "name": "Цезарь с курицей",
+        "sbisId": -95852325
+      }
+    ],
+    "dimensions": [
+      787,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.3079,
+        "original": "SBL Еда)\\Цезарь с курицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 52.3764,
+        "original": "SBL Еда)\\Цезарь с лососем.png"
+      },
+      {
+        "meanAbsolutePixelError": 53.089,
+        "original": "SBL Еда)\\Боул с креветками.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Цезарь с курицей.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\caesar-salmon-2a37489348.webp",
+    "products": [
+      {
+        "id": "4e59381c-b6f3-4947-8589-688c2db30d30",
+        "name": "Цезарь с лососем",
+        "sbisId": -204661065
+      }
+    ],
+    "dimensions": [
+      800,
+      762
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.4824,
+        "original": "SBL Еда)\\Цезарь с лососем.png"
+      },
+      {
+        "meanAbsolutePixelError": 49.8783,
+        "original": "SBL Еда)\\Боул с курицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 52.411,
+        "original": "SBL Еда)\\Цезарь с курицей.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Цезарь с лососем.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\caviar-sandwich-dd1b374771.webp",
+    "products": [
+      {
+        "id": "d5a07be4-a890-4ba3-b78d-d977ff33e632",
+        "name": "Бутерброд с икрой",
+        "sbisId": 345
+      }
+    ],
+    "dimensions": [
+      788,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.167,
+        "original": "SBL Еда)\\Бутерброд с икрой.png"
+      },
+      {
+        "meanAbsolutePixelError": 51.9866,
+        "original": "SBL Еда)\\Сырники.png"
+      },
+      {
+        "meanAbsolutePixelError": 52.8008,
+        "original": "SBL Еда)\\Овсяная каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Бутерброд с икрой.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\cherry-latte-aaad8ab848.webp",
+    "products": [
+      {
+        "id": "1819b371-a80c-4406-bf0b-9f35bf8f7f14",
+        "name": "Черри Латте",
+        "sbisId": -216493427
+      }
+    ],
+    "dimensions": [
+      599,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.1132,
+        "original": "SBL Напитки\\Черри латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 27.4946,
+        "original": "SBL Напитки\\Матча латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 29.1117,
+        "original": "SBL Напитки\\Бамбл.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Черри латте.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\cocoa-720e340850.webp",
+    "products": [
+      {
+        "id": "d84fb0e8-b0a6-49b4-8373-7eb3f7efdb4c",
+        "name": "Какао 300 мл",
+        "sbisId": 41
+      }
+    ],
+    "dimensions": [
+      425,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.4597,
+        "original": "SBL Напитки\\Какао.png"
+      },
+      {
+        "meanAbsolutePixelError": 23.2671,
+        "original": "SBL Напитки\\Какао хот черри.png"
+      },
+      {
+        "meanAbsolutePixelError": 25.3408,
+        "original": "SBL Напитки\\Ореховый какао грог.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Какао.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\cocoa-grog-8f875569ca.webp",
+    "products": [
+      {
+        "id": "9055d5e8-a530-47c6-8496-5e6a4de94c49",
+        "name": "Какао грог",
+        "sbisId": -51616968
+      }
+    ],
+    "dimensions": [
+      435,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 2.0121,
+        "original": "SBL Напитки\\Ореховый какао грог.png"
+      },
+      {
+        "meanAbsolutePixelError": 25.5027,
+        "original": "SBL Напитки\\Какао.png"
+      },
+      {
+        "meanAbsolutePixelError": 28.1429,
+        "original": "SBL Напитки\\Какао хот черри.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Ореховый какао грог.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\cocoa-hot-cherry-78e1fe5d9f.webp",
+    "products": [
+      {
+        "id": "52153c7a-063e-4345-9c3a-9287e7b0ef20",
+        "name": "Какао \"Горячая\" вишня",
+        "sbisId": 828
+      }
+    ],
+    "dimensions": [
+      462,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.7902,
+        "original": "SBL Напитки\\Какао хот черри.png"
+      },
+      {
+        "meanAbsolutePixelError": 23.1676,
+        "original": "SBL Напитки\\Какао.png"
+      },
+      {
+        "meanAbsolutePixelError": 27.8288,
+        "original": "SBL Напитки\\Ореховый какао грог.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Какао хот черри.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\egg-roll-julienne-8f0619bdd7.webp",
+    "products": [
+      {
+        "id": "532deb7e-fb99-4362-9fc4-f8c3fb0ffbf5",
+        "name": "Яичный рулет с жульеном",
+        "sbisId": -245519536
+      }
+    ],
+    "dimensions": [
+      800,
+      798
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.3543,
+        "original": "SBL Еда)\\Рулет с жульеном.png"
+      },
+      {
+        "meanAbsolutePixelError": 43.6455,
+        "original": "SBL Еда)\\РОТИ КП.png"
+      },
+      {
+        "meanAbsolutePixelError": 43.6519,
+        "original": "SBL Еда)\\Овсяная каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Рулет с жульеном.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\espresso-tonic-b1c0ae745f.webp",
+    "products": [
+      {
+        "id": "d10226ee-6add-4c1b-98b4-b4fcadac817f",
+        "name": "Эспрессо-тоник",
+        "sbisId": 164
+      }
+    ],
+    "dimensions": [
+      427,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 51.1224,
+        "original": "SBL Напитки\\Какао.png"
+      },
+      {
+        "meanAbsolutePixelError": 53.2431,
+        "original": "SBL Напитки\\Малиновый пунш.png"
+      },
+      {
+        "meanAbsolutePixelError": 53.7485,
+        "original": "SBL Напитки\\Какао хот черри.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Эспрессо тоник.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\granola-ef3cba64dc.webp",
+    "products": [
+      {
+        "id": "51352afb-16c5-404c-ba29-22adb73bba09",
+        "name": "Гранола с кедровым орехом",
+        "sbisId": 648
+      }
+    ],
+    "dimensions": [
+      791,
+      800
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.0547,
+        "original": "SBL Еда)\\Гранола.png"
+      },
+      {
+        "meanAbsolutePixelError": 44.2912,
+        "original": "SBL Еда)\\Шоколад орех.png"
+      },
+      {
+        "meanAbsolutePixelError": 45.5816,
+        "original": "SBL Еда)\\Апельсиновый конфитюр.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Гранола.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\ice-latte-ea535cb71f.webp",
+    "products": [
+      {
+        "id": "7142537b-3b0c-4877-94d6-acffe2924e2d",
+        "name": "Айс Латте",
+        "sbisId": 165
+      }
+    ],
+    "dimensions": [
+      400,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 48.6004,
+        "original": "SBL Напитки\\Протеиновый смузи.png"
+      },
+      {
+        "meanAbsolutePixelError": 54.5186,
+        "original": "SBL Напитки\\Айс латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 56.667,
+        "original": "SBL Еда)\\Апельсиновый конфитюр.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Айс латте.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\latte-coconut-peanut-68fbac0ed0.webp",
+    "products": [
+      {
+        "id": "06ea5935-2f0e-4062-a224-ad2b6f8460bb",
+        "name": "Латте «кокос арахис»",
+        "sbisId": 53
+      }
+    ],
+    "dimensions": [
+      559,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.3415,
+        "original": "SBL Напитки\\Латте Кокос-арахис.png"
+      },
+      {
+        "meanAbsolutePixelError": 12.6778,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      },
+      {
+        "meanAbsolutePixelError": 14.6302,
+        "original": "SBL Напитки\\Раф тыква.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Латте Кокос-арахис.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\lemonade-pink-lemon-056a45a154.webp",
+    "products": [
+      {
+        "id": "1d48f00e-e7bf-4299-9395-d72e47abe89c",
+        "name": "Лимонад Розовый лимон",
+        "sbisId": -147150727
+      }
+    ],
+    "dimensions": [
+      496,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.6439,
+        "original": "SBL Напитки\\Лимонад розовый лимон.png"
+      },
+      {
+        "meanAbsolutePixelError": 11.1626,
+        "original": "SBL Напитки\\Лимонад юдзу.png"
+      },
+      {
+        "meanAbsolutePixelError": 37.6616,
+        "original": "SBL Напитки\\Пинк дринк.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Лимонад розовый лимон.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\lemonade-yuzu-4803de052c.webp",
+    "products": [
+      {
+        "id": "b0c0902f-cabd-41dd-98ca-a8054f2cdd7f",
+        "name": "Лимонад Юдзу",
+        "sbisId": 254
+      }
+    ],
+    "dimensions": [
+      494,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.6215,
+        "original": "SBL Напитки\\Лимонад юдзу.png"
+      },
+      {
+        "meanAbsolutePixelError": 11.2133,
+        "original": "SBL Напитки\\Лимонад розовый лимон.png"
+      },
+      {
+        "meanAbsolutePixelError": 33.1658,
+        "original": "SBL Напитки\\Земляничный уе.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Лимонад юдзу.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\matcha-blue-74b85b513f.webp",
+    "products": [
+      {
+        "id": "60df8c82-361e-484f-9cd6-677fa609f491",
+        "name": "Матча Blue Sbleskom",
+        "sbisId": 37
+      },
+      {
+        "id": "ad6a0be0-6fd4-4fd8-8f9c-76397f0a51f5",
+        "name": "Матча Blue Sbleskom 350 мл",
+        "sbisId": 294
+      }
+    ],
+    "dimensions": [
+      601,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9444,
+        "original": "SBL Напитки\\Матча sbleskom.png"
+      },
+      {
+        "meanAbsolutePixelError": 17.7153,
+        "original": "SBL Напитки\\Убе латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 19.2305,
+        "original": "SBL Напитки\\Бамбл.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Матча sbleskom.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\matcha-jasmine-470f8b7f6d.webp",
+    "products": [
+      {
+        "id": "325d2050-4be5-4035-8d77-5a718e274936",
+        "name": "Матча Жасмин",
+        "sbisId": -148970023
+      }
+    ],
+    "dimensions": [
+      421,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 30.7804,
+        "original": "SBL Напитки\\Матча жасмин.png"
+      },
+      {
+        "meanAbsolutePixelError": 35.1039,
+        "original": "SBL Напитки\\Пинк дринк.png"
+      },
+      {
+        "meanAbsolutePixelError": 43.4178,
+        "original": "SBL Напитки\\Лимонад юдзу.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Матча жасмин.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\matcha-latte-af78f83e80.webp",
+    "products": [
+      {
+        "id": "9200e8cc-2c10-49ec-bee0-66ece59ed5c1",
+        "name": "Матча латте",
+        "sbisId": 36
+      },
+      {
+        "id": "b41cf944-2299-464c-b11c-3b50b4446111",
+        "name": "Матча латте 350мл",
+        "sbisId": 293
+      }
+    ],
+    "dimensions": [
+      602,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.6506,
+        "original": "SBL Напитки\\Матча латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 21.5271,
+        "original": "SBL Напитки\\Бамбл.png"
+      },
+      {
+        "meanAbsolutePixelError": 22.2067,
+        "original": "SBL Напитки\\Убе латте.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Матча латте.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\matcha-pistachio-latte-464ad99678.webp",
+    "products": [
+      {
+        "id": "6b40107e-13be-427d-8580-700acaad8d67",
+        "name": "Фисташковая Матча Латте 300 мл",
+        "sbisId": 641
+      }
+    ],
+    "dimensions": [
+      582,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.1426,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      },
+      {
+        "meanAbsolutePixelError": 11.6736,
+        "original": "SBL Напитки\\Раф тыква.png"
+      },
+      {
+        "meanAbsolutePixelError": 12.6188,
+        "original": "SBL Напитки\\Гранатовый.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Матча фисташка.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\oatmeal-5cd8d7998c.webp",
+    "products": [
+      {
+        "id": "a6db11d8-095f-4582-81a6-b31b8078aa53",
+        "name": "Овсяная с конфитюром апельсин-ваниль",
+        "sbisId": -196385137
+      }
+    ],
+    "dimensions": [
+      800,
+      787
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.0625,
+        "original": "SBL Еда)\\Овсяная каша.png"
+      },
+      {
+        "meanAbsolutePixelError": 31.3066,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      },
+      {
+        "meanAbsolutePixelError": 39.5589,
+        "original": "SBL Еда)\\РОТИ КП.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Овсяная каша.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\orange-punch-38d9e5b68c.webp",
+    "products": [
+      {
+        "id": "ba704a67-c9fd-457b-98e6-7cab5b6acddc",
+        "name": "Апельсиновый пунш 300мл",
+        "sbisId": 258
+      }
+    ],
+    "dimensions": [
+      627,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9957,
+        "original": "SBL Напитки\\Апельсиновый пунш.png"
+      },
+      {
+        "meanAbsolutePixelError": 17.2325,
+        "original": "SBL Напитки\\Малиновый пунш.png"
+      },
+      {
+        "meanAbsolutePixelError": 39.917,
+        "original": "SBL Напитки\\Ореховый какао грог.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Апельсиновый пунш.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\pink-drink-matcha-8f6743e685.webp",
+    "products": [
+      {
+        "id": "bfc41dd7-e823-4b7e-844d-707f2224f64f",
+        "name": "Пинк дринк Матча",
+        "sbisId": -263877443
+      },
+      {
+        "id": "1e99f00b-938c-457d-93f2-cecd2005de21",
+        "name": "Пинк дринк",
+        "sbisId": -255305941
+      }
+    ],
+    "dimensions": [
+      419,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 26.6101,
+        "original": "SBL Напитки\\Пинк дринк.png"
+      },
+      {
+        "meanAbsolutePixelError": 38.2144,
+        "original": "SBL Напитки\\Матча жасмин.png"
+      },
+      {
+        "meanAbsolutePixelError": 41.3772,
+        "original": "SBL Напитки\\Лимонад юдзу.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Пинк дринк.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\pomegranate-coffee-0db4af98e9.webp",
+    "products": [
+      {
+        "id": "6c7b5ca6-12bd-4a73-8752-2a146432c7b6",
+        "name": "Гранатовый кофе",
+        "sbisId": 406
+      }
+    ],
+    "dimensions": [
+      580,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.2861,
+        "original": "SBL Напитки\\Гранатовый.png"
+      },
+      {
+        "meanAbsolutePixelError": 10.8866,
+        "original": "SBL Напитки\\Сибирский чай с корицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 13.2412,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Гранатовый.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\protein-smoothie-7d430ffc4e.webp",
+    "products": [
+      {
+        "id": "b4588ead-7e7e-4b86-8898-a3bff4ed3f9a",
+        "name": "Протеиновый смузи",
+        "sbisId": 697
+      }
+    ],
+    "dimensions": [
+      444,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 16.0917,
+        "original": "SBL Напитки\\Протеиновый смузи.png"
+      },
+      {
+        "meanAbsolutePixelError": 35.1921,
+        "original": "SBL Напитки\\Земляничный уе.png"
+      },
+      {
+        "meanAbsolutePixelError": 36.5857,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Протеиновый смузи.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\raf-cedar-6c09f06459.webp",
+    "products": [
+      {
+        "id": "f16ae5e0-c8ff-4e24-ac14-74228abcfb48",
+        "name": "Раф «кедровый»",
+        "sbisId": 56
+      }
+    ],
+    "dimensions": [
+      585,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.1569,
+        "original": "SBL Напитки\\Кедровый раф.png"
+      },
+      {
+        "meanAbsolutePixelError": 16.6162,
+        "original": "SBL Напитки\\Убе латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 21.0939,
+        "original": "SBL Напитки\\Матча sbleskom.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Кедровый раф.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\raf-pumpkin-54890a9d8d.webp",
+    "products": [
+      {
+        "id": "c0cce818-ef50-4eb6-b80c-0564fed1db5b",
+        "name": "Раф тыква карамель",
+        "sbisId": -102899831
+      }
+    ],
+    "dimensions": [
+      601,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.5798,
+        "original": "SBL Напитки\\Раф тыква.png"
+      },
+      {
+        "meanAbsolutePixelError": 12.3111,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      },
+      {
+        "meanAbsolutePixelError": 14.688,
+        "original": "SBL Напитки\\Латте Кокос-арахис.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Раф тыква.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\raspberry-punch-54a02fed67.webp",
+    "products": [
+      {
+        "id": "aa2d1619-616f-46d2-88a4-f095639912a8",
+        "name": "Малиновый пунш",
+        "sbisId": -141636035
+      }
+    ],
+    "dimensions": [
+      635,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.2112,
+        "original": "SBL Напитки\\Малиновый пунш.png"
+      },
+      {
+        "meanAbsolutePixelError": 17.8587,
+        "original": "SBL Напитки\\Апельсиновый пунш.png"
+      },
+      {
+        "meanAbsolutePixelError": 40.552,
+        "original": "SBL Напитки\\Какао.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Малиновый пунш.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\rice-porridge-f0ae84c81e.webp",
+    "products": [
+      {
+        "id": "e9263adc-f1a4-4c18-8aba-b02fbbb28034",
+        "name": "Рисовая с шоколадом и вишней",
+        "sbisId": -257333780
+      },
+      {
+        "id": "cc84fb17-6585-4245-ab06-6d6c7469f6e6",
+        "name": "Рисовая с шоколадом и орехом",
+        "sbisId": -229680531
+      },
+      {
+        "id": "e7987649-28c2-4261-9f1f-c090fc7977c9",
+        "name": "Рисовая с апельсиновым конфитюром",
+        "sbisId": -166498640
+      }
+    ],
+    "dimensions": [
+      800,
+      787
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.0392,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      },
+      {
+        "meanAbsolutePixelError": 31.1548,
+        "original": "SBL Еда)\\Овсяная каша.png"
+      },
+      {
+        "meanAbsolutePixelError": 33.5044,
+        "original": "SBL Еда)\\Роти ВС.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Рисовая каша.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\rosehip-berry-7c9a8603bf.webp",
+    "products": [
+      {
+        "id": "e46170fd-b2be-475b-be28-c744de3243dd",
+        "name": "Шиповник ягодный",
+        "sbisId": -62568504
+      }
+    ],
+    "dimensions": [
+      585,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.6292,
+        "original": "SBL Напитки\\Ягодный шиповник.png"
+      },
+      {
+        "meanAbsolutePixelError": 13.9664,
+        "original": "SBL Напитки\\Гранатовый.png"
+      },
+      {
+        "meanAbsolutePixelError": 16.0885,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Ягодный шиповник.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\roti-chicken-pesto-4a199ca19a.webp",
+    "products": [
+      {
+        "id": "49bdd8dd-6c82-4aaf-9983-39bc124c2ecd",
+        "name": "Роти с курицей и песто",
+        "sbisId": -157419170
+      }
+    ],
+    "dimensions": [
+      800,
+      789
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.1591,
+        "original": "SBL Еда)\\РОТИ КП.png"
+      },
+      {
+        "meanAbsolutePixelError": 24.0996,
+        "original": "SBL Еда)\\Роти ВС.png"
+      },
+      {
+        "meanAbsolutePixelError": 33.6712,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\РОТИ КП.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\roti-ham-cheese-db422dcab4.webp",
+    "products": [
+      {
+        "id": "ffeef056-3501-45ef-9159-84fb9ce17c3c",
+        "name": "Роти с ветчиной и сыром",
+        "sbisId": -29070746
+      }
+    ],
+    "dimensions": [
+      800,
+      788
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.6828,
+        "original": "SBL Еда)\\Роти ВС.png"
+      },
+      {
+        "meanAbsolutePixelError": 24.2371,
+        "original": "SBL Еда)\\РОТИ КП.png"
+      },
+      {
+        "meanAbsolutePixelError": 33.1806,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Роти ВС.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\siberian-tea-3a015f1c35.webp",
+    "products": [
+      {
+        "id": "1f767360-3453-4398-acfc-a77b485e963d",
+        "name": "Сибирский чай с корицей 300мл",
+        "sbisId": 478
+      }
+    ],
+    "dimensions": [
+      573,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9601,
+        "original": "SBL Напитки\\Сибирский чай с корицей.png"
+      },
+      {
+        "meanAbsolutePixelError": 10.8066,
+        "original": "SBL Напитки\\Гранатовый.png"
+      },
+      {
+        "meanAbsolutePixelError": 14.1612,
+        "original": "SBL Напитки\\Матча фисташка.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Сибирский чай с корицей.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\strawberry-ube-e303f7831b.webp",
+    "products": [
+      {
+        "id": "54f5b1d7-3a31-474e-8789-45fe2bab7f18",
+        "name": "Земляничный убе",
+        "sbisId": -51012023
+      }
+    ],
+    "dimensions": [
+      422,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 22.5388,
+        "original": "SBL Напитки\\Протеиновый смузи.png"
+      },
+      {
+        "meanAbsolutePixelError": 26.6446,
+        "original": "SBL Напитки\\Земляничный уе.png"
+      },
+      {
+        "meanAbsolutePixelError": 35.524,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Земляничный уе.png",
+    "reviewMethod": "visual source and menu comparison"
+  },
+  {
+    "file": "downloaded\\syrniki-f0f9c8f4d0.webp",
+    "products": [
+      {
+        "id": "010200dc-770b-4986-b689-d8d8b3b9c75c",
+        "name": "Сырники мсп",
+        "sbisId": -64156664
+      }
+    ],
+    "dimensions": [
+      800,
+      790
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.0407,
+        "original": "SBL Еда)\\Сырники.png"
+      },
+      {
+        "meanAbsolutePixelError": 47.6913,
+        "original": "SBL Еда)\\Овсяная каша.png"
+      },
+      {
+        "meanAbsolutePixelError": 48.6846,
+        "original": "SBL Еда)\\Рисовая каша.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Еда)\\Сырники.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\tea-blackberry-1afb3e266d.webp",
+    "products": [
+      {
+        "id": "67ef1597-6614-46c4-897e-86a534637d85",
+        "name": "Ежевичный чай",
+        "sbisId": -159982253
+      }
+    ],
+    "dimensions": [
+      900,
+      899
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9704,
+        "original": "SBL Напитки\\Чай ежевика.png"
+      },
+      {
+        "meanAbsolutePixelError": 22.9191,
+        "original": "SBL Напитки\\Чай малина.png"
+      },
+      {
+        "meanAbsolutePixelError": 32.1949,
+        "original": "SBL Напитки\\Чай розовый жасмин.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Чай ежевика.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\tea-raspberry-rosemary-fc9fc12596.webp",
+    "products": [
+      {
+        "id": "9c0ce841-8681-4b1e-ac7d-b3a50fc3aecd",
+        "name": "Чай Малина-Розмарин 500 мл",
+        "sbisId": 780
+      }
+    ],
+    "dimensions": [
+      900,
+      897
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9693,
+        "original": "SBL Напитки\\Чай малина.png"
+      },
+      {
+        "meanAbsolutePixelError": 22.8113,
+        "original": "SBL Напитки\\Чай ежевика.png"
+      },
+      {
+        "meanAbsolutePixelError": 28.8413,
+        "original": "SBL Напитки\\Чай розовый жасмин.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Чай малина.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\tea-rose-jasmine-72c399b7bd.webp",
+    "products": [
+      {
+        "id": "16734a89-1e4d-4e39-9e7f-bf05e077f727",
+        "name": "Чай розовый жасмин",
+        "sbisId": -35876492
+      }
+    ],
+    "dimensions": [
+      899,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 1.3356,
+        "original": "SBL Напитки\\Чай розовый жасмин.png"
+      },
+      {
+        "meanAbsolutePixelError": 28.8772,
+        "original": "SBL Напитки\\Чай малина.png"
+      },
+      {
+        "meanAbsolutePixelError": 32.3688,
+        "original": "SBL Напитки\\Чай ежевика.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Чай розовый жасмин.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\tea-seabuckthorn-ginger-988a1974ae.webp",
+    "products": [
+      {
+        "id": "4511d488-60a0-4969-bc3a-bebb2d33b7e6",
+        "name": "Чай Облепиха-имбирь 500 мл",
+        "sbisId": 575
+      }
+    ],
+    "dimensions": [
+      900,
+      875
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.917,
+        "original": "SBL Напитки\\Чай облепиха.png"
+      },
+      {
+        "meanAbsolutePixelError": 36.4321,
+        "original": "SBL Напитки\\Чай малина.png"
+      },
+      {
+        "meanAbsolutePixelError": 38.1084,
+        "original": "SBL Напитки\\Чай розовый жасмин.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Чай облепиха.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  },
+  {
+    "file": "downloaded\\ube-latte-f07af42b2d.webp",
+    "products": [
+      {
+        "id": "8a238e3a-89e5-49bd-8a34-41485628f886",
+        "name": "Убе Латте",
+        "sbisId": 487
+      },
+      {
+        "id": "88fe13bf-8a1c-4512-a6cf-19299e85cd8b",
+        "name": "Убе Латте 350 мл",
+        "sbisId": 489
+      }
+    ],
+    "dimensions": [
+      598,
+      900
+    ],
+    "nearest": [
+      {
+        "meanAbsolutePixelError": 0.9873,
+        "original": "SBL Напитки\\Убе латте.png"
+      },
+      {
+        "meanAbsolutePixelError": 16.6731,
+        "original": "SBL Напитки\\Кедровый раф.png"
+      },
+      {
+        "meanAbsolutePixelError": 17.3214,
+        "original": "SBL Напитки\\Матча sbleskom.png"
+      }
+    ],
+    "reviewedOriginal": "SBL Напитки\\Убе латте.png",
+    "reviewMethod": "normalized pixel and menu comparison"
+  }
+]

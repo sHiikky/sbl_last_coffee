@@ -2,7 +2,8 @@
 // размера и с одним отступом сверху на всех экранах. Метка бренда и линия по
 // умолчанию выключены — включаются пропсами showEyebrow / showLine.
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from './AppText';
 import { useWindowDimensions } from 'react-native';
 import HoloLine from './HoloLine';
 import { colors, spacing, typography, getHorizontalPadding } from '../theme/tokens';

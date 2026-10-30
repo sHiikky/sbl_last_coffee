@@ -1,21 +1,19 @@
 // screens/LoginScreen.js
-// ТЕСТОВЫЙ вход по номеру телефона: два шага (номер → код из СМС). Реальной
-// отправки СМС и серверной проверки нет — принимается любой код.
-// Аккаунт хранится локально (App.js, ключ sbl_account); Supabase-сессию экран
-// не трогает. Когда появится настоящий вход, меняется только submitPhone/submitCode.
+// Real Supabase OTP only. Sending remains disabled until its provider is configured.
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-  KeyboardAvoidingView, Platform, Image, useWindowDimensions,
-} from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
+import Text from '../components/AppText';
+import TextInput from '../components/AppTextInput';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import PrimaryButton from '../components/PrimaryButton';
+import BrandLogo from '../components/BrandLogo';
+import AccountDocumentsScreen from './AccountDocumentsScreen';
+import { PHONE_AUTH_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, describeAuthError } from '../lib/accountService';
 import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
 
-const CODE_LENGTH = 4;
-const RESEND_SECONDS = 30;
+const CODE_LENGTH = OTP_LENGTH;
 
 // Из введённого текста достаёт до 10 цифр номера после +7.
 // `prevDigits` нужен для Backspace: он может удалить только скобку/пробел
@@ -34,7 +32,8 @@ function parsePhoneInput(text, prevDigits) {
 }
 
 export function formatPhone(digits) {
-  const d = digits || '';
+  const raw = String(digits || '').replace(/\D/g, '');
+  const d = raw.length === 11 && /^[78]/.test(raw) ? raw.slice(1) : raw;
   let out = '+7';
   if (d.length > 0) out += ` (${d.slice(0, 3)}`;
   if (d.length >= 3) out += ')';
@@ -55,63 +54,96 @@ export default function LoginScreen({ navigation, onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [retryAt, setRetryAt] = useState(0);
+  const [challenge, setChallenge] = useState(null);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
   const codeInputRef = useRef(null);
+  const busyRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const phoneValid = digits.length === 10;
   const destination = formatPhone(digits);
 
   useEffect(() => {
-    if (secondsLeft <= 0) return undefined;
-    const t = setTimeout(() => setSecondsLeft(s => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [secondsLeft]);
+    const refresh = () => setSecondsLeft(Math.max(0, Math.ceil((retryAt - Date.now()) / 1000)));
+    refresh();
+    const timer = setInterval(refresh, 1000);
+    return () => clearInterval(timer);
+  }, [retryAt]);
+
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   useEffect(() => {
-    if (step === 'code') setTimeout(() => codeInputRef.current?.focus(), 150);
+    if (step !== 'code') return undefined;
+    const timer = setTimeout(() => codeInputRef.current?.focus(), 150);
+    return () => clearTimeout(timer);
   }, [step]);
 
-  const submitPhone = () => {
-    if (!phoneValid || loading) return;
+  const submitPhone = async () => {
+    if (!phoneValid || busyRef.current || !PHONE_AUTH_ENABLED) return;
+    busyRef.current = true;
     setError('');
     setLoading(true);
-    // Имитация отправки СМС.
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const next = await startPhoneSignIn(digits);
+      if (!mountedRef.current) return;
+      setChallenge(next);
       setCode('');
       setStep('code');
-      setSecondsLeft(RESEND_SECONDS);
-    }, 600);
+      setRetryAt(next.retryAt);
+    } catch (cause) {
+      if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setLoading(false);
+    }
   };
 
-  const submitCode = () => {
-    if (loading) return;
+  const submitCode = async () => {
+    if (busyRef.current || code.length !== CODE_LENGTH || !challenge) return;
+    busyRef.current = true;
     setError('');
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const account = await verifyPhoneSignIn({ ...challenge, token: code });
+      await onLogin?.(account);
+      if (!mountedRef.current) return;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      onLogin?.({ phone: digits });
       navigation.goBack();
-    }, 500);
+    } catch (cause) {
+      if (mountedRef.current) setError(describeAuthError(cause));
+    } finally {
+      busyRef.current = false;
+      if (mountedRef.current) setLoading(false);
+    }
   };
 
   const onCodeChange = (text) => {
     const next = text.replace(/\D/g, '').slice(0, CODE_LENGTH);
     setCode(next);
     setError('');
-    if (next.length === CODE_LENGTH) submitCode();
   };
 
-  const resend = () => {
-    if (secondsLeft > 0) return;
-    setCode('');
+  const resend = async () => {
+    if (secondsLeft > 0 || busyRef.current || !challenge) return;
+    busyRef.current = true;
+    setLoading(true);
     setError('');
-    setSecondsLeft(RESEND_SECONDS);
+    try {
+      const next = await resendPhoneSignIn(challenge);
+      if (!mountedRef.current) return;
+      setChallenge(next);
+      setRetryAt(next.retryAt);
+      setCode('');
+    } catch (cause) {
+      if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
+    } finally { busyRef.current = false; if (mountedRef.current) setLoading(false); }
   };
 
   const backFromCode = () => {
     setStep('phone');
     setCode('');
+    setChallenge(null);
     setError('');
   };
 
@@ -123,6 +155,7 @@ export default function LoginScreen({ navigation, onLogin }) {
       <View style={{ paddingTop: insets.top, paddingHorizontal: hPad }}>
         <TouchableOpacity
           onPress={step === 'code' ? backFromCode : () => navigation.goBack()}
+          disabled={loading}
           hitSlop={8}
           style={styles.backButton}
           accessibilityRole="button"
@@ -137,14 +170,16 @@ export default function LoginScreen({ navigation, onLogin }) {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Image source={require('../assets/logo-mark.png')} style={styles.logo} resizeMode="contain" />
+        <BrandLogo variant="full" width={216} style={styles.logo} accessibilityLabel="SBL · Украшения и кофе" />
 
         {step === 'phone' ? (
           <>
             <Text style={styles.title}>Вход или регистрация</Text>
             <Text style={styles.subtitle}>
-              Введите номер телефона, мы отправим код подтверждения. Так бонусы и история заказов сохранятся за вами.
+              Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.
             </Text>
+
+            {!PHONE_AUTH_ENABLED && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.</Text></View>}
 
             <Text style={styles.label}>Номер телефона</Text>
             <View style={[styles.field, error ? styles.fieldError : null]}>
@@ -169,15 +204,17 @@ export default function LoginScreen({ navigation, onLogin }) {
               <PrimaryButton
                 label="Получить код"
                 onPress={submitPhone}
-                disabled={!phoneValid}
+                disabled={!phoneValid || !PHONE_AUTH_ENABLED || secondsLeft > 0}
                 loading={loading}
                 fullWidth
               />
             </View>
 
-            <Text style={styles.legal}>
-              Нажимая «Получить код», вы соглашаетесь с условиями использования и политикой конфиденциальности.
-            </Text>
+            {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
+            {secondsLeft > 0 && <Text style={styles.legal}>Повторный запрос кода через {secondsLeft} с</Text>}
+            <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Условия предзаказа и сведения о данных" style={styles.resend}>
+              <Text style={styles.resendText}>Условия предзаказа и сведения о данных</Text>
+            </TouchableOpacity>
           </>
         ) : (
           <>
@@ -209,15 +246,18 @@ export default function LoginScreen({ navigation, onLogin }) {
               autoComplete="sms-otp"
               textContentType="oneTimeCode"
               maxLength={CODE_LENGTH}
+              editable={!loading}
               style={styles.hiddenInput}
               accessibilityLabel="Код подтверждения"
             />
 
             {!!error && <Text style={styles.errorText}>{error}</Text>}
 
+            <View style={{ marginTop: spacing.xl }}><PrimaryButton label="Подтвердить код" onPress={submitCode} loading={loading} disabled={code.length !== CODE_LENGTH} fullWidth /></View>
+
             <TouchableOpacity
               onPress={resend}
-              disabled={secondsLeft > 0}
+              disabled={secondsLeft > 0 || loading}
               style={styles.resend}
               accessibilityRole="button"
               accessibilityLabel="Отправить код ещё раз"
@@ -227,20 +267,18 @@ export default function LoginScreen({ navigation, onLogin }) {
               </Text>
             </TouchableOpacity>
 
-            <View style={styles.testHint}>
-              <Ionicons name="information-circle-outline" size={18} color={colors.textSecondary} />
-              <Text style={styles.testHintText}>Тестовый режим: код не отправляется, подойдут любые {CODE_LENGTH} цифры</Text>
-            </View>
+            {challenge?.mode === 'sms' && <Text style={styles.legal}>Этот номер уже зарегистрирован. После подтверждения откроется его аккаунт; гостевые заказы автоматически в него не переносятся.</Text>}
           </>
         )}
       </ScrollView>
+      <AccountDocumentsScreen visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -10 },
-  logo: { width: 88, height: 42, marginTop: spacing.lg, marginBottom: spacing.xxl },
+  logo: { marginTop: spacing.lg, marginBottom: spacing.xxl },
   title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.4 },
   subtitle: { fontSize: 15, lineHeight: 22, color: colors.textSecondary, marginTop: spacing.sm, marginBottom: spacing.xxl },
   label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: spacing.sm },

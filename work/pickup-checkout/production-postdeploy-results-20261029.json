@@ -1,0 +1,258 @@
+[
+  {
+    "test": "00 OVERALL: all structural and permission checks",
+    "result": "PASS"
+  },
+  {
+    "test": "01 API roles exist",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.account_deletion_requests",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.device_push_tokens",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.order_items",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.order_notification_deliveries",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.order_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "02 all new columns, types, nullability and default presence: public.orders",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.claim_order_notifications(uuid,integer)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.create_pickup_order(uuid,jsonb,text,boolean,numeric,jsonb,jsonb,jsonb)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.enqueue_order_notification()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.finish_order_notification(uuid,uuid)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.get_account_deletion_request()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.get_loyalty_state()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.get_order_by_idempotency_key(uuid)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.get_ordering_catalog()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.get_ordering_config()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.pickup_order_clock()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.pickup_ordering_constants()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.record_order_notification_result(uuid,uuid,uuid,text,text,text)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.register_device_push_token(uuid,text,text,uuid)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.renew_order_notification_lease(uuid,uuid)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.request_account_deletion()",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.unregister_device_push_token(uuid)",
+    "result": "PASS"
+  },
+  {
+    "test": "03 RPC definition and privileges: public.update_order_status(uuid,text,boolean,boolean)",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.account_deletion_requests",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.device_push_tokens",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.order_items",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.order_notification_deliveries",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.order_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "04 table and RLS: public.orders",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.account_deletion_requests",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.device_push_tokens",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.order_items",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.order_notification_deliveries",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.order_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "05 table writes denied to API roles: public.orders",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.account_deletion_requests",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.device_push_tokens",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.order_items",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.order_notification_deliveries",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.order_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "06 column writes denied to API roles: public.orders",
+    "result": "PASS"
+  },
+  {
+    "test": "07 customer SELECT policy restricted to own UID: public.account_deletion_requests",
+    "result": "PASS"
+  },
+  {
+    "test": "07 customer SELECT policy restricted to own UID: public.device_push_tokens",
+    "result": "PASS"
+  },
+  {
+    "test": "08 internal notification table not readable by API roles: public.order_notification_deliveries",
+    "result": "PASS"
+  },
+  {
+    "test": "08 internal notification table not readable by API roles: public.order_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_00_reward_before",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_01_bonus_initialize",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_bonus_redeem_trigger",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_notification_outbox",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_reward_consume",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_status_bonus_trigger",
+    "result": "PASS"
+  },
+  {
+    "test": "09 order trigger enabled and correct function: orders_z_bonus_settle_insert",
+    "result": "PASS"
+  },
+  {
+    "test": "10 unique key: public.account_deletion_requests(user_id)",
+    "result": "PASS"
+  },
+  {
+    "test": "10 unique key: public.device_push_tokens(expo_push_token)",
+    "result": "PASS"
+  },
+  {
+    "test": "10 unique key: public.device_push_tokens(user_id,installation_id)",
+    "result": "PASS"
+  },
+  {
+    "test": "10 unique key: public.order_notification_deliveries(outbox_id,device_id)",
+    "result": "PASS"
+  },
+  {
+    "test": "10 unique key: public.order_notification_outbox(order_id,event_status)",
+    "result": "PASS"
+  },
+  {
+    "test": "11 manual sale requires payment constraint",
+    "result": "PASS"
+  },
+  {
+    "test": "12 legacy six-argument checkout exists but API execution is closed",
+    "result": "PASS"
+  },
+  {
+    "test": "13 obsolete five-argument checkout absent",
+    "result": "PASS"
+  },
+  {
+    "test": "14 private pickup clock uses real time, not test fixture settings",
+    "result": "PASS"
+  },
+  {
+    "test": "15 idempotency unique index remains valid",
+    "result": "PASS"
+  }
+]

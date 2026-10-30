@@ -5,20 +5,21 @@
 // перезапустил приложение (activeOrder в App.js восстанавливается из Supabase
 // при старте, см. refreshActiveOrder).
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import useOrderStatus from '../../hooks/useOrderStatus';
 import { colors, spacing, radius, shadow } from '../../theme/tokens';
 
 const STATUS_LABEL = {
-  new: 'Заказ принят',
+  new: 'Отправлен · ждёт подтверждения',
   accepted: 'Заказ подтверждён',
   preparing: 'Готовим ваш напиток',
   ready: 'Готово к выдаче — заберите заказ',
 };
 
 export default function ActiveOrderBanner({ activeOrder, onPress, onFinished }) {
-  const { status, orderNumber } = useOrderStatus(activeOrder?.id, {
+  const { status, orderNumber, error } = useOrderStatus(activeOrder?.id, {
     initialStatus: activeOrder?.status,
     onFinished,
   });
@@ -27,6 +28,7 @@ export default function ActiveOrderBanner({ activeOrder, onPress, onFinished }) 
   if (!status || status === 'completed' || status === 'cancelled') return null;
 
   const displayNumber = orderNumber != null ? orderNumber : activeOrder.orderNumber;
+  const title = displayNumber ? `Заказ №${displayNumber}` : 'Текущий заказ';
 
   return (
     <TouchableOpacity
@@ -34,12 +36,13 @@ export default function ActiveOrderBanner({ activeOrder, onPress, onFinished }) 
       activeOpacity={0.85}
       style={[styles.wrap, shadow.card]}
       accessibilityRole="button"
-      accessibilityLabel={`Заказ №${displayNumber}, ${STATUS_LABEL[status] || 'обрабатывается'}`}
+      accessibilityLabel={`${title}, ${STATUS_LABEL[status] || 'обрабатывается'}`}
     >
       <View style={styles.dot} />
       <View style={{ flex: 1, marginLeft: spacing.md }}>
-        <Text style={styles.title}>Заказ №{displayNumber}</Text>
+        <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{STATUS_LABEL[status] || 'Заказ обрабатывается'}</Text>
+        {!!error && <Text style={styles.subtitle}>Нет связи · последний известный статус</Text>}
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
     </TouchableOpacity>

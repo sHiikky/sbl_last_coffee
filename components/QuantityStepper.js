@@ -4,7 +4,8 @@
 // compact — кружки 28 px с hitSlop вместо 44-пиксельных боксов, для узких
 // мест вроде карточки товара.
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Text from './AppText';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/tokens';

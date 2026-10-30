@@ -2,10 +2,12 @@
 // Основная карточка пользователя тёмного профиля: аватар с голо-кольцом,
 // имя/email/статус, статистика (бонусы / прогресс до подарка / заказы).
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import HolographicAvatarRing from './HolographicAvatarRing';
 import HolographicProgressSegment from '../HolographicProgressSegment';
+import BrandLogo from '../BrandLogo';
 import { darkProfile, spacing, radius } from '../../theme/tokens';
 
 export default function DarkProfileCard({
@@ -48,7 +50,7 @@ export default function DarkProfileCard({
       />
 
       {/* едва заметный водяной знак SBL справа */}
-      <Text pointerEvents="none" style={styles.watermark} numberOfLines={1}>SBL</Text>
+      <View pointerEvents="none" style={styles.watermark}><BrandLogo width={88} tone="light" accessibilityLabel={null} /></View>
 
       <View style={styles.content}>
         <View style={styles.userRow}>
@@ -121,10 +123,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: spacing.lg,
     top: spacing.lg,
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 2,
-    color: 'rgba(255,255,255,0.06)',
+    opacity: 0.08,
   },
   content: { padding: spacing.xl },
   userRow: { flexDirection: 'row', alignItems: 'center' },

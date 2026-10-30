@@ -19,7 +19,8 @@
 // категориях при scroll-spy ощущалось как грубый tab-switch, а не premium
 // плавный переход.
 import React, { useEffect, useRef } from 'react';
-import { Animated, Easing, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Animated, Easing, TouchableOpacity, StyleSheet } from 'react-native';
+import Text from './AppText';
 import * as Haptics from 'expo-haptics';
 import { colors, radius, spacing, shadow } from '../theme/tokens';
 

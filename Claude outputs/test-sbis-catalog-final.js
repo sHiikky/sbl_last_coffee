@@ -4,9 +4,9 @@
 
 const fs = require("fs");
 
-const APP_CLIENT_ID = "4402856400799386";
-const APP_SECRET = "ВСТАВЬТЕ_СЮДА_ЗАЩИЩЁННЫЙ_КЛЮЧ";
-const SECRET_KEY = "ВСТАВЬТЕ_СЮДА_СОДЕРЖИМОЕ_СКАЧАННОГО_ФАЙЛА";
+const APP_CLIENT_ID = process.env.SBIS_APP_CLIENT_ID;
+const APP_SECRET = process.env.SBIS_APP_SECRET;
+const SECRET_KEY = process.env.SBIS_SECRET_KEY;
 
 const POINT_ID = 240;
 const PRICE_LIST_ID = 64; // "Осень-Зима 25'26" — актуальный

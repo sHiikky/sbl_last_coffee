@@ -1,0 +1,887 @@
+{
+  "checkedAt": "2026-10-27T17:40:33.733Z",
+  "totalMenuRows": 153,
+  "photoRows": 62,
+  "uniqueUrls": 53,
+  "loaded": 45,
+  "failed": 8,
+  "results": [
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMjEyLCAiUGhvdG9VUkwiOiAiaHR0cHM6Ly9kaXNrLnNiaXMucnUvZGlzay9hcGkvdjEvNGIwMDUzNjctZjEwOC00ZGQyLTlkYzItYjJkMzkyYzgxMTU3IiwgIlBob3RvSWQiOiBudWxsLCAiU2l6ZSI6IG51bGwsICJBZGRpdGlvbmFsUGFyYW1zIjogbnVsbH0=",
+      "products": [
+        {
+          "id": "56637041-fe0d-44d7-b73c-452023b792ee",
+          "name": "Банановый какао",
+          "sbisId": 212
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.766Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621391
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMjgsICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS80ZjY5NWYwMC00MGM0LTQyZWMtOTM5MS1jZDgyYzI2MzNjNWUiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "b3a3451a-a37e-4cbd-bd99-57135e4f3228",
+          "name": "Кофе Американо",
+          "sbisId": 28
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.266Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621391
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMjksICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS84NTQ3YTUxNC0zMzlhLTRiOTEtODAwYS1iMDU2MDU1NzQ4MTkiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "ea6267d0-0ce3-4a60-ac2b-417d8fa9f1f8",
+          "name": "Кофе Капучино большой",
+          "sbisId": 29
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.296Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621399
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMTgsICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS9jNWM3ZTM1NC0xYjgxLTQ2MjQtOWI3Yi05YmU0YWMwZTZjNjIiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "d03c4f7a-212a-4013-8be9-ec364595eb3f",
+          "name": "Кофе Эспрессо",
+          "sbisId": 18
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.250Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621404
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMTkzLCAiUGhvdG9VUkwiOiAiaHR0cHM6Ly9kaXNrLnNiaXMucnUvZGlzay9hcGkvdjEvNzZhMDZmZWQtMDZlNy00YzhkLTgwNjgtNDk4MDBjYWUwYjExIiwgIlBob3RvSWQiOiBudWxsLCAiU2l6ZSI6IG51bGwsICJBZGRpdGlvbmFsUGFyYW1zIjogbnVsbH0=",
+      "products": [
+        {
+          "id": "ad271b93-4948-482a-b74d-1000d4fad583",
+          "name": "Матча-тоник",
+          "sbisId": 193
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.733Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621399
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogMzMsICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS9jZWU1Njk0OS1mNWJiLTRlZDctODU1Ni1iY2ZkMjYwOGZhMGMiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "d2a368c5-b93c-400e-875c-3c0bc0c894ac",
+          "name": "Кофе Латте маленький",
+          "sbisId": 33
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.360Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621404
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogNDMsICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS85OWNlYTBkMS00MGM1LTQzNWMtODk3MS0xNDA2YTM0NzBiNmYiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "e81960d6-f50a-4405-9f8e-77e793e7b1e6",
+          "name": "Чай зеленый 500мл",
+          "sbisId": 43
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.945Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621399
+    },
+    {
+      "url": "https://api.sbis.ru/img?params=eyJPYmplY3RUeXBlIjogIm5vbWVuY2xhdHVyZV9mb3JfcmVmIiwgIk9iamVjdElkIjogNDQsICJQaG90b1VSTCI6ICJodHRwczovL2Rpc2suc2Jpcy5ydS9kaXNrL2FwaS92MS9mNGViMWM5NS1jMmQzLTQ4NTYtOWJjZC1jMDkyNTcyNzAzZjkiLCAiUGhvdG9JZCI6IG51bGwsICJTaXplIjogbnVsbCwgIkFkZGl0aW9uYWxQYXJhbXMiOiBudWxsfQ==",
+      "products": [
+        {
+          "id": "793899a7-0aea-4a93-af00-e34ff52a1a41",
+          "name": "Чай черный 500мл",
+          "sbisId": 44
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.985Z",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 621404
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/americano-berry-foam-df4ebdb93d.webp",
+      "products": [
+        {
+          "id": "95eb4a3f-ac3e-4abc-9da3-fddbe1e9855a",
+          "name": "Американо с вишневой пеной",
+          "sbisId": -264787285
+        },
+        {
+          "id": "61105853-d4d6-44e4-8b14-54143e0d1d0b",
+          "name": "Американо с облепиховой пеной",
+          "sbisId": -236086236
+        },
+        {
+          "id": "f7b3b3a1-0221-410b-b34e-37a521521a7c",
+          "name": "Американо с малиновой пеной",
+          "sbisId": -193619728
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.473Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 125976,
+      "file": "downloaded\\americano-berry-foam-df4ebdb93d.webp",
+      "sha256": "916dee27859534af97d3ae2733946cdef2089d27d642862361c33c1023eaed6e"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/americano-yuzu-4446e5839f.webp",
+      "products": [
+        {
+          "id": "9b77f36e-88a6-472b-a3b6-5888e6c4774b",
+          "name": "Юдзу американо",
+          "sbisId": 253
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.777Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 111240,
+      "file": "downloaded\\americano-yuzu-4446e5839f.webp",
+      "sha256": "ae583d77350ecefe203ddc43c24bcf49f71eb55681f4c646a3f65994c432dc7b"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/aperol-6694d91eb5.webp",
+      "products": [
+        {
+          "id": "e3ded87d-820f-4979-b0d6-8d6a486771ba",
+          "name": "Апероль",
+          "sbisId": -122944030
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.678Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 45044,
+      "file": "downloaded\\aperol-6694d91eb5.webp",
+      "sha256": "87a94651a1704adda0f4b0595963be83b9e6664760dfe282896f364b546ffde5"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bowl-chicken-01d13462a7.webp",
+      "products": [
+        {
+          "id": "a18d68c8-062a-4e93-804a-008531027ae2",
+          "name": "Боул с курицей",
+          "sbisId": -266195614
+        },
+        {
+          "id": "201e84c1-ab00-446d-b61c-3068c1e014fe",
+          "name": "Боул с курицей мсп",
+          "sbisId": -24885409
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.427Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 173918,
+      "file": "downloaded\\bowl-chicken-01d13462a7.webp",
+      "sha256": "5ac370fcf2feaacaae7f30e019da54ca0ea3aeae2ba0c49b36aa138636fd3d05"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bowl-shrimp-b42c496870.webp",
+      "products": [
+        {
+          "id": "3eb34c22-9830-4793-85ef-7031ef8e00b6",
+          "name": "Боул с креветкой мсп",
+          "sbisId": -160111663
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.310Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 143982,
+      "file": "downloaded\\bowl-shrimp-b42c496870.webp",
+      "sha256": "5573d12fb9736a62840f917ce30ce0eb36eb88e7cd8ea42ae95b95c04eeb0533"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/breakfast-constructor-7736456714.webp",
+      "products": [
+        {
+          "id": "9c6afb23-a74b-44d4-9b05-acad9d99e745",
+          "name": "Завтрак конструктор",
+          "sbisId": 812
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.290Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 126328,
+      "file": "downloaded\\breakfast-constructor-7736456714.webp",
+      "sha256": "63383aa461500be44651903d26082656e2dae7125753559c2e9bd9b1e438ad43"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bumble-02d411857f.webp",
+      "products": [
+        {
+          "id": "0e9bf916-6860-4208-b619-52936b9efe93",
+          "name": "Шмель/Бамбл",
+          "sbisId": 163
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.586Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 73600,
+      "file": "downloaded\\bumble-02d411857f.webp",
+      "sha256": "c7279e758c30774144ea6fb65b467dd90fef9a95dd00fb59d98ab0397afa47e4"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caesar-chicken-69c2c3f128.webp",
+      "products": [
+        {
+          "id": "55e5cbc6-40f9-4c2b-90ef-b518f4da2f5a",
+          "name": "Цезарь с курицей",
+          "sbisId": -95852325
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.887Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 132488,
+      "file": "downloaded\\caesar-chicken-69c2c3f128.webp",
+      "sha256": "693b863e108ced9b093752758bc38810970613275ba164e953f562a40ec38460"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caesar-salmon-2a37489348.webp",
+      "products": [
+        {
+          "id": "4e59381c-b6f3-4947-8589-688c2db30d30",
+          "name": "Цезарь с лососем",
+          "sbisId": -204661065
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.300Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 140670,
+      "file": "downloaded\\caesar-salmon-2a37489348.webp",
+      "sha256": "668ce9258487904359fbc2fb15c1c907b55768d62afabba3333f770b7d002f6b"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caviar-sandwich-dd1b374771.webp",
+      "products": [
+        {
+          "id": "d5a07be4-a890-4ba3-b78d-d977ff33e632",
+          "name": "Бутерброд с икрой",
+          "sbisId": 345
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.860Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 150324,
+      "file": "downloaded\\caviar-sandwich-dd1b374771.webp",
+      "sha256": "6862dde89f54c42ddd24f239dc64434de201c2c2fa9f6335a64f74e63b339ca8"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cherry-latte-aaad8ab848.webp",
+      "products": [
+        {
+          "id": "1819b371-a80c-4406-bf0b-9f35bf8f7f14",
+          "name": "Черри Латте",
+          "sbisId": -216493427
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.476Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 69706,
+      "file": "downloaded\\cherry-latte-aaad8ab848.webp",
+      "sha256": "683a0d8d7f687c1dfef2dceddbc99e8075ff9795d634cfd925113195cd515daf"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-720e340850.webp",
+      "products": [
+        {
+          "id": "d84fb0e8-b0a6-49b4-8373-7eb3f7efdb4c",
+          "name": "Какао 300 мл",
+          "sbisId": 41
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.677Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 75124,
+      "file": "downloaded\\cocoa-720e340850.webp",
+      "sha256": "69f1e0f08884c22810f4547a8e27d39fad5a2cb2608f28a7fd57099efa1c340f"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-grog-8f875569ca.webp",
+      "products": [
+        {
+          "id": "9055d5e8-a530-47c6-8496-5e6a4de94c49",
+          "name": "Какао грог",
+          "sbisId": -51616968
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.991Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 82728,
+      "file": "downloaded\\cocoa-grog-8f875569ca.webp",
+      "sha256": "f264a9aef095cfad10638540e471aa3a32b72c1430d51ccb6058892dacabd8ef"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-hot-cherry-78e1fe5d9f.webp",
+      "products": [
+        {
+          "id": "52153c7a-063e-4345-9c3a-9287e7b0ef20",
+          "name": "Какао \"Горячая\" вишня",
+          "sbisId": 828
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.361Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 80542,
+      "file": "downloaded\\cocoa-hot-cherry-78e1fe5d9f.webp",
+      "sha256": "7fef320b13d30df3178c86f014c1c87e881575aafecec77e7378e8002518a9d0"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/egg-roll-julienne-8f0619bdd7.webp",
+      "products": [
+        {
+          "id": "532deb7e-fb99-4362-9fc4-f8c3fb0ffbf5",
+          "name": "Яичный рулет с жульеном",
+          "sbisId": -245519536
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.475Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 117954,
+      "file": "downloaded\\egg-roll-julienne-8f0619bdd7.webp",
+      "sha256": "d67bcdc2735f39e77fafdd11f736f8fc644f6156e2af0fc7a8590704af8b14b5"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/espresso-tonic-b1c0ae745f.webp",
+      "products": [
+        {
+          "id": "d10226ee-6add-4c1b-98b4-b4fcadac817f",
+          "name": "Эспрессо-тоник",
+          "sbisId": 164
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.587Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 60160,
+      "file": "downloaded\\espresso-tonic-b1c0ae745f.webp",
+      "sha256": "67c3dc34d573fc199f63b2633ee2b9fb170d9e672752e2ade859cf56aa33ad3c"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/granola-ef3cba64dc.webp",
+      "products": [
+        {
+          "id": "51352afb-16c5-404c-ba29-22adb73bba09",
+          "name": "Гранола с кедровым орехом",
+          "sbisId": 648
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.191Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 166590,
+      "file": "downloaded\\granola-ef3cba64dc.webp",
+      "sha256": "00c6ebab0c14ab0cd749bb99d29e90dea5846d895d42cb01ff5e91bd6aab80ff"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/ice-latte-ea535cb71f.webp",
+      "products": [
+        {
+          "id": "7142537b-3b0c-4877-94d6-acffe2924e2d",
+          "name": "Айс Латте",
+          "sbisId": 165
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.669Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 58800,
+      "file": "downloaded\\ice-latte-ea535cb71f.webp",
+      "sha256": "b7b43969a2cba97445566f793d3151c19e9c6d2761dcc55b158bad857109a5a6"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/latte-coconut-peanut-68fbac0ed0.webp",
+      "products": [
+        {
+          "id": "06ea5935-2f0e-4062-a224-ad2b6f8460bb",
+          "name": "Латте «кокос арахис»",
+          "sbisId": 53
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.478Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 58108,
+      "file": "downloaded\\latte-coconut-peanut-68fbac0ed0.webp",
+      "sha256": "033e9e4766a7a4ad9dc24af3afd5b04ed6cc37ae5bcbd535a7fae0df0c1c2762"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/lemonade-pink-lemon-056a45a154.webp",
+      "products": [
+        {
+          "id": "1d48f00e-e7bf-4299-9395-d72e47abe89c",
+          "name": "Лимонад Розовый лимон",
+          "sbisId": -147150727
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.549Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 50752,
+      "file": "downloaded\\lemonade-pink-lemon-056a45a154.webp",
+      "sha256": "a81464ae420a4a2992a04c7cababbc721ae868fb15eda0442a2c9c137fdf8f10"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/lemonade-yuzu-4803de052c.webp",
+      "products": [
+        {
+          "id": "b0c0902f-cabd-41dd-98ca-a8054f2cdd7f",
+          "name": "Лимонад Юдзу",
+          "sbisId": 254
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.822Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 42196,
+      "file": "downloaded\\lemonade-yuzu-4803de052c.webp",
+      "sha256": "0d7e37cf89ec7153315b48a87067666a40c47795edb075c69ba7d93327300a79"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-blue-74b85b513f.webp",
+      "products": [
+        {
+          "id": "60df8c82-361e-484f-9cd6-677fa609f491",
+          "name": "Матча Blue Sbleskom",
+          "sbisId": 37
+        },
+        {
+          "id": "ad6a0be0-6fd4-4fd8-8f9c-76397f0a51f5",
+          "name": "Матча Blue Sbleskom 350 мл",
+          "sbisId": 294
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.656Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 56512,
+      "file": "downloaded\\matcha-blue-74b85b513f.webp",
+      "sha256": "f34b27086c391f053f594b665311f62baf8d8c1e17d8c1508496b7d0b7ab4832"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-jasmine-470f8b7f6d.webp",
+      "products": [
+        {
+          "id": "325d2050-4be5-4035-8d77-5a718e274936",
+          "name": "Матча Жасмин",
+          "sbisId": -148970023
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.535Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 54312,
+      "file": "downloaded\\matcha-jasmine-470f8b7f6d.webp",
+      "sha256": "1a350e77b5b74f9b44e7dc6377d6c6ce01f8d51391156974e652c5e00a30dae8"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-latte-af78f83e80.webp",
+      "products": [
+        {
+          "id": "9200e8cc-2c10-49ec-bee0-66ece59ed5c1",
+          "name": "Матча латте",
+          "sbisId": 36
+        },
+        {
+          "id": "b41cf944-2299-464c-b11c-3b50b4446111",
+          "name": "Матча латте 350мл",
+          "sbisId": 293
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.425Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 64206,
+      "file": "downloaded\\matcha-latte-af78f83e80.webp",
+      "sha256": "c2b9936befd4dbb28e08dba34e18d3daed3bdc8dd32816ec8538ea4831436584"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-pistachio-latte-464ad99678.webp",
+      "products": [
+        {
+          "id": "6b40107e-13be-427d-8580-700acaad8d67",
+          "name": "Фисташковая Матча Латте 300 мл",
+          "sbisId": 641
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.167Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 69970,
+      "file": "downloaded\\matcha-pistachio-latte-464ad99678.webp",
+      "sha256": "481ff59353c7458a5941447edc8472c519232f63eeb1b49b4dce1e92a766e21c"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/oatmeal-5cd8d7998c.webp",
+      "products": [
+        {
+          "id": "a6db11d8-095f-4582-81a6-b31b8078aa53",
+          "name": "Овсяная с конфитюром апельсин-ваниль",
+          "sbisId": -196385137
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.307Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 127908,
+      "file": "downloaded\\oatmeal-5cd8d7998c.webp",
+      "sha256": "727c28ebef362e6ce787c988ddfd369ad17fdba65b5ae887cdb787973d8af31b"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/orange-punch-38d9e5b68c.webp",
+      "products": [
+        {
+          "id": "ba704a67-c9fd-457b-98e6-7cab5b6acddc",
+          "name": "Апельсиновый пунш 300мл",
+          "sbisId": 258
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.829Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 106760,
+      "file": "downloaded\\orange-punch-38d9e5b68c.webp",
+      "sha256": "a26da082d8164805939d7358c3282c699fa1577376b265408b9bdfba7535c213"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/pink-drink-matcha-8f6743e685.webp",
+      "products": [
+        {
+          "id": "bfc41dd7-e823-4b7e-844d-707f2224f64f",
+          "name": "Пинк дринк Матча",
+          "sbisId": -263877443
+        },
+        {
+          "id": "1e99f00b-938c-457d-93f2-cecd2005de21",
+          "name": "Пинк дринк",
+          "sbisId": -255305941
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.474Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 41610,
+      "file": "downloaded\\pink-drink-matcha-8f6743e685.webp",
+      "sha256": "4b6432d03c19a3379f0fd698448140d066d38bd74d129fb63fbafface3c0e246"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/pomegranate-coffee-0db4af98e9.webp",
+      "products": [
+        {
+          "id": "6c7b5ca6-12bd-4a73-8752-2a146432c7b6",
+          "name": "Гранатовый кофе",
+          "sbisId": 406
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.000Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 68264,
+      "file": "downloaded\\pomegranate-coffee-0db4af98e9.webp",
+      "sha256": "f94a3ae62e677148b403e36fd45937f0ea305dbf0ac096b31947e20af4620240"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/protein-smoothie-7d430ffc4e.webp",
+      "products": [
+        {
+          "id": "b4588ead-7e7e-4b86-8898-a3bff4ed3f9a",
+          "name": "Протеиновый смузи",
+          "sbisId": 697
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.208Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 78578,
+      "file": "downloaded\\protein-smoothie-7d430ffc4e.webp",
+      "sha256": "7b4caa9062b9a4ae1c25f0a8780270f4212bf713d6b739a32c5fcb6833bd935b"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raf-cedar-6c09f06459.webp",
+      "products": [
+        {
+          "id": "f16ae5e0-c8ff-4e24-ac14-74228abcfb48",
+          "name": "Раф «кедровый»",
+          "sbisId": 56
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:32.482Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 65958,
+      "file": "downloaded\\raf-cedar-6c09f06459.webp",
+      "sha256": "e1668fa716e79b3c8e7bdc04ae24d390ddba0426e03706b21634ca3267d51f01"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raf-pumpkin-54890a9d8d.webp",
+      "products": [
+        {
+          "id": "c0cce818-ef50-4eb6-b80c-0564fed1db5b",
+          "name": "Раф тыква карамель",
+          "sbisId": -102899831
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.757Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 68178,
+      "file": "downloaded\\raf-pumpkin-54890a9d8d.webp",
+      "sha256": "528acc7de04818304507c365b5942035fcfdb0cd0288037fc88638a2923e8392"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raspberry-punch-54a02fed67.webp",
+      "products": [
+        {
+          "id": "aa2d1619-616f-46d2-88a4-f095639912a8",
+          "name": "Малиновый пунш",
+          "sbisId": -141636035
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.676Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 118726,
+      "file": "downloaded\\raspberry-punch-54a02fed67.webp",
+      "sha256": "20764270b2ed6ce06e4d9a8c5a686d96d5057ef34e7e32a1d2d3e3a46d95ec0e"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/rice-porridge-f0ae84c81e.webp",
+      "products": [
+        {
+          "id": "e9263adc-f1a4-4c18-8aba-b02fbbb28034",
+          "name": "Рисовая с шоколадом и вишней",
+          "sbisId": -257333780
+        },
+        {
+          "id": "cc84fb17-6585-4245-ab06-6d6c7469f6e6",
+          "name": "Рисовая с шоколадом и орехом",
+          "sbisId": -229680531
+        },
+        {
+          "id": "e7987649-28c2-4261-9f1f-c090fc7977c9",
+          "name": "Рисовая с апельсиновым конфитюром",
+          "sbisId": -166498640
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:29.475Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 106722,
+      "file": "downloaded\\rice-porridge-f0ae84c81e.webp",
+      "sha256": "18c7cac9a7594c2aec818522ebcbcae33169c368e6e8af4b754377f580c62810"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/rosehip-berry-7c9a8603bf.webp",
+      "products": [
+        {
+          "id": "e46170fd-b2be-475b-be28-c744de3243dd",
+          "name": "Шиповник ягодный",
+          "sbisId": -62568504
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.989Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 86080,
+      "file": "downloaded\\rosehip-berry-7c9a8603bf.webp",
+      "sha256": "733f01f6d1053d39712425cec63da016e58fd70a59fe1fb5f0613075e879439d"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/roti-chicken-pesto-4a199ca19a.webp",
+      "products": [
+        {
+          "id": "49bdd8dd-6c82-4aaf-9983-39bc124c2ecd",
+          "name": "Роти с курицей и песто",
+          "sbisId": -157419170
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.473Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 114630,
+      "file": "downloaded\\roti-chicken-pesto-4a199ca19a.webp",
+      "sha256": "a84801c80d5124bbc06154c0a570c26825b1aab493f2b797e5169d7c0c88b7a0"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/roti-ham-cheese-db422dcab4.webp",
+      "products": [
+        {
+          "id": "ffeef056-3501-45ef-9159-84fb9ce17c3c",
+          "name": "Роти с ветчиной и сыром",
+          "sbisId": -29070746
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.222Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 110658,
+      "file": "downloaded\\roti-ham-cheese-db422dcab4.webp",
+      "sha256": "6d4958e89342c8d4567aef78198a61a54232566c940bde4e06a35f2254fc5b8b"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/siberian-tea-3a015f1c35.webp",
+      "products": [
+        {
+          "id": "1f767360-3453-4398-acfc-a77b485e963d",
+          "name": "Сибирский чай с корицей 300мл",
+          "sbisId": 478
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.051Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 69498,
+      "file": "downloaded\\siberian-tea-3a015f1c35.webp",
+      "sha256": "2464ace6ee8c8390e3902f4bcbf3edbf5c8db86e076286f0701b6c6d5451cefa"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/strawberry-ube-e303f7831b.webp",
+      "products": [
+        {
+          "id": "54f5b1d7-3a31-474e-8789-45fe2bab7f18",
+          "name": "Земляничный убе",
+          "sbisId": -51012023
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.048Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 41806,
+      "file": "downloaded\\strawberry-ube-e303f7831b.webp",
+      "sha256": "bad2ffebf925e2b4be76cf58bb9e0da8836ba2d240838ae146c4685bce567208"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/syrniki-f0f9c8f4d0.webp",
+      "products": [
+        {
+          "id": "010200dc-770b-4986-b689-d8d8b3b9c75c",
+          "name": "Сырники мсп",
+          "sbisId": -64156664
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.904Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 82514,
+      "file": "downloaded\\syrniki-f0f9c8f4d0.webp",
+      "sha256": "b6b1c2f6c6a5ddd0df6184d210aeeab4b2fc39b5bc4f2dc9a00a6977facf9a2d"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-blackberry-1afb3e266d.webp",
+      "products": [
+        {
+          "id": "67ef1597-6614-46c4-897e-86a534637d85",
+          "name": "Ежевичный чай",
+          "sbisId": -159982253
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:30.370Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 151790,
+      "file": "downloaded\\tea-blackberry-1afb3e266d.webp",
+      "sha256": "030fa9650070259ca43c59cb783bc598ae6c9c988b82b843f5d4a3cb7467d71c"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-raspberry-rosemary-fc9fc12596.webp",
+      "products": [
+        {
+          "id": "9c0ce841-8681-4b1e-ac7d-b3a50fc3aecd",
+          "name": "Чай Малина-Розмарин 500 мл",
+          "sbisId": 780
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.285Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 130844,
+      "file": "downloaded\\tea-raspberry-rosemary-fc9fc12596.webp",
+      "sha256": "2cda3d2cdaad3375b2802ef7bab599eaab65b393c79a2f586dcf2c7286017366"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-rose-jasmine-72c399b7bd.webp",
+      "products": [
+        {
+          "id": "16734a89-1e4d-4e39-9e7f-bf05e077f727",
+          "name": "Чай розовый жасмин",
+          "sbisId": -35876492
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:31.107Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 164024,
+      "file": "downloaded\\tea-rose-jasmine-72c399b7bd.webp",
+      "sha256": "48cd4eb765f0c4a8d9a8f8683d05e7ac80a427b18fbafeb4548b7e3411cf957f"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-seabuckthorn-ginger-988a1974ae.webp",
+      "products": [
+        {
+          "id": "4511d488-60a0-4969-bc3a-bebb2d33b7e6",
+          "name": "Чай Облепиха-имбирь 500 мл",
+          "sbisId": 575
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.128Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 120284,
+      "file": "downloaded\\tea-seabuckthorn-ginger-988a1974ae.webp",
+      "sha256": "250965356d0be94a9c7b20ef5da0a6dc5484beaa2291ecec66d1390dfd70796f"
+    },
+    {
+      "url": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/ube-latte-f07af42b2d.webp",
+      "products": [
+        {
+          "id": "8a238e3a-89e5-49bd-8a34-41485628f886",
+          "name": "Убе Латте",
+          "sbisId": 487
+        },
+        {
+          "id": "88fe13bf-8a1c-4512-a6cf-19299e85cd8b",
+          "name": "Убе Латте 350 мл",
+          "sbisId": 489
+        }
+      ],
+      "checkedAt": "2026-10-27T17:40:33.083Z",
+      "status": 200,
+      "contentType": "image/webp",
+      "bytes": 60454,
+      "file": "downloaded\\ube-latte-f07af42b2d.webp",
+      "sha256": "ab40665c785170d6a75abfdada4b66faa17b1a174d6f0cdd6b04e31d6ac1a811"
+    }
+  ]
+}

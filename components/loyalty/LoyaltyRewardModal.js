@@ -4,7 +4,8 @@
 // без конфетти на весь экран и ярких spring-эффектов — лёгкий fade/scale,
 // уважает Reduce Motion.
 import React, { useEffect, useRef, useState } from 'react';
-import { Modal, View, Text, StyleSheet, Animated, AccessibilityInfo } from 'react-native';
+import { Modal, View, StyleSheet, Animated, AccessibilityInfo } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import HolographicSurface from '../HolographicSurface';

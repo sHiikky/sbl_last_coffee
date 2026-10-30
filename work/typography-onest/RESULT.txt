@@ -1,0 +1,45 @@
+SBL — APPROVED ONEST + MINERAL PALETTE + CHECKOUT FINISH — 2026-10-30
+
+Implemented in the actual application served at http://127.0.0.1:8094/.
+Selected body font: Onest. Product card titles15px/400, line20px, two-line
+reserved height. Product prices16px/600 with tabular figures. Shared card
+covers menu, home, favourites and recommendations. Cart lines/totals and
+historical money use the same semibold family with context-specific sizes.
+Mineral base #EFF0ED, surfaces #FDFEFC, text #202320, secondary #62675E,
+action #B74924. Existing product atmospheres/satin/flame/photographs retained.
+
+Six static local Onest faces400..900 derived from the exact preview source.
+Russian/digit/ruble coverage and OS/2 weight checked during generation.
+OFL/source hash/derived face hashes retained in assets/fonts/onest/.
+FontTools is a workspace-only build utility; excluded from Git.
+expo-font~14.0.12 matches the installed Expo54 bundledNativeModules contract.
+App waits for local font completion before revealing its screens, then uses
+AppText/AppTextInput with explicit static faces. Failed loading falls back
+to platform text. No global monkey patch/defaultProps. Nested text keeps
+parent weight; input refs, events, values and accessibility props forwarded.
+
+Cart checkout uses existing PrimaryButton holo variant / HolographicSurface
+and its shared18s motion/Reduced Motion/background lifecycle. Spinner has
+dark contrast on holo. Existing disabled/closed/loading/order guards kept.
+No real checkout submitted by automated verification; no database migration.
+
+Validation:
+- All27 integration suites PASS (including checkout, input caret/mask,
+  product sheet, photo recovery, motion and actual typography SSR coverage).
+- Expo web/iOS/Android JS exports PASS, all local font faces bundled.
+- Native visual rendering still requires a phone build; exports are not APK/IPA.
+
+Browser verification:
+- Real ProductCard DOM: SBLOnest400/15px, reserved40px title; prices
+  SBLOnest600/16px, tabular-nums. Font files contain the actual named weights
+  (CSS normal avoids artificial bold over the selected static face).
+- Menu420px visually checked; palette and photos correct.
+- Added one latte locally, inspected the product sheet and cart without
+  submitting checkout. CTA contains canonical gradients and moving transforms.
+- Cart320px: no horizontal overflow, complete centered two-line CTA74px,
+  footer sits above nav. Cart420px: CTA fits one line53px.
+- Actual Onest input fields/mask and tab labels render. Browser errors none.
+- Final all-platform export rerun after centered multiline button refinement.
+- Proofs: menu-420.png, cart-420.png, cart-320.png.
+- Original empty cart restored after verification; no order was submitted.
+  Viewport reset and the actual app left open on Menu.

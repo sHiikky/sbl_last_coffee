@@ -1,0 +1,35 @@
+SBL — выбранные варианты внедрены, 2026-10-29
+
+Выбор владельца по скриншотам:
+Д — Сатиновое серебро (карта), В — Янтарное стекло (огонёк).
+
+Карта: components/HomeLoyaltyCard.js, theme/satinCard.js.
+Точная композиция выбранного материала: BrandLogo, жирный баланс900,
+тёмный круг кэшбэка, уровень/цель. Все значения из живых props, не из demo.
+Нижнийtrack приглушённоспектральный при0, настоящийfill соответствуетprogress.
+Кнопка Моя карта44px сохраняет открытие программы лояльности.
+Блик: components/LoyaltyCardSheen.js —3s раз18s (15s idle), первыйчерез1.5s;
+останавливается при navigationblur, background, ReducedMotion, unmount.
+
+Огонёк: components/FlameIcon.js, LoyaltyRulesCard.js.
+Точное выбранное изображение из предпросмотра без перерисовки; исходникRGBA
+assets/brand/flame-amber-source.png, отображаемаярамка [174,585,445,562].
+Общийкомпонент во всех заголовках Home/Series/Profile и правиле серии.
+Декоративноеизображение не дублируется для screenreader.
+
+Проверки:
+- work/verify-integration.cjs: все24suite PASS, включая новыйsatin-card-check.
+- Новыйtest проверяет живыеданные/progress0/partial/max/clamp/44pxInfo,
+  геометрию3sблика/18sинтервал, blur/background/ReducedMotion/latecallback/cleanup.
+- Финальный Expoexport web/Android/iOS PASS, неAPK/IPA:
+  web index-d53833c3688396a93470d922709b1b7a.js
+  ios index-07d8e5a6b1501b76d25f15c42f845137.hbc
+  android index-b14efa2f421794c291761f7151f1c7ba.hbc
+- BrowserQA420x900: карта/янтарныйогонёк видны, Моякарта открываетсерию;
+  наэкранеСерии и вПравилах тотжеогонёк. На320px root/client/scrollWidth=320,
+  карточкавмещаетсябезгоризонтальногоoverflow.
+- Данные/БД/заказы неизменялись. Существующие2товаравкорзине сохранены.
+  Коммитов/пуша/развёртываниянебыло. gitdiffcheckчистый.
+
+Скриншоты: selected-home.png, selected-series.png.
+Основноеприложение: http://127.0.0.1:8094/

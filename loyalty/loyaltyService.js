@@ -288,7 +288,7 @@ export function getEligibleCartItemsForReward(cart, reward, config = LOYALTY_CON
   if (config.rewardEligibilityStrategy === 'cheapest_dessert') {
     const desserts = items.filter(item => item.menuCategory === DESSERT_CATEGORY);
     const cheapest = desserts.reduce((min, item) => (
-      !min || item.unitPrice < min.unitPrice ? item : min
+      !min || (item.baseUnitPrice ?? item.unitPrice) < (min.baseUnitPrice ?? min.unitPrice) || ((item.baseUnitPrice ?? item.unitPrice) === (min.baseUnitPrice ?? min.unitPrice) && String(item.key || item.id) < String(min.key || min.id)) ? item : min
     ), null);
     return cheapest ? [cheapest] : [];
   }

@@ -1,0 +1,546 @@
+{
+  "version": 1,
+  "photos": {
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/syrniki-f0f9c8f4d0.webp": {
+      "hue": 34.7,
+      "saturation": 42,
+      "width": 800,
+      "height": 790,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/latte-coconut-peanut-68fbac0ed0.webp": {
+      "hue": 32.6,
+      "saturation": 35.4,
+      "width": 559,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bumble-02d411857f.webp": {
+      "hue": 39.8,
+      "saturation": 42,
+      "width": 592,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-rose-jasmine-72c399b7bd.webp": {
+      "hue": 35.1,
+      "saturation": 42,
+      "width": 899,
+      "height": 900,
+      "region": [
+        0.15,
+        0.3,
+        0.5,
+        0.45
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cherry-latte-aaad8ab848.webp": {
+      "hue": 33,
+      "saturation": 35.7,
+      "width": 599,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/lemonade-pink-lemon-056a45a154.webp": {
+      "hue": 48.1,
+      "saturation": 42,
+      "width": 496,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/pink-drink-matcha-8f6743e685.webp": {
+      "hue": 39.7,
+      "saturation": 42,
+      "width": 419,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/siberian-tea-3a015f1c35.webp": {
+      "hue": 32,
+      "saturation": 37,
+      "width": 573,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bowl-chicken-01d13462a7.webp": {
+      "hue": 33.7,
+      "saturation": 42,
+      "width": 800,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-jasmine-470f8b7f6d.webp": {
+      "hue": 59.3,
+      "saturation": 42,
+      "width": 421,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/bowl-shrimp-b42c496870.webp": {
+      "hue": 26.5,
+      "saturation": 42,
+      "width": 788,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-seabuckthorn-ginger-988a1974ae.webp": {
+      "hue": 33.5,
+      "saturation": 42,
+      "width": 900,
+      "height": 875,
+      "region": [
+        0.15,
+        0.3,
+        0.5,
+        0.45
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/roti-chicken-pesto-4a199ca19a.webp": {
+      "hue": 32,
+      "saturation": 41.7,
+      "width": 800,
+      "height": 789,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caesar-salmon-2a37489348.webp": {
+      "hue": 25.7,
+      "saturation": 42,
+      "width": 800,
+      "height": 762,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/granola-ef3cba64dc.webp": {
+      "hue": 27.5,
+      "saturation": 31.8,
+      "width": 791,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-hot-cherry-78e1fe5d9f.webp": {
+      "hue": 24.3,
+      "saturation": 32.6,
+      "width": 462,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/egg-roll-julienne-8f0619bdd7.webp": {
+      "hue": 35.9,
+      "saturation": 36.1,
+      "width": 800,
+      "height": 798,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/strawberry-ube-e303f7831b.webp": {
+      "hue": 2.9,
+      "saturation": 29.6,
+      "width": 422,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caesar-chicken-69c2c3f128.webp": {
+      "hue": 35.2,
+      "saturation": 42,
+      "width": 787,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-blue-74b85b513f.webp": {
+      "hue": 194.4,
+      "saturation": 26,
+      "width": 601,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/americano-berry-foam-df4ebdb93d.webp": {
+      "hue": 28.6,
+      "saturation": 31.4,
+      "width": 900,
+      "height": 791,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-blackberry-1afb3e266d.webp": {
+      "hue": 0.2,
+      "saturation": 42,
+      "width": 900,
+      "height": 899,
+      "region": [
+        0.15,
+        0.3,
+        0.5,
+        0.45
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-pistachio-latte-464ad99678.webp": {
+      "hue": 94,
+      "saturation": 28.8,
+      "width": 582,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/pomegranate-coffee-0db4af98e9.webp": {
+      "hue": 31.4,
+      "saturation": 29.4,
+      "width": 580,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/ice-latte-ea535cb71f.webp": {
+      "hue": 33,
+      "saturation": 42,
+      "width": 400,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ],
+      "cutout": "latte"
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/ube-latte-f07af42b2d.webp": {
+      "hue": 290,
+      "saturation": 26,
+      "width": 598,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-grog-8f875569ca.webp": {
+      "hue": 27.4,
+      "saturation": 31.4,
+      "width": 435,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/matcha-latte-af78f83e80.webp": {
+      "hue": 94,
+      "saturation": 38.7,
+      "width": 602,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/americano-yuzu-4446e5839f.webp": {
+      "hue": 30.5,
+      "saturation": 42,
+      "width": 900,
+      "height": 768,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/tea-raspberry-rosemary-fc9fc12596.webp": {
+      "hue": 10.3,
+      "saturation": 42,
+      "width": 900,
+      "height": 897,
+      "region": [
+        0.15,
+        0.3,
+        0.5,
+        0.45
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/breakfast-constructor-7736456714.webp": {
+      "hue": 35.1,
+      "saturation": 42,
+      "width": 799,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/oatmeal-5cd8d7998c.webp": {
+      "hue": 30.3,
+      "saturation": 26,
+      "width": 800,
+      "height": 787,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raspberry-punch-54a02fed67.webp": {
+      "hue": 12.7,
+      "saturation": 40.7,
+      "width": 635,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/lemonade-yuzu-4803de052c.webp": {
+      "hue": 50.1,
+      "saturation": 35.1,
+      "width": 494,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/protein-smoothie-7d430ffc4e.webp": {
+      "hue": 6.5,
+      "saturation": 33.9,
+      "width": 444,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/orange-punch-38d9e5b68c.webp": {
+      "hue": 11.3,
+      "saturation": 42,
+      "width": 627,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raf-pumpkin-54890a9d8d.webp": {
+      "hue": 32.7,
+      "saturation": 41.9,
+      "width": 601,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/rice-porridge-f0ae84c81e.webp": {
+      "hue": 38,
+      "saturation": 26,
+      "width": 800,
+      "height": 787,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/espresso-tonic-b1c0ae745f.webp": {
+      "hue": 22.4,
+      "saturation": 42,
+      "width": 427,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/caviar-sandwich-dd1b374771.webp": {
+      "hue": 38.2,
+      "saturation": 38,
+      "width": 788,
+      "height": 800,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/cocoa-720e340850.webp": {
+      "hue": 22.9,
+      "saturation": 31.6,
+      "width": 425,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/aperol-6694d91eb5.webp": {
+      "hue": 14.7,
+      "saturation": 42,
+      "width": 312,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/rosehip-berry-7c9a8603bf.webp": {
+      "hue": 0.2,
+      "saturation": 38.1,
+      "width": 585,
+      "height": 900,
+      "region": [
+        0.15,
+        0.16,
+        0.65,
+        0.6
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/raf-cedar-6c09f06459.webp": {
+      "hue": 27.1,
+      "saturation": 33.3,
+      "width": 585,
+      "height": 900,
+      "region": [
+        0.13,
+        0.05,
+        0.74,
+        0.16
+      ]
+    },
+    "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/roti-ham-cheese-db422dcab4.webp": {
+      "hue": 32.3,
+      "saturation": 42,
+      "width": 800,
+      "height": 788,
+      "region": [
+        0.1,
+        0.1,
+        0.8,
+        0.8
+      ]
+    }
+  }
+}

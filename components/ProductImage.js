@@ -2,13 +2,16 @@
 // Единый компонент изображения товара.
 // Пока нет фото — унифицированный silver placeholder с едва заметным SBL-водяным знаком,
 // а не яркий emoji. Когда появится фото: передай source — placeholder исчезнет автоматически.
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import Text from './AppText';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/tokens';
 import HolographicSurface from './HolographicSurface';
+import { photoTranslation } from '../lib/photoComposition';
+import BrandLogo from './BrandLogo';
 
 const CATEGORY_ICON = {
   coffee: 'cafe-outline',
@@ -36,6 +39,9 @@ export default function ProductImage({
   contentFit = 'contain',
   contentPosition = 'center',
   zoom = 1,
+  offsetX = 0,
+  offsetY = 0,
+  backgroundColor,
   // transparent — без подложки под фото: товар «висит» прямо на фоне
   // карточки, а заглушка рисуется приглушённым тёмным по светлому.
   transparent = false,
@@ -44,6 +50,15 @@ export default function ProductImage({
 }) {
   const [loading, setLoading] = useState(!!source);
   const [failed, setFailed] = useState(false);
+  const [layout, setLayout] = useState({ width: 0, height: 0 });
+  const sourceKey = typeof source === 'object' ? source?.uri : source;
+  const activeSource = useRef({ key: sourceKey, revision: 0 });
+  if (activeSource.current.key !== sourceKey) {
+    activeSource.current = { key: sourceKey, revision: activeSource.current.revision + 1 };
+  }
+  const requestRevision = activeSource.current.revision;
+  useEffect(() => { setFailed(false); setLoading(!!source); }, [sourceKey]);
+  const translation = photoTranslation({ offsetX, offsetY }, layout);
   const showPlaceholder = !source || failed;
   const iconName = CATEGORY_ICON[category] || 'cafe-outline';
 
@@ -51,6 +66,10 @@ export default function ProductImage({
     <View
       style={[styles.container, { aspectRatio, borderRadius, overflow: 'hidden' }, transparent && { backgroundColor: 'transparent' }, style]}
       accessibilityLabel={accessibilityLabel}
+      onLayout={event => {
+        const { width, height } = event.nativeEvent.layout;
+        setLayout(previous => previous.width === width && previous.height === height ? previous : { width, height });
+      }}
     >
       {showPlaceholder ? (
         <View style={styles.placeholder}>
@@ -77,30 +96,33 @@ export default function ProductImage({
               style={styles.placeholderGlint}
             />
           )}
-          <Text style={[styles.monogram, transparent && { color: 'rgba(12,12,12,0.05)' }]}>SBL</Text>
+          <View pointerEvents="none" style={[styles.brandWatermark, { opacity: transparent ? 0.05 : 0.07 }]}><BrandLogo width={84} accessibilityLabel={null} /></View>
           <View style={[styles.placeholderIcon, transparent && { backgroundColor: 'rgba(12,12,12,0.04)', borderColor: 'rgba(12,12,12,0.06)' }]}>
             <Ionicons name={iconName} size={30} color="rgba(12,12,12,0.28)" />
           </View>
         </View>
       ) : (
         <>
-          <LinearGradient
+          {backgroundColor ? <View style={[StyleSheet.absoluteFill, { backgroundColor }]} /> : <LinearGradient
             colors={transparent ? CLEAR_GRADIENT_3 : ['#FFFFFF', '#F3F1ED', '#E7E5DF']}
             locations={[0, 0.62, 1]}
             start={{ x: 0.2, y: 0 }}
             end={{ x: 0.9, y: 1 }}
             style={StyleSheet.absoluteFill}
-          />
+          />}
+          <View style={[StyleSheet.absoluteFill, { transform: [{ translateX: translation.x }, { translateY: translation.y }] }]}>
           <Image
+            key={sourceKey}
             source={source}
             style={[StyleSheet.absoluteFill, zoom !== 1 && { transform: [{ scale: zoom }] }]}
             contentFit={contentFit}
             contentPosition={contentPosition}
             transition={200}
             cachePolicy="memory-disk"
-            onLoadEnd={() => setLoading(false)}
-            onError={() => { setFailed(true); setLoading(false); }}
+            onLoadEnd={() => { if (activeSource.current.revision === requestRevision) setLoading(false); }}
+            onError={() => { if (activeSource.current.revision === requestRevision) { setFailed(true); setLoading(false); } }}
           />
+          </View>
           {loading && (
             <View style={[styles.loadingOverlay, transparent && { backgroundColor: 'transparent' }]}>
               <ActivityIndicator color={colors.textMuted} />
@@ -134,13 +156,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.58)',
   },
-  monogram: {
-    position: 'absolute',
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: 2,
-    color: 'rgba(12,12,12,0.045)',
-  },
+  brandWatermark: { position: 'absolute' },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     alignItems: 'center', justifyContent: 'center',

@@ -1,0 +1,37 @@
+{
+  "family": "Onest",
+  "source": "https://github.com/google/fonts/tree/main/ofl/onest",
+  "source_sha256": "966c5c29b4755da84b6854d5c21dd4eaa2420225d0e9874de602de176d4a9f31",
+  "faces": [
+    {
+      "weight": 400,
+      "file": "Onest-400.ttf",
+      "sha256": "6e2305382b578486ae88f411d27c238764be8038e29207df0972f9bdc98b2a8e"
+    },
+    {
+      "weight": 500,
+      "file": "Onest-500.ttf",
+      "sha256": "30bd4bcaa10c901584f17319dfb1b6dccec0984d26e991f7defabda116f0563e"
+    },
+    {
+      "weight": 600,
+      "file": "Onest-600.ttf",
+      "sha256": "fde61f3b3cabbae25ddcf514d5ecbac59c949dfcb56f84f8bc5209882f29f0d1"
+    },
+    {
+      "weight": 700,
+      "file": "Onest-700.ttf",
+      "sha256": "3169e74b9ca286e1f9f22d462d58343393cdd9772b103d757ac0603e0f3a925e"
+    },
+    {
+      "weight": 800,
+      "file": "Onest-800.ttf",
+      "sha256": "b2509a20024a19b185d1ec24e5874ae649c576d60bf1a2e8f180abb9a3f23933"
+    },
+    {
+      "weight": 900,
+      "file": "Onest-900.ttf",
+      "sha256": "a01191e3c8d435b5f8108ae9ea2d0e12f28aecda408729591c78ab75daa69c43"
+    }
+  ]
+}

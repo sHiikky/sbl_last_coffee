@@ -1,30 +1,32 @@
 // theme/tokens.js — единая система токенов v2 (премиальный редизайн SBL)
 export const colors = {
-  surface0: '#ECEAE5',
-  surface1: '#F8F7F4',
-  surface2: '#FFFFFF',
-  surface3: '#111111',
+  surface0: '#EFF0ED',
+  surface1: '#FDFEFC',
+  surface2: '#FDFEFC',
+  surface3: '#202320',
   surface3Alt: '#171717',
+  launchBackground: '#050505',
 
-  textPrimary:            '#0C0C0C',
-  textSecondary:          '#777570',
-  textMuted:              '#8A867F', // темнее прежнего #A3A09A: контраст подписей на #ECEAE5 был ~2,2:1
+  textPrimary:            '#202320',
+  textSecondary:          '#62675E',
+  textMuted:              '#686E63',
   textOnDark:             '#FFFFFF',
-  textOnDarkMuted:        'rgba(255,255,255,0.42)',
-  textOnDarkFaint:        'rgba(255,255,255,0.28)',
+  textOnDarkSecondary:    '#C8C6C1',
+  textOnDarkMuted:        'rgba(255,255,255,0.72)',
+  textOnDarkFaint:        'rgba(255,255,255,0.6)',
 
-  border:                 'rgba(12,12,12,0.08)',
-  borderStrong:           'rgba(12,12,12,0.16)',
+  border:                 'rgba(32,35,32,0.08)',
+  borderStrong:           'rgba(32,35,32,0.16)',
   borderOnDark:           'rgba(255,255,255,0.08)',
 
-  accent:                 '#E8500A',
-  accentPressed:          '#C94105',
-  accentSoft:             'rgba(232,80,10,0.12)',
+  accent:                 '#B74924',
+  accentPressed:          '#973A1C',
+  accentSoft:             'rgba(183,73,36,0.12)',
 
   success:                '#268A58',
   danger:                 '#C9443D',
-  disabled:               '#D9D6D0',
-  skeleton:               '#E5E2DC',
+  disabled:               '#D9DDD5',
+  skeleton:               '#E1E5DC',
 
   silverLight:            '#F7F7F5',
   silverMid:              '#E7E8EA',
@@ -33,10 +35,10 @@ export const colors = {
   silverHighlight:        '#FFFFFF',
 
   // Алиасы для обратной совместимости со старыми экранами
-  background:             '#ECEAE5',
-  surface:                '#F8F7F4',
-  surfaceElevated:        '#FFFFFF',
-  darkSurface:            '#111111',
+  background:             '#EFF0ED',
+  surface:                '#FDFEFC',
+  surfaceElevated:        '#FDFEFC',
+  darkSurface:            '#202320',
   darkSurfaceSecondary:   '#171717',
 };
 
@@ -85,7 +87,7 @@ export const shadow = {
     elevation: 6,
   },
   button: {
-    shadowColor: '#E8500A',
+    shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.24,
     shadowRadius: 14,
@@ -115,6 +117,8 @@ export const materials = {
 };
 
 export const typography = {
+  productTitle: { fontSize: 15, lineHeight: 20, fontWeight: '400', letterSpacing: 0 },
+  price:        { fontSize: 16, fontWeight: '600', letterSpacing: 0, fontVariant: ['tabular-nums'] },
   eyebrow:      { fontSize: 11, fontWeight: '600', letterSpacing: 2.5, textTransform: 'uppercase' },
   caption:      { fontSize: 12, fontWeight: '400' },
   body:         { fontSize: 15, fontWeight: '400' },
@@ -158,7 +162,7 @@ export const darkProfile = {
   border: 'rgba(255,255,255,0.12)',
   borderStrong: 'rgba(255,255,255,0.2)',
   text: '#F5F5F5',
-  textSecondary: 'rgba(255,255,255,0.55)',
+  textSecondary: 'rgba(255,255,255,0.72)',
   divider: 'rgba(255,255,255,0.08)',
   pressed: 'rgba(255,255,255,0.04)',
 };

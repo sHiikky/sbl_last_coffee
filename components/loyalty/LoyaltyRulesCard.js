@@ -1,7 +1,9 @@
 // components/loyalty/LoyaltyRulesCard.js
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
+import FlameIcon from '../FlameIcon';
 import { colors, spacing, radius } from '../../theme/tokens';
 import { LOYALTY_CONFIG } from '../../loyalty/loyaltyConfig';
 
@@ -19,7 +21,7 @@ export default function LoyaltyRulesCard() {
       {RULES.map(rule => (
         <View key={rule.text} style={styles.row}>
           <View style={styles.iconBox}>
-            <Ionicons name={rule.icon} size={16} color={colors.textPrimary} />
+            {rule.icon === 'flame-outline' ? <FlameIcon size={22} /> : <Ionicons name={rule.icon} size={16} color={colors.textPrimary} />}
           </View>
           <Text style={styles.text}>{rule.text}</Text>
         </View>

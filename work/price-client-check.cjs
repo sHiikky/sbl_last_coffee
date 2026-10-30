@@ -14,7 +14,7 @@ function load(file,mocks={}) {
   babelrc:false,configFile:false,plugins:['@babel/plugin-transform-modules-commonjs'],
  }).code;
  const module={exports:{}};
- vm.runInNewContext(source,{module,exports:module.exports,require:n=>{if(!mocks[n])throw Error(n);return mocks[n]},console});
+ vm.runInNewContext(source,{module,exports:module.exports,require:n=>{if(n.endsWith('/cartOptions')||n.endsWith('/cartOptions.js'))return require('./load-domain.cjs')('lib/cartOptions.js');if(!mocks[n])throw Error(n);return mocks[n]},console});
  return module.exports;
 }
 const {buildCheckoutQuote,money,refreshCartPrices}=load('lib/checkoutQuote.js');
@@ -22,12 +22,12 @@ const service=load('lib/orderService.js',mocks);
 (async()=>{
  const items=[{id:'b',qty:1,unitPrice:19.95},{id:'a',qty:2,unitPrice:25},{id:'b',qty:2,unitPrice:19.95}];
  const quote=buildCheckoutQuote(items,109.85);
- assert.equal(JSON.stringify(quote.items),JSON.stringify([['a',2,25],['b',3,19.95]]));
+ assert.equal(JSON.stringify(quote.items),JSON.stringify([['a','a',2,25,[]],['b','b',3,19.95,[]]]));
  assert.equal(money(19.95*2*.1),3.99);
  assert.throws(()=>buildCheckoutQuote([{id:'a',qty:1,unitPrice:NaN}],10));
  const original={k:{id:'a',qty:2,unitPrice:25},gone:{id:'gone',qty:1,unitPrice:1}};
  const refreshed=refreshCartPrices(original,[{id:'a',price:30,name:'new',menuCategory:'test'}]);
- assert.equal(refreshed.k.unitPrice,30);assert.equal(refreshed.k.qty,2);assert.equal(refreshed.gone,undefined);
+ assert.equal(refreshed.a.unitPrice,30);assert.equal(refreshed.a.qty,2);assert.equal(refreshed.gone,undefined);
  assert.equal(original.k.unitPrice,25);
  const attempt={idempotencyKey:'key',items,promoCode:null,rewardRequested:false,bonusRedeem:0,expectedQuote:quote};
  await service.savePendingCheckoutAttempt(attempt);

@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, Alert } from 'react-native';
+import { View, TouchableOpacity, FlatList, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, useWindowDimensions, Alert } from 'react-native';
+import Text from '../components/AppText';
+import TextInput from '../components/AppTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,7 +12,6 @@ import EmptyState from '../components/EmptyState';
 import PrimaryButton from '../components/PrimaryButton';
 import LoyaltyRewardCartCard from '../components/loyalty/LoyaltyRewardCartCard';
 import BonusRedeemCartCard from '../components/bonus/BonusRedeemCartCard';
-import Chip from '../components/Chip';
 import ProductCard from '../components/ProductCard';
 import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/tokens';
 import { PICKUP_TIMES, PICKUP_POINTS, formatPrice, cartKey } from '../data/products';
@@ -31,6 +32,9 @@ import {
 } from '../lib/orderService';
 import useBonusAccount from '../hooks/useBonusAccount';
 import { getBonusLevel, maxRedeemable } from '../lib/bonusConfig';
+import { CAFE, validateContact, fetchOrderingConfig, orderingState, formatPickupTime, checkoutErrorMessage } from '../lib/ordering';
+import { formatAdditions } from '../lib/cartOptions';
+import { completePhoneInput, editPhoneInput, formatPhoneInput, PHONE_INPUT_PLACEHOLDER } from '../lib/phoneInput';
 
 function showMessage(title, message) {
   if (Platform.OS === 'web') globalThis.alert(`${title}\n${message}`);
@@ -47,6 +51,8 @@ export default function CartScreen({
   tabBarHeight,
   // Для блока «С этим берут»: каталог, добавление в корзину, избранное.
   products = [],
+  account = null,
+  getCurrentCustomerId,
   onAddToCart,
   favoriteIds = [],
   onToggleFavorite,
@@ -73,10 +79,44 @@ export default function CartScreen({
   const [promo, setPromo] = useState('');
   const [promoState, setPromoState] = useState(null);
   const [ordering, setOrdering] = useState(false);
-  const [pickupTime, setPickupTime] = useState(PICKUP_TIMES[1]);
-  const [pickupPoint, setPickupPoint] = useState(PICKUP_POINTS[0]);
+  const [pickupTime] = useState(PICKUP_TIMES[0]);
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState(formatPhoneInput(account?.phone));
+  const [orderComment, setOrderComment] = useState('');
+  const [orderingConfig, setOrderingConfig] = useState(null);
+  const [clockTick, setClockTick] = useState(Date.now());
+  const [phoneSelection, setPhoneSelection] = useState(undefined);
+  const phoneInputRef = useRef({ text: customerPhone, selection: { start: customerPhone.length, end: customerPhone.length } });
+  useEffect(() => {
+    const text = formatPhoneInput(account?.phone);
+    phoneInputRef.current = { text, selection: { start: text.length, end: text.length } };
+    setCustomerPhone(text);
+    setPhoneSelection(undefined);
+  }, [account?.id, account?.phone]);
+  const changeCustomerPhone = value => {
+    const current = phoneInputRef.current;
+    const edited = editPhoneInput(current.text, value, current.selection);
+    phoneInputRef.current = edited;
+    setCustomerPhone(edited.text);
+    setPhoneSelection(edited.selection);
+  };
+  const changePhoneSelection = event => {
+    const selection = event.nativeEvent.selection;
+    phoneInputRef.current.selection = selection;
+    setPhoneSelection(selection);
+  };
+  useEffect(() => {
+    let active = true;
+    const refresh = () => { setClockTick(Date.now()); fetchOrderingConfig().then(config => { if (active) setOrderingConfig(config); }).catch(() => {}); };
+    refresh();
+    const timer = setInterval(refresh, 30000);
+    return () => { active = false; clearInterval(timer); };
+  }, []);
+  const cafeState = orderingState(orderingConfig, clockTick);
+  const [pickupPoint] = useState(PICKUP_POINTS[0]);
   const [appliedRewardId, setAppliedRewardId] = useState(null);
   const [redeemBonuses, setRedeemBonuses] = useState(false);
+  const [commentExpanded, setCommentExpanded] = useState(false);
   const bonusAccount = useBonusAccount();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -153,13 +193,13 @@ export default function CartScreen({
     .slice(0, 8);
   const itemCount = items.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-  const discount = promoState === 'ok' ? money(subtotal * 0.1) : 0;
 
   const availableReward = getAvailableRewards(loyaltyState?.rewards || [])[0] || null;
   const rewardApplicable = availableReward ? isRewardApplicable(availableReward, cart) : false;
   const rewardEligibleItems = availableReward ? getEligibleCartItemsForReward(cart, availableReward) : [];
   const rewardApplied = rewardApplicable && appliedRewardId === availableReward?.id;
-  const rewardDiscount = rewardApplied ? (rewardEligibleItems[0]?.unitPrice || 0) : 0;
+  const rewardDiscount = rewardApplied ? (rewardEligibleItems[0]?.baseUnitPrice ?? rewardEligibleItems[0]?.unitPrice ?? 0) : 0;
+  const discount = promoState === 'ok' ? money((subtotal - rewardDiscount) * 0.1) : 0;
 
   const serviceFee = subtotal > 0 ? 0 : 0;
   const total = Math.max(0, subtotal - discount - rewardDiscount + serviceFee);
@@ -200,11 +240,16 @@ export default function CartScreen({
   // сервера, чтобы локальное состояние никогда не расходилось с реальным
   // заказом.
   const runOrder = async () => {
+    const customer = await getUserOrThrow();
+    const ownerChanged = () => !mountedRef.current || (!!getCurrentCustomerId && getCurrentCustomerId() !== customer.id);
+    if (ownerChanged()) return;
+    const contact = { ...validateContact({ name: customerName, phone: account?.phone || completePhoneInput(customerPhone) || '', comment: orderComment }), customer_id: customer.id };
+    const fulfillment = { point_id: CAFE.pointId, pickup_at: null };
     const promoCode = promoState === 'ok' ? promo.trim().toUpperCase() : null;
     const rewardRequested = rewardApplied;
     const bonusRedeem = redeemBonuses ? maxBonusRedeemable : 0;
     const expectedQuote = buildCheckoutQuote(items, payTotal);
-    const attemptSignature = buildRequestFingerprint({ items, promoCode, rewardRequested, bonusRedeem, expectedQuote });
+    const attemptSignature = buildRequestFingerprint({ items, promoCode, rewardRequested, bonusRedeem, expectedQuote, contact, fulfillment });
 
     // НЕЛЬЗЯ молча затереть ЕЩЁ не разрешённую попытку (Block 1.3, п.1).
     // Источник истины здесь — то, что реально лежит в AsyncStorage (а не
@@ -283,6 +328,7 @@ export default function CartScreen({
     // READ-ONLY lookup (recoverPendingCheckoutOnce в lib/orderService.js);
     // сам заказ он не создаст — это только этот экран, в ответ на реальное
     // нажатие пользователя (см. комментарий в начале orderService.js).
+    if (ownerChanged()) return;
     await savePendingCheckoutAttempt({
       idempotencyKey,
       items,
@@ -290,6 +336,9 @@ export default function CartScreen({
       rewardRequested,
       bonusRedeem,
       expectedQuote,
+      contact,
+      fulfillment,
+      customerId: customer.id,
       state: CHECKOUT_ATTEMPT_STATE.SUBMITTING,
     });
 
@@ -299,7 +348,7 @@ export default function CartScreen({
       // подтверждается, никакого экрана входа перед этим нет. Вызываем здесь
       // же, чтобы при отсутствии сессии пользователь увидел понятную ошибку
       // раньше, чем RPC откажет с 'не удалось определить пользователя'.
-      await getUserOrThrow();
+      if (ownerChanged()) return;
 
       const order = await createOrder({
         idempotencyKey,
@@ -308,7 +357,10 @@ export default function CartScreen({
         rewardRequested,
         bonusRedeem,
         expectedQuote,
+        contact,
+        fulfillment,
       });
+      if (ownerChanged()) return;
 
       // reward_applied — решение СЕРВЕРА (он же выбрал, к какому именно
       // товару его применить), а не то, что до вызова считал клиент.
@@ -322,15 +374,17 @@ export default function CartScreen({
       checkoutAttemptRef.current = { key: null, signature: null };
       // An accepted server order remains successful even if local cleanup fails.
       // Its persisted attempt can be recovered read-only after a restart.
-      try { await clearPendingCheckoutAttempt(); }
+      try { await clearPendingCheckoutAttempt(idempotencyKey); }
       catch (storageError) { console.warn('[order] accepted order cache cleanup failed', storageError); }
 
       const serverTotal = Number(order.total || 0);
       const serverBonusRedeemed = Number(order.bonus_redeemed || 0);
 
       onOrder({
-        pickupTime,
-        pickupPoint,
+        customerId: customer.id,
+        pickupTime: formatPickupTime(order.pickup_at),
+        pickupPoint: order.pickup_point || pickupPoint,
+        pickupAt: order.pickup_at,
         // Итог берём из ответа сервера (authoritative), а не из локально
         // посчитанного payTotal — сервер мог применить/не применить
         // промокод или награду иначе, чем предполагал клиентский предпросмотр.
@@ -344,6 +398,7 @@ export default function CartScreen({
         orderedItems: items,
       });
     } catch (error) {
+      if (ownerChanged()) return;
       console.warn('[order] failed to create order via RPC', error);
 
       // Block 1.2, п.6: сервер отвечает либо ОКОНЧАТЕЛЬНО (деterministic —
@@ -358,7 +413,7 @@ export default function CartScreen({
         // Сервер ответил окончательно — этим ключом больше нечего
         // проверять при следующем запуске, попытка закрыта.
         checkoutAttemptRef.current = { key: null, signature: null };
-        try { await clearPendingCheckoutAttempt(); }
+        try { await clearPendingCheckoutAttempt(idempotencyKey); }
         catch (storageError) { console.warn('[order] rejected attempt cache cleanup failed', storageError); }
       } else {
         // Неизвестно, дошёл ли запрос до сервера — НЕ удаляем попытку,
@@ -376,7 +431,7 @@ export default function CartScreen({
         onCheckoutAttemptUncertain?.(idempotencyKey);
       }
 
-      if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
+      if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'MODIFIER_NOT_AVAILABLE', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
         setAppliedRewardId(null);
         setRedeemBonuses(false);
         let refreshed = false;
@@ -404,7 +459,7 @@ export default function CartScreen({
         'Не удалось оформить заказ',
         isIdempotencyConflict
           ? 'Похоже, состав заказа изменился во время оформления. Попробуйте оформить ещё раз.'
-          : (error?.message || 'Проверьте подключение к интернету и попробуйте снова.')
+          : checkoutErrorMessage(classification.code)
       );
     } finally {
       orderingRef.current = false;
@@ -425,7 +480,7 @@ export default function CartScreen({
       // Сюда попадают сбои подготовки (AsyncStorage, recovery) до отправки
       // заказа: без этого блока флаг оставался бы true и кнопка «мёртвой».
       console.warn('[order] failed before submit', error);
-      showMessage('Не удалось оформить заказ', 'Не удалось подготовить заказ. Проверьте подключение и повторите попытку.');
+      showMessage('Не удалось оформить заказ', error.message || 'Не удалось подготовить заказ. Проверьте подключение и повторите попытку.');
     } finally {
       orderingRef.current = false;
       if (mountedRef.current) setOrdering(false);
@@ -474,6 +529,7 @@ export default function CartScreen({
       </View>
 
       <FlatList
+        style={{ flex: 1 }}
         data={items}
         keyExtractor={item => item.key}
         contentContainerStyle={{ paddingHorizontal: hPad, paddingTop: spacing.md, paddingBottom: spacing.lg }}
@@ -491,7 +547,9 @@ export default function CartScreen({
               style={{ width: 64 }}
             />
             <View style={{ flex: 1, marginLeft: spacing.md }}>
-              <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+              {!!item.modifiers?.length && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: spacing.xs }}>{formatAdditions(item.modifiers)}</Text>}
+              {!!item.preparationNote && <Text style={{ color: colors.textSecondary, fontSize: 12, marginTop: spacing.xs }}>Пожелание: {item.preparationNote}</Text>}
               <Text style={styles.itemPrice}>{formatPrice(item.unitPrice)}</Text>
             </View>
             <QuantityStepper qty={item.qty} onIncrement={() => onIncrement(item)} onDecrement={() => onDecrement(item.key)} />
@@ -510,6 +568,30 @@ export default function CartScreen({
         }
         ListFooterComponent={
           <View>
+            <View style={[styles.infoBox, { marginTop: spacing.md, gap: spacing.sm }]}>
+              <Text style={styles.infoTitle}>Контакт для получения заказа</Text>
+              <TextInput accessibilityLabel="Ваше имя" placeholder="Ваше имя" value={customerName} onChangeText={setCustomerName} maxLength={80} style={styles.contactInput} />
+              <TextInput
+                accessibilityLabel="Телефон для связи"
+                placeholder={PHONE_INPUT_PLACEHOLDER}
+                value={customerPhone}
+                onChangeText={changeCustomerPhone}
+                selection={phoneSelection}
+                onSelectionChange={changePhoneSelection}
+                editable={!account?.phone}
+                keyboardType="phone-pad"
+                textContentType="telephoneNumber"
+                autoComplete="tel"
+                autoCorrect={false}
+                style={styles.contactInput}
+              />
+              <TouchableOpacity accessibilityRole="button" accessibilityState={{ expanded: commentExpanded }} accessibilityLabel="Комментарий к заказу" onPress={() => setCommentExpanded(value => !value)} style={styles.commentToggle}>
+                <Text style={styles.commentToggleLabel}>{orderComment ? 'Комментарий добавлен' : 'Добавить комментарий к заказу'}</Text>
+                <Ionicons name={commentExpanded ? 'chevron-up' : 'chevron-down'} size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+              {commentExpanded && <TextInput accessibilityLabel="Текст комментария к заказу" placeholder="Например, как к вам обратиться при выдаче" value={orderComment} onChangeText={setOrderComment} maxLength={500} multiline style={styles.contactInput} />}
+              {!account && <Text style={styles.pickupHintText}>Номер для связи. Для сохранения аккаунта между устройствами потребуется вход по SMS.</Text>}
+            </View>
             {suggestions.length > 0 && onAddToCart && (
               <View style={styles.suggestBlock}>
                 <Text style={styles.suggestTitle}>С этим берут</Text>
@@ -537,20 +619,20 @@ export default function CartScreen({
             )}
 
             <View style={[styles.summaryBox, shadow.card]}>
-              <Text style={styles.sectionCaption}>Точка самовывоза</Text>
-              <View style={styles.chipWrap}>
-                {PICKUP_POINTS.map(point => (
-                  <Chip key={point} label={point} active={pickupPoint === point} onPress={() => setPickupPoint(point)} />
-                ))}
+              <View style={styles.pickupInfoHeading}>
+                <Text style={styles.infoTitle}>Самовывоз из SBL</Text>
+                <TouchableOpacity accessibilityRole="button" accessibilityLabel="Показать кофейню на карте" onPress={() => navigation.navigate('CafeLocation')} style={styles.mapButton}>
+                  <Ionicons name="map-outline" size={16} color={colors.accent} />
+                  <Text style={styles.mapButtonText}>На карте</Text>
+                </TouchableOpacity>
               </View>
-            </View>
-
-            <View style={[styles.summaryBox, shadow.card]}>
-              <Text style={styles.sectionCaption}>Время самовывоза</Text>
-              <View style={styles.chipWrap}>
-                {PICKUP_TIMES.map(slot => (
-                  <Chip key={slot} label={slot} active={pickupTime === slot} onPress={() => setPickupTime(slot)} />
-                ))}
+              <View style={styles.pickupInfoRow}>
+                <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.pickupInfoText}>{pickupPoint}</Text>
+              </View>
+              <View style={styles.pickupInfoRow}>
+                <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+                <Text style={styles.pickupInfoText}>{pickupTime} · ежедневно 11:00–20:00</Text>
               </View>
             </View>
 
@@ -603,20 +685,41 @@ export default function CartScreen({
 
             <View style={styles.pickupHint}>
               <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-              <Text style={styles.pickupHintText}>Соберём заказ в течение 15 минут · {pickupPoint}</Text>
+              <Text style={styles.pickupHintText}>Приём заказов до 19:55 по Томску. Оплата при получении.</Text>
             </View>
+            {!cafeState.isOpen && <Text style={{ color: colors.danger, marginTop: spacing.sm }}>Сейчас заказы не принимаются. Кофейня открыта с 11:00 до 20:00 по Томску.</Text>}
 
-            <View style={{ marginTop: spacing.lg, paddingBottom: tabBarHeight + spacing.lg }}>
-              <PrimaryButton fullWidth loading={ordering} label="Оформить заказ" onPress={handleOrder} haptic="success" variant="holo" />
-            </View>
           </View>
         }
       />
+      <View style={[styles.checkoutDock, { paddingHorizontal: hPad, paddingBottom: tabBarHeight ? spacing.md : Math.max(insets.bottom, spacing.md) }]}>
+        <View style={styles.checkoutDockSummary}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.checkoutDockLabel}>К оплате при получении</Text>
+            <Text style={styles.checkoutDockHint}>{cafeState.isOpen ? 'Готовим 3–5 минут' : 'Заказы: 11:00–19:55 · Томск'}</Text>
+          </View>
+          <Text style={styles.checkoutDockTotal} accessibilityLiveRegion="polite">{formatPrice(payTotal)}</Text>
+        </View>
+        <PrimaryButton fullWidth loading={ordering} disabled={!cafeState.isOpen} label={cafeState.isOpen ? 'Заказать · оплата при получении' : 'Приём заказов закрыт'} onPress={handleOrder} haptic="success" variant="holo" />
+      </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  contactInput: { minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.medium, padding: spacing.md, color: colors.textPrimary, backgroundColor: colors.surfaceElevated, fontSize: 14 },
+  commentToggle: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  commentToggleLabel: { color: colors.textSecondary, fontSize: 13, flex: 1 },
+  pickupInfoHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, marginBottom: spacing.sm },
+  pickupInfoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm },
+  pickupInfoText: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, flex: 1 },
+  mapButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, paddingHorizontal: spacing.sm },
+  mapButtonText: { color: colors.accent, fontSize: 12, fontWeight: '600' },
+  checkoutDock: { backgroundColor: colors.surfaceElevated, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, ...shadow.level2 },
+  checkoutDockSummary: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.md, marginBottom: spacing.md },
+  checkoutDockLabel: { fontSize: 13, color: colors.textSecondary },
+  checkoutDockHint: { fontSize: 12, color: colors.textSecondary, marginTop: spacing.xs },
+  checkoutDockTotal: { fontSize: 22, fontWeight: '600', fontVariant: ['tabular-nums'], color: colors.textPrimary },
   recoveryNotice: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -655,9 +758,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  itemName: { fontSize: 14, fontWeight: '600', color: colors.textPrimary },
+  itemName: { fontSize: 15, lineHeight: 20, fontWeight: '400', color: colors.textPrimary },
   itemMeta: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
-  itemPrice: { fontSize: 14, fontWeight: '700', color: colors.accent, marginTop: 4 },
+  itemPrice: { fontSize: 16, fontWeight: '600', fontVariant: ['tabular-nums'], color: colors.accent, marginTop: 4 },
   sectionCaption: { fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md },
   promoBox: {
     backgroundColor: colors.surfaceElevated,
@@ -677,7 +780,7 @@ const styles = StyleSheet.create({
   summaryValue: { fontSize: 13, color: colors.textPrimary },
   summaryTotal: { borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.md, marginTop: spacing.xs },
   totalLabel: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  totalValue: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
+  totalValue: { fontSize: 18, fontWeight: '600', fontVariant: ['tabular-nums'], color: colors.textPrimary },
   pickupHint: {
     marginTop: spacing.md,
     flexDirection: 'row',

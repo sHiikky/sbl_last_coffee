@@ -5,9 +5,10 @@ const code = babel.transformSync(source, { babelrc: false, configFile: false, pl
 const flush = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
 function makeScreen({ rpcError = null, storageError = null, saveError = null } = {}) {
   const alerts = [], calls = [], orders = [];
+  let stateIndex = 0;
   const React = {
     createElement(type, props, ...children) { return { type, props: props || {}, children }; },
-    useState(initial) { let value = initial; return [value, next => { value = typeof next === 'function' ? next(value) : next; }]; },
+    useState(initial) { const index=stateIndex++; let value = index===4?'Test':index===5?'+79990000001':initial; return [value, next => { value = typeof next === 'function' ? next(value) : next; }]; },
     useRef(value) { return { current: value }; },
     useEffect() {},
   };
@@ -37,6 +38,9 @@ function makeScreen({ rpcError = null, storageError = null, saveError = null } =
     '../lib/supabaseClient': { getUserOrThrow:async()=>({id:'guest'}) },
     '../lib/checkoutQuote': { money:n=>Math.round(n*100)/100, buildCheckoutQuote:(_items,payable)=>({items:[['coffee',1,100]],payable}) },
     '../lib/orderService': service,
+    '../lib/cartOptions':{formatAdditions:()=>''},
+    '../lib/phoneInput':require('./load-domain.cjs')('lib/phoneInput.js'),
+    '../lib/ordering':{CAFE:{pointId:'lenina-72'},validateContact:x=>x,orderingState:()=>({isOpen:true}),fetchOrderingConfig:async()=>({}),formatPickupTime:()=> '12:00'},
     '../hooks/useBonusAccount': { __esModule:true, default:()=>({balance:0,lifetimePaid:0,refresh:async()=>{}}) },
     '../lib/bonusConfig': { getBonusLevel:()=>({rate:0.05}), maxRedeemable:()=>0 },
   };
@@ -50,7 +54,7 @@ function makeScreen({ rpcError = null, storageError = null, saveError = null } =
   const tree=moduleObject.exports.default({ navigation:{},cart:{coffee:{id:'coffee',qty:1,unitPrice:100}},products:[],onOrder:x=>orders.push(x),onRefreshCheckout:async()=>{refreshed++;},loyaltyState:{rewards:[],refresh:async()=>{} } });
   function find(node) {
     if (!node || typeof node !== 'object') return null;
-    if(node.props?.label==='Оформить заказ')return node;
+    if(node.props?.fullWidth && node.props?.haptic==='success')return node;
     for(const child of (Array.isArray(node)?node:Object.values(node))){ const result=find(child);if(result)return result; }
   }
   const button=find(tree);assert(button,'checkout button exists');

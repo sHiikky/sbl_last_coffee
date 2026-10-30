@@ -3,7 +3,8 @@
 // - 'card' (по умолчанию) — левый верхний угол карточки товара;
 // - 'hero' — крупная метка в левом нижнем углу фото на экране товара.
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from './AppText';
 import { colors } from '../theme/tokens';
 
 const MAP = {

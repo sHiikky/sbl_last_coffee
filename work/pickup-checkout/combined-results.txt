@@ -1,0 +1,89 @@
+Fresh native PostgreSQL17 database: sbl_notes_final on 127.0.0.1:5543
+Migration 20261005123617_remote_schema.sql: PASS
+Migration 20261005150000_reward_entitlement.sql: PASS
+Migration 20261005160000_price_changed.sql: PASS
+Migration 20261005170000_bonus_hardening.sql: PASS
+Migration 20261005180000_function_security.sql: PASS
+Migration 20261005190000_product_availability.sql: PASS
+Migration 20261029100000_pickup_checkout.sql: PASS
+Migration 20261029110000_notifications.sql: PASS
+Pickup rollback suite:48/48PASS
+01 catalog exposes available hidden modifiers but hides unpublished bases                       | PASS
+02 catalog and config are publicly readable                                                     | PASS
+03 acceptance window boundary 2026-10-29T03:59:59Z                                              | PASS
+03 acceptance window boundary 2026-10-29T04:00:00Z                                              | PASS
+03 acceptance window boundary 2026-10-29T12:55:00.001Z                                          | PASS
+03 acceptance window boundary 2026-10-29T12:55:00Z                                              | PASS
+03 acceptance window boundary 2026-10-29T13:00:00Z                                              | PASS
+04 next opening uses the next Tomsk calendar day                                                | PASS
+05 modifiers multiply per parent, money total precedes bonus debit, contact and ASAP persist    | PASS
+06 base and modifier snapshots are authoritative                                                | PASS
+07 exactly one 20 point debit                                                                   | PASS
+08 existing recovery lookup still returns own v2 order                                          | PASS
+09 retry survives closing, price change and stop list without a second debit                    | PASS
+10 changed contact cannot reuse an existing idempotency key                                     | PASS
+11 a new request after closing is rejected                                                      | PASS
+12 different modifier variants remain separate order lines                                      | PASS
+12b canonical sorting, whole decimal quantities and duplicate variant aggregation               | PASS
+12c different syrup notes stay separate, normalize whitespace, and never change modifier prices | PASS
+12d a different preparation note cannot reuse an idempotency key                                | PASS
+12e preparation notes are limited to two hundred Unicode characters                             | PASS
+12f interior controls are rejected while line feed remains supported                            | PASS
+13 contact requires a normalized Russian +7 phone                                               | PASS
+13b a checkout prepared by another user cannot use the current session                          | PASS
+14 blank contact name is rejected                                                               | PASS
+15 oversized comment is rejected                                                                | PASS
+16 unknown pickup point is rejected                                                             | PASS
+17 scheduled pickup cannot precede preparation                                                  | PASS
+18 scheduled pickup cannot exceed closing                                                       | PASS
+19 verified account phone cannot be replaced by a guest contact                                 | PASS
+20 fractional parent quantity is rejected                                                       | PASS
+21 modifier quantity over ten is rejected                                                       | PASS
+21b more than twenty distinct modifiers is rejected                                             | PASS
+21c duplicate modifier rows cannot bypass the per-unit quantity limit                           | PASS
+22 stale modifier price is rejected                                                             | PASS
+23 a rejected quote creates no partial order                                                    | PASS
+24 stopped modifier is rejected                                                                 | PASS
+25 gift removes one base, promotion applies to the remaining charged amount                     | PASS
+26 gifted unit still charges modifiers and preserves a repeatable base snapshot                 | PASS
+27 customer cannot perform a staff status change                                                | PASS
+28 a new order cannot jump directly to completed                                                | PASS
+29 handover requires explicit payment confirmation                                              | PASS
+30 payment and completion settle the existing bonus mechanism exactly once                      | PASS
+31 later Saby confirmation preserves original payment and creates no duplicate earnings         | PASS
+32 repeated cancellation reverses earnings once                                                 | PASS
+33 cancellation refunds the original bonus debit once                                           | PASS
+34 legacy checkout cannot bypass contact and hours through API roles                            | PASS
+35 direct staff and customer mutation privileges are removed                                    | PASS
+36 actual direct authenticated staff update is denied                                           | PASS
+Notification rollback suite:27/27PASS
+PASS: token owner sees only own registration
+PASS: foreign token cannot be taken over with a different installation id
+PASS: same installation may follow an authenticated account switch
+PASS: direct token writes, outbox reads and worker execution denied to customer
+PASS: unauthenticated API role cannot register tokens
+PASS: repeated status creates one outbox event
+PASS: active lease excludes a second worker
+PASS: claim contains only the customer device
+PASS: live lease is checked and renewed before outbound HTTP
+PASS: wrong worker lease cannot acknowledge delivery
+PASS: expired lease cannot be renewed by a late worker
+PASS: expired lease is reclaimed with a new fencing token
+PASS: stale worker acknowledgement is rejected
+PASS: Expo ticket recorded without marking it delivered
+PASS: receipt wait does not immediately resend
+PASS: receipt polling retains the accepted ticket
+PASS: DeviceNotRegistered invalidates the exact old token
+PASS: opt-out before dispatch leaves no recipient
+PASS: event without subscribed devices finishes without sending
+PASS: cancellation supersedes a queued ready notification
+PASS: worker receives cancellation, not stale readiness
+PASS: receipt delivery finishes the event
+PASS: deletion is queued honestly while orders remain active
+PASS: repeated deletion request is idempotent
+PASS: customer cannot read another deletion request
+PASS: request did not delete orders or users
+PASS: internal worker and deletion API grants are restricted
+Cleanup counts: {"items": 0, "users": 0, "orders": 0, "outbox": 0, "bonuses": 0, "devices": 0, "products": 0, "deletions": 0, "deliveries": 0}
+Summary:75/75PASS; includes preparation_note variants/limits/idempotency, final notifications, rollback cleanup.
+Local PostgreSQL shutdown: pg_ctl -m fast -w stop -> server stopped. Cluster files preserved.

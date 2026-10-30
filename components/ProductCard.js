@@ -11,19 +11,22 @@
 // поиска. Реально нужный ре-рендер (изменилось qty/избранное для этого
 // товара) по-прежнему проходит через обычное сравнение пропсов.
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from './AppText';
 import { Ionicons } from '@expo/vector-icons';
 import PressableCard from './PressableCard';
 import ProductImage from './ProductImage';
 import Badge from './Badge';
 import QuantityStepper from './QuantityStepper';
-import { colors, radius, shadow } from '../theme/tokens';
+import { colors, radius, shadow, typography } from '../theme/tokens';
 import { formatPrice } from '../data/products';
+import { getPhotoComposition } from '../lib/photoComposition';
 
 const CARD_PADDING = 12;
 
 function ProductCard({ product, width = 152, onPress, qty = 0, onIncrement, onDecrement }) {
   const name = product.displayName || product.name;
+  const photo = getPhotoComposition(product, 'card');
 
   return (
     <PressableCard
@@ -38,9 +41,11 @@ function ProductCard({ product, width = 152, onPress, qty = 0, onIncrement, onDe
           aspectRatio={1}
           borderRadius={0}
           transparent
-          contentFit={product.cardContentFit || 'contain'}
+          contentFit={photo.fit}
           contentPosition={product.imagePosition || 'center'}
-          zoom={product.quickZoom || product.cardZoom || product.imageZoom || 1}
+          zoom={photo.zoom}
+          offsetX={photo.offsetX}
+          offsetY={photo.offsetY}
         />
         {product.badge && <Badge type={product.badge} />}
       </View>
@@ -77,9 +82,9 @@ const styles = StyleSheet.create({
   // flex: 1 + space-between: если соседняя карточка в ряду выше, нижняя
   // строка «цена + шеврон» остаётся прижатой к низу карточки.
   body: { flex: 1, justifyContent: 'space-between', paddingTop: 6, paddingRight: CARD_PADDING - 4, paddingBottom: 6, paddingLeft: CARD_PADDING },
-  title: { fontSize: 16, lineHeight: 20, fontWeight: '700', color: colors.textPrimary },
+  title: { ...typography.productTitle, minHeight: 40, color: colors.textPrimary },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  price: { flexShrink: 1, fontSize: 15, fontWeight: '800', color: colors.textPrimary },
+  price: { ...typography.price, flexShrink: 1, color: colors.textPrimary },
   chevronHit: { width: 44, height: 36, marginVertical: -4, marginRight: -6, alignItems: 'center', justifyContent: 'center' },
 });
 

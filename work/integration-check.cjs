@@ -8,6 +8,7 @@ function load(file, mocks, globals = {}) {
   }).code;
   const module = { exports: {} };
   vm.runInNewContext(code, { module, exports: module.exports, require: n => {
+    if (n === './cartOptions') return require('./load-domain.cjs')('lib/cartOptions.js');
     if (!(n in mocks)) throw Error('Missing mock: ' + n);
     return mocks[n];
   }, queueMicrotask, console, ...globals });

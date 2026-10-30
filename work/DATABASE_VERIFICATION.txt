@@ -1,0 +1,25 @@
+SBL database verification, 2026-10-18 (Asia/Tomsk).
+Results supplied by the owner from coffee Supabase SQL Editor.
+
+Confirmed:
+- All supplied schema/API privileges/search_path/trigger checks PASS.
+- 26 integrity checks PASS; initial data: orders 22, completed 17, cancelled 4, journal 5, reward entitlements 0.
+- Existing customer RLS: own orders 11, foreign hidden 11; own items 13, foreign hidden 14; own account 1, foreign hidden 1; foreign journal rows 5 hidden; own reward progress 1, foreign hidden 7; staff rows 2 hidden. Empty reward entitlements initially SKIP.
+- Order lookup RPC returns exact own order and hides a known foreign key: both PASS.
+- database-behavior-rollback.sql: all five suites plus fixture-count cleanup PASS, including temporary earned/expired/redeemed rewards and authenticated reward isolation.
+- database-concurrency: completion verification 7 PASS; cancellation verification 7 PASS. Overlap confirmed with pg_blocking_pids. Correct 1/2-point earnings at the 5/10 percent threshold, exact reversal and repeated statuses.
+- Concurrency fixtures removed; baseline/restored counts match: items 27, staff 2, users 26, orders 22, bonus_accounts 2, reward_progress 8, bonus_transactions 5, reward_entitlements 0.
+- database-rpc-concurrency, synchronized rerun: all 8 same-key checks PASS. Real overlap confirmed; both sessions returned the same order; exactly one item snapshot and one 20-point redemption; balance 10 from initial 30, no debt or duplicate key.
+- database-rpc-concurrency, competing redemptions: all 8 checks PASS. Real overlap confirmed; one 20-point redemption accepted, the other rejected with BONUS_BALANCE_CHANGED; no order for the rejected key; exactly one redemption entry, balance 10 and debt 0.
+- Final RPC fixture cleanup PASS. Baseline/restored counts match: items 27, staff 2, users 26, orders 22, products 142, bonus_accounts 2, reward_progress 8, bonus_transactions 5, reward_entitlements 0. Both marked users, temporary product and test orders were removed.
+
+Outcome:
+The planned SQL verification set is complete and passed on the selected coffee database.
+The initial same-key attempt was inconclusive because of session start order. Revision 2 added an observed advisory-lock readiness signal; clean rerun passed with real application-lock overlap. No application function change was needed.
+
+Remaining outside this SQL verification scope:
+- Full app-to-cashier end-to-end order and device/release testing.
+- HTTP/API gateway and mobile-client concurrency were not exercised by these SQL sessions. Write/concurrency scenarios invoked server functions as postgres with fixture customer claims; client API permissions and selected customer isolation were verified separately.
+- No migration reset/rebuild or historical migration backfill was run against this database. These checks establish tested behavior and data integrity, not exhaustive proof for all future inputs or all user/policy combinations.
+
+No schema reset or migrations were applied during this verification. Test writes were rollback-scoped or limited to tagged fixtures; order-number sequence increments are expected.

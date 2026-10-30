@@ -13,27 +13,19 @@
 export const DESSERT_CATEGORY = 'Десерты';
 
 export const PICKUP_TIMES = [
-  'Через 10 мин',
-  'Через 15 мин',
-  'Через 20 мин',
-  'Через 30 мин',
+  'Через 3–5 минут',
 ];
 
 export const PICKUP_POINTS = [
-  'SBL · Томск, проспект Ленина 72',
+  'SBL · Томск, проспект Ленина, 72',
 ];
 
 export function formatPrice(n) {
   return `${Number(n || 0).toLocaleString('ru-RU')} ₽`;
 }
 
-// Раньше ключ корзины включал размер/молоко/температуру/добавки — в реальном
-// меню СБИС у каждого варианта уже отдельная позиция со своей ценой (например,
-// "Чай 500 мл" — сам по себе товар, а не "Чай" + выбор объёма). Поэтому один
-// товар = одна строка корзины, ключ — просто id товара.
-export function cartKey(id) {
-  return String(id);
-}
+// Размер — отдельный SKU; добавки и пожелание отличают рецепты одного SKU.
+export { optionCartKey as cartKey } from '../lib/cartOptions.js';
 
 export function getProductById(products, id) {
   return (products || []).find(product => product.id === id);

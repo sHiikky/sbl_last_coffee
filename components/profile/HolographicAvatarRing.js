@@ -2,7 +2,8 @@
 // Тонкое голографическое кольцо вокруг аватара профиля (серебро + едва
 // уловимый цветной перелив), внутри — фото пользователя или инициалы.
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Image } from 'react-native';
+import Text from '../AppText';
 import HolographicSurface from '../HolographicSurface';
 import { darkProfile } from '../../theme/tokens';
 

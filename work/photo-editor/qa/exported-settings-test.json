@@ -1,0 +1,26 @@
+{
+  "type": "sbl-photo-composition",
+  "version": 1,
+  "projectRef": "vxefueynagwuavlyeiqc",
+  "exportedAt": "2026-10-28T18:46:01.333Z",
+  "products": [
+    {
+      "id": "7142537b-3b0c-4877-94d6-acffe2924e2d",
+      "name": "Айс Латте",
+      "sourceUrl": "https://vxefueynagwuavlyeiqc.supabase.co/storage/v1/object/public/product-photos/ice-latte-ea535cb71f.webp",
+      "sourceFingerprint": "url-sha256:9c1a9e94fda70e44d9fa3e9f77a8cb4174d14d0c36077404b1201f3f4ed09343",
+      "detail": {
+        "fit": "contain",
+        "zoom": 0.88,
+        "offsetX": 0.5,
+        "offsetY": 0
+      },
+      "card": {
+        "fit": "contain",
+        "zoom": 1,
+        "offsetX": 0,
+        "offsetY": 0
+      }
+    }
+  ]
+}

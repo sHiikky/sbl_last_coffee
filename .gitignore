@@ -56,3 +56,12 @@ tmp/
 scripts/
 .agents/
 меню сблеском/
+
+# Local package cache and generated colour-analysis samples
+work/.npm-cache/
+work/font-tooling/
+work/product-concepts/palette-pixels.json
+
+# Downloaded third-party webpage mirrors and local build logs
+work/product-concepts/style-lab/font-research/
+work/product-sheet-*.log

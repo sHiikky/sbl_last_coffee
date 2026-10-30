@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src https: data:; connect-src https://vxefueynagwuavlyeiqc.supabase.co; base-uri 'none'; form-action 'none'">
+  <title>SBL · Редактор фото</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="model.js"></script>
+  <script defer src="editor.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="mark">SBL</span><div><h1>Редактор фото</h1><p>Настройте фото в меню и карточке товара</p></div></div>
+    <div class="toolbar"><button id="importButton" class="secondary">Открыть настройки</button><button id="exportButton" class="primary" disabled>Скачать настройки <span id="exportCount">0</span></button><input id="importFile" type="file" accept="application/json,.json" hidden></div>
+  </header>
+  <div class="privacy"><span class="dot"></span>Фото читаются из каталога. Изменения сохраняются только в этом браузере, база и оригиналы остаются без изменений.</div>
+  <div id="message" class="message" role="status" aria-live="polite">Загружаем каталог кофейни…</div>
+  <main class="workspace">
+    <aside class="catalog panel" aria-label="Выбор позиции">
+      <div class="catalog-head"><h2>Позиции <span id="catalogCount" class="counter">—</span></h2><button id="reloadButton" class="quiet">Обновить</button></div>
+      <label class="sr-only" for="search">Поиск по названию</label><input id="search" type="search" placeholder="Найти напиток или блюдо" autocomplete="off">
+      <label class="sr-only" for="category">Раздел меню</label><select id="category"><option value="">Все разделы</option></select>
+      <label class="check"><input id="onlyPhotos" type="checkbox" checked> Только с фотографиями</label>
+      <div id="productList" class="product-list" role="list" aria-label="Позиции каталога"></div>
+      <p id="emptyList" class="empty" hidden>По этим условиям ничего не нашлось.</p>
+    </aside>
+
+    <section class="preview-area" aria-label="Предпросмотр">
+      <div class="preview-heading"><div><span id="productCategory" class="eyebrow">ФОТО ПРОДУКТА</span><h2 id="productName">Выберите позицию слева</h2></div><span id="draftStatus" class="draft">Без изменений</span></div>
+      <div class="preview-options"><div class="segmented" role="group" aria-label="Размер предпросмотра"><button id="smallPreview" aria-pressed="false">Компактный экран</button><button id="largePreview" aria-pressed="true" class="selected">Обычный экран</button></div><label class="check"><input id="guides" type="checkbox"> Направляющие</label></div>
+      <div class="previews">
+        <article class="phone-shell"><div class="preview-label">При открытии позиции</div><div id="detailFrame" class="frame detail-frame"><div class="image-translate"><img id="detailImage" class="product-photo" alt="" draggable="false" referrerpolicy="no-referrer"></div><div class="guides" aria-hidden="true"></div><div class="photo-placeholder">Выберите фото</div><div class="mock-actions" aria-hidden="true"><span>←</span><div><span>↗</span><span>♡</span></div></div></div><div class="mock-body"><span class="eyebrow" id="detailKicker">НАПИТКИ · КОФЕ</span><h3 id="detailName">Название позиции</h3><p>Фото целиком, спокойный фон и немного воздуха.</p><div class="mock-buy" aria-hidden="true">+ <span id="detailPrice">— ₽</span></div></div></article>
+        <article class="menu-example"><div class="preview-label">В меню</div><div class="menu-card"><div id="cardFrame" class="frame card-frame"><div class="image-translate"><img id="cardImage" class="product-photo" alt="" draggable="false" referrerpolicy="no-referrer"></div><div class="guides" aria-hidden="true"></div><div class="photo-placeholder">Нет фото</div></div><h3 id="cardName">Название позиции</h3><div class="menu-price"><strong id="cardPrice">— ₽</strong><span aria-hidden="true">›</span></div></div><p class="caption">Настройки карточки и меню независимы. Проверяйте оба вида.</p></article>
+      </div>
+      <div class="source-info"><span id="imageMeta">Размер исходника появится после загрузки.</span><a id="sourceLink" hidden target="_blank" rel="noopener noreferrer">Открыть оригинал ↗</a></div>
+      <p class="preview-note">Меняется размещение фотографии, а не сам файл. Белые поля внутри исходника, цвет напитка и фон на фотографии редактор не удаляет.</p>
+    </section>
+
+    <aside class="controls panel" aria-label="Настройка фотографии">
+      <h2>Композиция</h2><p class="muted">Сначала выберите вид, который настраиваете.</p>
+      <div class="segmented view-tabs" role="group" aria-label="Настраиваемый вид"><button id="detailTab" class="selected" aria-pressed="true">Карточка товара</button><button id="cardTab" aria-pressed="false">Меню</button></div>
+      <fieldset id="settings" disabled>
+        <legend class="sr-only">Размещение фото</legend>
+        <label class="field-label" for="fit">Размещение</label><select id="fit"><option value="contain">Показать целиком</option><option value="cover">Заполнить рамку</option></select><p class="hint">Для напитков обычно лучше «Показать целиком».</p>
+        <div class="control-label"><label for="zoom">Масштаб</label><output id="zoomOutput" for="zoom">90%</output></div><input id="zoom" type="range" min="0.5" max="1.8" step="0.01" value="0.9"><div class="range-hints"><span>50%</span><span>180%</span></div>
+        <div class="control-label"><label for="offsetX">Сдвиг по горизонтали</label><output id="offsetXOutput" for="offsetX">0%</output></div><input id="offsetX" type="range" min="-35" max="35" step="0.5" value="0"><div class="range-hints"><span>← влево</span><span>вправо →</span></div>
+        <div class="control-label"><label for="offsetY">Сдвиг по вертикали</label><output id="offsetYOutput" for="offsetY">0%</output></div><input id="offsetY" type="range" min="-35" max="35" step="0.5" value="0"><div class="range-hints"><span>↑ выше</span><span>ниже ↓</span></div>
+        <div class="control-actions"><button id="centerButton" type="button" class="secondary">По центру</button><button id="resetViewButton" type="button" class="secondary">Сбросить этот вид</button></div><button id="resetProductButton" type="button" class="quiet reset-product">Сбросить оба вида позиции</button>
+      </fieldset>
+      <div class="howto"><h3>Как передать результат</h3><ol><li>Настройте фотографии нужных позиций.</li><li>Нажмите «Скачать настройки».</li><li>Прикрепите JSON-файл в чат.</li></ol><p>Этот файл содержит настройки и ссылки, не копии фото. До встраивания файла внешний вид приложения не меняется.</p></div>
+      <p id="storageStatus" class="storage-status">Черновик автоматически сохраняется в этом браузере.</p>
+      <button id="discardProductButton" class="quiet reset-product" disabled>Убрать позицию из черновика</button>
+      <details class="technical"><summary>ID выбранной позиции</summary><code id="productId">—</code></details>
+    </aside>
+  </main>
+  <noscript>Для редактора нужен JavaScript. Оригинальные фото и база данных не изменяются.</noscript>
+</body>
+</html>

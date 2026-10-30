@@ -1,0 +1,23 @@
+// Material values from the selected prototype Д, «Сатиновое серебро».
+export const satinCard = {
+  base: ['#C6CBD0', '#F2F3F3', '#D8DDE0', '#C2C8CD', '#E1E3E5'],
+  baseStops: [0, 0.35, 0.57, 0.8, 1],
+  text: '#1B1C1E',
+  secondary: '#55575A',
+  cardName: '#42464A',
+  border: 'rgba(251,252,253,0.76)',
+  brush: 'rgba(255,255,255,0.07)',
+  brushClear: 'rgba(255,255,255,0)',
+  cashback: '#1C2025',
+  cashbackText: '#FFFFFF',
+  cashbackCaption: '#D4D7D9',
+  cashbackEdge: 'rgba(255,255,255,0.21)',
+  track: '#A9AFB5',
+  trackEdge: 'rgba(76,81,87,0.1)',
+  trackOpacity: 0.28,
+  trackSpectrum: ['#98ADFF', '#F4F6FF', '#F9DA8C', '#FC766B', '#DF8CCB', '#969BF1'],
+  fillSpectrum: ['#9BAEFF', '#EFF3FF', '#FFE39E', '#FF8A75', '#EF8BC0', '#9399F3'],
+  spectrumStops: [0, 0.16, 0.35, 0.58, 0.78, 1],
+  sheen: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.07)', 'rgba(255,255,255,0.67)', 'rgba(255,255,255,0.07)', 'rgba(255,255,255,0)'],
+  shadow: { shadowColor: '#1D1D16', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.063, shadowRadius: 26, elevation: 2 },
+};

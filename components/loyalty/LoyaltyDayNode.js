@@ -2,7 +2,8 @@
 // Одна точка на карте серии. Чисто презентационный компонент — весь статус
 // приходит снаружи из loyalty/loyaltySelectors.js, здесь нет бизнес-правил.
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/tokens';
 import { LOYALTY_CONFIG } from '../../loyalty/loyaltyConfig';

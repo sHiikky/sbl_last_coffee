@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, ActivityIndicator, Easing, Dimensions, AppState } from 'react-native';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { View, Pressable, Linking, Easing, Dimensions, AppState, Alert, Platform } from 'react-native';
+import Text, { FontReadyContext } from './components/AppText';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -8,6 +9,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import { fontAssets, fontFamilies } from './theme/fontFaces';
 
 import HomeScreen from './screens/HomeScreen';
 import MenuScreen from './screens/MenuScreen';
@@ -20,28 +24,38 @@ import LoginScreen from './screens/LoginScreen';
 import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import LoyaltyScreen from './screens/LoyaltyScreen';
 import LoyaltyRewardModal from './components/loyalty/LoyaltyRewardModal';
+import BrandLaunch from './components/BrandLaunch';
+import CafeLocationScreen from './screens/CafeLocationScreen';
+import useMotionPreference from './hooks/useMotionPreference';
+import { parseProductLink } from './lib/productLinks';
 import { HomeIcon, MenuIcon, CartIcon, ProfileIcon } from './navigation/TabIcons';
 import { colors } from './theme/tokens';
 import { cartKey, getProductById } from './data/products';
 import { getAvailableRewards } from './loyalty/loyaltyService';
-import { fetchVisibleProducts } from './lib/catalogService';
+import { fetchOrderingCatalog } from './lib/catalogService';
+import { selectMenuProducts, hasProductPhoto } from './lib/menuVisibility';
+import { makeCartItem, cartMatchesSnapshot } from './lib/cartOptions';
+import { getVerifiedAccount, signOutAccount } from './lib/accountService';
+import useOrderNotifications from './hooks/useOrderNotifications';
 import { refreshCartPrices } from './lib/checkoutQuote';
 import useLoyaltyState from './loyalty/useLoyaltyState';
 import useCustomerOrders from './hooks/useCustomerOrders';
 import useBonusAccount from './hooks/useBonusAccount';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
-import { getUserOrThrow } from './lib/supabaseClient';
+import { getUserOrThrow, supabase } from './lib/supabaseClient';
 import {
   recoverPendingCheckoutOnce,
   scheduleBoundedCheckoutRecoveryRetries,
   ORDER_FINAL_STATUSES,
   CHECKOUT_RECOVERY_OUTCOME,
+  clearPendingCheckoutAttempt,
 } from './lib/orderService';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+if (Platform.OS !== 'web') void SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const TAB_BAR_HEIGHT = 54;
+const TAB_BAR_HEIGHT = 64;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 // Полноценный горизонтальный "перелист" между табами: текущий экран уезжает
@@ -66,15 +80,6 @@ const STORAGE_KEYS = {
   activeOrder: 'sbl_active_order',
 };
 
-function LoadingScreen() {
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-      <ActivityIndicator size="small" color={colors.accent} />
-      <Text style={{ fontSize: 13, color: colors.textSecondary }}>Подготавливаем кофейню SBL…</Text>
-    </View>
-  );
-}
-
 function TabBarIcon({ route, focused, cartCount }) {
   switch (route.name) {
     case 'HomeTab': return <HomeIcon focused={focused} />;
@@ -87,11 +92,15 @@ function TabBarIcon({ route, focused, cartCount }) {
 
 function Tabs({
   account,
+  getCurrentCustomerId,
   onLogout,
   cart,
   favorites,
   orderHistory,
   products,
+  catalogLoading,
+  catalogError,
+  onRetryCatalog,
   onAddToCart,
   onIncrement,
   onDecrement,
@@ -110,6 +119,8 @@ function Tabs({
   onCheckoutAttemptUncertain,
 }) {
   const insets = useSafeAreaInsets();
+  const fontsReady = useContext(FontReadyContext);
+  const { reduceMotion } = useMotionPreference();
   const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
@@ -117,11 +128,11 @@ function Tabs({
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        sceneStyleInterpolator: pageSlideInterpolator,
+        sceneStyleInterpolator: reduceMotion ? undefined : pageSlideInterpolator,
         transitionSpec: {
           animation: 'timing',
           config: {
-            duration: 420,
+            duration: reduceMotion ? 0 : 280,
             easing: Easing.out(Easing.cubic),
           },
         },
@@ -129,7 +140,7 @@ function Tabs({
         tabBarActiveTintColor: colors.accent,
         // Было слишком светлое (#B0AEA8) — на белом фоне неактивные иконки/
         // подписи почти не читались. Взяли более контрастный нейтральный серый.
-        tabBarInactiveTintColor: '#8A8780',
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
           height: tabBarHeight,
           paddingTop: 4,
@@ -147,15 +158,17 @@ function Tabs({
           paddingVertical: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
-          fontWeight: '600',
-          lineHeight: 14,
+          fontFamily: fontsReady ? fontFamilies[600] : undefined,
+          fontSize: 12,
+          fontWeight: fontsReady ? 'normal' : '600',
+          lineHeight: 16,
+          flexShrink: 0,
         },
         tabBarIcon: ({ focused }) => <TabBarIcon route={route} focused={focused} cartCount={cartCount} />,
       })}
       screenListeners={({ navigation }) => ({
         tabPress: () => {
-          if (!navigation.isFocused()) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          if (!navigation.isFocused() && !reduceMotion) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
         },
       })}
     >
@@ -165,6 +178,9 @@ function Tabs({
             {...props}
             cart={cart}
             products={products}
+            catalogLoading={catalogLoading}
+            catalogError={catalogError}
+            onRetryCatalog={onRetryCatalog}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
             onRefreshCheckout={onRefreshCheckout}
@@ -187,6 +203,9 @@ function Tabs({
             {...props}
             cart={cart}
             products={products}
+            catalogLoading={catalogLoading}
+            catalogError={catalogError}
+            onRetryCatalog={onRetryCatalog}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
             onRefreshCheckout={onRefreshCheckout}
@@ -200,8 +219,11 @@ function Tabs({
       <Tab.Screen name="CartTab" options={{ tabBarLabel: 'Корзина', title: 'Корзина' }}>
         {props => (
           <CartScreen
+            key={getCurrentCustomerId?.() || 'guest'}
             {...props}
             cart={cart}
+            account={account}
+            getCurrentCustomerId={getCurrentCustomerId}
             onIncrement={onIncrement}
             onDecrement={onDecrement}
             onRefreshCheckout={onRefreshCheckout}
@@ -241,12 +263,17 @@ function Tabs({
 
 function RootStack({
   account,
+  getCurrentCustomerId,
   onLogin,
   onLogout,
   cart,
   favorites,
   orderHistory,
   products,
+  modifiers,
+  catalogLoading,
+  catalogError,
+  onRetryCatalog,
   onAddToCart,
   onIncrement,
   onDecrement,
@@ -267,18 +294,26 @@ function RootStack({
   onRequestCheckoutRecovery,
   onCheckoutAttemptUncertain,
 }) {
+  const { reduceMotion } = useMotionPreference();
+  // Keep the complete ordering catalog in App for cart refresh/history/additions.
+  // Only customer discovery and product choices use the photo-only projection.
+  const menuProducts = useMemo(() => selectMenuProducts(products), [products]);
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false, animation: reduceMotion ? 'none' : 'default' }}>
       <Stack.Screen name="Tabs">
         {props => (
           <Tabs
             {...props}
             account={account}
+            getCurrentCustomerId={getCurrentCustomerId}
             onLogout={onLogout}
             cart={cart}
             favorites={favorites}
             orderHistory={orderHistory}
-            products={products}
+            products={menuProducts}
+            catalogLoading={catalogLoading}
+            catalogError={catalogError}
+            onRetryCatalog={onRetryCatalog}
             onAddToCart={onAddToCart}
             onIncrement={onIncrement}
             onDecrement={onDecrement}
@@ -302,19 +337,19 @@ function RootStack({
       <Stack.Screen
         name="Product"
         options={{
-          presentation: 'card',
-          // Само открытие анимирует ProductScreen (всплытие контента), поэтому
-          // системный переход только плавно проявляет экран.
-          animation: 'fade',
-          animationDuration: 180,
-          gestureEnabled: true,
+          presentation: 'transparentModal',
+          animation: 'none',
+          contentStyle: { backgroundColor: 'transparent' },
+          gestureEnabled: false,
         }}
       >
         {props => (
           <ProductScreen
+            key={props.route.params.product.id}
             {...props}
             cart={cart}
-            products={products}
+            products={menuProducts}
+            modifiers={modifiers}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
             onRefreshCheckout={onRefreshCheckout}
@@ -323,6 +358,8 @@ function RootStack({
           />
         )}
       </Stack.Screen>
+
+      <Stack.Screen name="CafeLocation" component={CafeLocationScreen} />
 
       <Stack.Screen name="OrderHistory">
         {props => (
@@ -340,7 +377,7 @@ function RootStack({
           <FavoritesScreen
             {...props}
             favoriteIds={favorites}
-            products={products}
+            products={menuProducts}
             cart={cart}
             onAddToCart={onAddToCart}
             onDecrement={onDecrement}
@@ -351,14 +388,14 @@ function RootStack({
 
       <Stack.Screen
         name="Login"
-        options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true }}
+        options={{ presentation: 'modal', animation: reduceMotion ? 'none' : 'slide_from_bottom', gestureEnabled: true }}
       >
         {props => <LoginScreen {...props} onLogin={onLogin} />}
       </Stack.Screen>
 
       <Stack.Screen
         name="Loyalty"
-        options={{ presentation: 'card', animation: 'slide_from_right', gestureEnabled: true }}
+        options={{ presentation: 'card', animation: reduceMotion ? 'none' : 'slide_from_right', gestureEnabled: true }}
       >
         {props => (
           <LoyaltyScreen
@@ -375,7 +412,13 @@ function RootStack({
 }
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [isReady, setIsReady] = useState(false);
+  const [launchDone, setLaunchDone] = useState(false);
+  const [navigationVersion, setNavigationVersion] = useState(0);
+  const navigationRef = useRef(null);
+  const [pendingProductId, setPendingProductId] = useState(null);
+  const [linkNotice, setLinkNotice] = useState(null);
   const [cart, setCart] = useState({});
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [account, setAccount] = useState(null);
@@ -383,7 +426,13 @@ export default function App() {
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
   const [products, setProducts] = useState([]);
+  const [modifiers, setModifiers] = useState([]);
+  const [authUserId, setAuthUserId] = useState(null);
+  const [notificationOrder, setNotificationOrder] = useState(null);
+  const authUserRef = useRef(undefined);
+  const authRevision = useRef(0);
   const [catalogError, setCatalogError] = useState(null);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const catalogRevision = useRef(0);
   const catalogRefresh = useRef(() => {});
   const customerOrders = useCustomerOrders(isReady);
@@ -455,9 +504,11 @@ export default function App() {
     }
 
     const items = (result.attemptItems || []).map(item => ({
-      key: cartKey(item.id),
+      key: cartKey(item.id, item.modifiers, item.preparationNote),
       id: item.id,
       qty: item.qty,
+      modifiers: item.modifiers || [],
+      preparationNote: item.preparationNote || '',
       unitPrice: getProductById(productsRef.current, item.id)?.price ?? 0,
     }));
     const orderRecord = {
@@ -482,7 +533,7 @@ export default function App() {
         // Корзину чистим, только если она не изменилась с момента исходной
         // попытки — иначе есть риск стереть то, что пользователь добавил
         // уже после сбоя и никак не связанное с восстановленным заказом.
-        if (result.matchesCurrentCart) setCart({});
+        if (result.matchesCurrentCart) setCart(previous => cartMatchesSnapshot(previous, result.attemptItems) ? {} : previous);
         break;
       }
       case CHECKOUT_RECOVERY_OUTCOME.FOUND_TERMINAL: {
@@ -493,7 +544,7 @@ export default function App() {
         // AsyncStorage — см. recoverPendingCheckoutOnce). Cart cleanup — та
         // же логика, что и для активного заказа: сами товары были списаны
         // в заказ независимо от его текущего статуса.
-        if (result.matchesCurrentCart) setCart({});
+        if (result.matchesCurrentCart) setCart(previous => cartMatchesSnapshot(previous, result.attemptItems) ? {} : previous);
         break;
       }
       case CHECKOUT_RECOVERY_OUTCOME.NOT_FOUND_FINAL: {
@@ -535,9 +586,10 @@ export default function App() {
   // только применяет результат централизованно и не даёт ошибке вылететь
   // необработанной.
   const runCheckoutRecovery = async (cartItems, options) => {
+    const ownerRevision = authRevision.current;
     try {
       const result = await recoverPendingCheckoutOnce(cartItems, options);
-      applyCheckoutRecoveryResult(result);
+      if (ownerRevision === authRevision.current) applyCheckoutRecoveryResult(result);
       return result;
     } catch (error) {
       console.warn('[order] checkout recovery failed', error);
@@ -551,10 +603,11 @@ export default function App() {
   // read-only проверок с bounded backoff — см.
   // CHECKOUT_RECOVERY_BOUNDED_RETRY_DELAYS_MS в lib/orderService.js.
   const handleCheckoutAttemptUncertain = (idempotencyKey) => {
+    const ownerRevision = authRevision.current;
     const cancel = scheduleBoundedCheckoutRecoveryRetries({
       idempotencyKey,
       getCartItems: () => Object.values(cartRef.current || {}),
-      onResult: applyCheckoutRecoveryResult,
+      onResult: result => { if (ownerRevision === authRevision.current) applyCheckoutRecoveryResult(result); },
     });
     uncertaintyRetryCancelersRef.current.push(cancel);
   };
@@ -573,11 +626,14 @@ export default function App() {
     let active = true;
     const refreshCatalog = async () => {
       const request = ++catalogRevision.current;
+      if (active) setCatalogLoading(true);
       try {
-        const rows = await fetchVisibleProducts();
-        if (active && request === catalogRevision.current) { setProducts(rows); setCatalogError(null); }
+        const rows = await fetchOrderingCatalog();
+        if (active && request === catalogRevision.current) { setProducts(rows.filter(p => !p.isModifier)); setModifiers(rows.filter(p => p.isModifier)); setCatalogError(null); }
       } catch (error) {
         if (active && request === catalogRevision.current) setCatalogError(error);
+      } finally {
+        if (active && request === catalogRevision.current) setCatalogLoading(false);
       }
     };
     catalogRefresh.current = refreshCatalog;
@@ -588,6 +644,27 @@ export default function App() {
     });
     return () => { active = false; clearInterval(timer); listener.remove(); };
   }, []);
+
+  // Deep links identify a public SKU only; never accept Auth tokens or external routes.
+  useEffect(() => {
+    let active = true;
+    const receive = value => {
+      const id = parseProductLink(typeof value === 'string' ? value : value?.url, { webOrigin: Platform.OS === 'web' ? window.location.href : null });
+      if (active && id) { setLinkNotice(null); setPendingProductId(id); }
+    };
+    void Linking.getInitialURL().then(receive).catch(() => {});
+    const subscription = Linking.addEventListener('url', receive);
+    const onHash = () => receive(window.location.href);
+    if (Platform.OS === 'web') window.addEventListener('hashchange', onHash);
+    return () => { active = false; subscription.remove(); if (Platform.OS === 'web') window.removeEventListener('hashchange', onHash); };
+  }, []);
+
+  useEffect(() => {
+    if (!isReady || !pendingProductId || catalogLoading || orderComplete || !navigationRef.current?.isReady()) return;
+    const product = products.find(item => item.id === pendingProductId && hasProductPhoto(item));
+    if (product) { navigationRef.current.navigate('Product', { product }); setPendingProductId(null); }
+    else if (!catalogError) { setPendingProductId(null); setLinkNotice('Эта позиция сейчас недоступна. Посмотрите другие напитки в меню.'); }
+  }, [isReady, pendingProductId, catalogLoading, products, catalogError, orderComplete, navigationVersion]);
 
   // Тихий анонимный вход в Supabase, затем сверяем с сервером, есть ли у
   // пользователя незавершённый заказ — баннер на Главной должен появляться
@@ -600,14 +677,54 @@ export default function App() {
   // Выход не трогает корзину, избранное и историю — они привязаны к устройству,
   // а не к аккаунту; Supabase-сессия покупателя анонимная и остаётся прежней.
   const handleLogin = (nextAccount) => {
+    if (!nextAccount?.id || nextAccount.id !== authUserRef.current) return;
     setAccount(nextAccount);
-    AsyncStorage.setItem(STORAGE_KEYS.account, JSON.stringify(nextAccount)).catch(() => {});
   };
 
-  const handleLogout = () => {
-    setAccount(null);
-    AsyncStorage.removeItem(STORAGE_KEYS.account).catch(() => {});
+  const handleLogout = async () => {
+    try { await signOutAccount(); }
+    catch (error) {
+      if (Platform.OS === 'web') globalThis.alert(error.message || 'Не удалось выйти. Проверьте подключение.');
+      else Alert.alert('Не удалось выйти', error.message || 'Проверьте подключение.');
+      throw error;
+    }
   };
+
+  useEffect(() => {
+    if (!isReady) return;
+    let active = true;
+    let revision = 0;
+    const applySession = session => {
+      if (!active) return;
+      const nextId = session?.user?.id || null;
+      if (authUserRef.current !== undefined && authUserRef.current !== nextId) {
+        authRevision.current += 1;
+        uncertaintyRetryCancelersRef.current.forEach(cancel => cancel());
+        uncertaintyRetryCancelersRef.current = [];
+        setOrderHistory([]); setActiveOrder(null); setOrderComplete(null); setCheckoutRecoveryNotice(null);
+        setNotificationOrder(null);
+        void clearPendingCheckoutAttempt().catch(() => {});
+        void AsyncStorage.multiRemove([STORAGE_KEYS.orders, STORAGE_KEYS.activeOrder, STORAGE_KEYS.account]).catch(() => {});
+      }
+      authUserRef.current = nextId;
+      setAuthUserId(nextId);
+      setAccount(getVerifiedAccount(session));
+    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => { revision += 1; applySession(session); });
+    const initialRevision = revision;
+    supabase.auth.getSession().then(({ data, error }) => { if (error) throw error; if (initialRevision === revision) applySession(data?.session); }).catch(() => { console.warn('[auth] session restore unavailable'); });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, [isReady]);
+
+  useOrderNotifications({ userId: authUserId, onOpenOrder: orderId => {
+    if (orderId && authUserRef.current) { setNotificationOrder({ id: orderId, userId: authUserRef.current }); void customerOrders.refresh(); }
+  } });
+  useEffect(() => {
+    if (!notificationOrder || !customerOrders.loaded || customerOrders.error || customerOrders.customerId !== notificationOrder.userId) return;
+    const ownedOrder = customerOrders.data.find(order => order.id === notificationOrder.id);
+    if (ownedOrder && authUserRef.current === notificationOrder.userId) setOrderComplete({ supabaseOrderId: ownedOrder.id, orderNumber: ownedOrder.orderNumber, status: ownedOrder.status });
+    setNotificationOrder(null);
+  }, [notificationOrder, customerOrders.loaded, customerOrders.data, customerOrders.error, customerOrders.customerId]);
 
   useEffect(() => {
     AsyncStorage.multiGet([
@@ -630,11 +747,10 @@ export default function App() {
       };
       restore(STORAGE_KEYS.cart, setCart);
       restore(STORAGE_KEYS.favorites, setFavoriteIds);
-      restore(STORAGE_KEYS.account, setAccount);
-      restore(STORAGE_KEYS.orders, value => setOrderHistory(Array.isArray(value) ? value : []));
+      // Account, orders and active order are restored from the authenticated
+      // server session, never from a previous user's device-only phone stub.
       // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
       // сверит это с сервером сразу после старта и перезапишет при расхождении.
-      restore(STORAGE_KEYS.activeOrder, value => setActiveOrder(value?.id ? value : null));
       setIsReady(true);
     }).catch(error => {
       // Хранилище недоступно: лучше открыть приложение с пустым состоянием,
@@ -734,42 +850,28 @@ export default function App() {
   // уже отдельная позиция со своей ценой — поэтому один товар = одна строка
   // корзины, без выбора опций поверх цены (раньше это делали sizeId/milkId/
   // temperatureId/addonIds, теперь не нужны).
-  const addToCart = (product) => {
-    if (!product || product.isAvailable === false) return;
-    const key = cartKey(product.id);
-
-    setCart(prev => {
-      const existing = prev[key];
-      return {
-        ...prev,
-        [key]: existing
-          ? { ...existing, qty: existing.qty + 1 }
-          : {
-              key,
-              id: product.id,
-              name: product.name,
-              image: product.image,
-              imageFit: product.imageFit,
-              imagePosition: product.imagePosition,
-              category: product.category,
-              // Кураторский раздел ("Напитки"/"Еда"/"Десерты"/"Магазин") —
-              // именно на нём, а не на сыром category из СБИС, теперь строится
-              // награда "бесплатный десерт" в программе лояльности (см.
-              // loyaltyService.js), чтобы сэндвичи/супы из старого раздела
-              // "Сытное/Десерты" в неё не попадали.
-              menuCategory: product.menuCategory,
-              unitPrice: product.price,
-              qty: 1,
-            },
-      };
+  const addToCart = (product, selectedModifiers = [], preparationNote = '', quantity = 1) => {
+    product = products.find(current => current.id === product?.id && current.isAvailable !== false);
+    const currentModifiers = selectedModifiers.map(m => {
+      const current = modifiers.find(candidate => candidate.id === (m.id || m.product_id));
+      return current && current.isAvailable !== false ? { id: current.id, name: current.displayName || current.name, quantity: m.quantity, unitPrice: current.price } : null;
     });
+    if (currentModifiers.some(m => !m)) return false;
+    const item = makeCartItem(product, currentModifiers, quantity, preparationNote);
+    if (!item) return false;
+    setCart(prev => ({ ...prev, [item.key]: { ...item, qty: Math.min(99, (prev[item.key]?.qty || 0) + quantity) } }));
+    return true;
   };
 
   const refreshCheckoutPrices = async () => {
     const request = ++catalogRevision.current;
-    const latestProducts = await fetchVisibleProducts();
-    if (request === catalogRevision.current) { setProducts(latestProducts); setCatalogError(null); }
-    setCart(previous => refreshCartPrices(previous, latestProducts));
+    setCatalogLoading(true);
+    try {
+      const latestProducts = await fetchOrderingCatalog();
+      if (request === catalogRevision.current) { setProducts(latestProducts.filter(p => !p.isModifier)); setModifiers(latestProducts.filter(p => p.isModifier)); setCatalogError(null); }
+      setCart(previous => refreshCartPrices(previous, latestProducts));
+    } catch (error) { if (request === catalogRevision.current) setCatalogError(error); throw error; }
+    finally { if (request === catalogRevision.current) setCatalogLoading(false); }
   };
   const decrementCart = (key) => {
     setCart(prev => {
@@ -797,20 +899,13 @@ export default function App() {
     order.items.forEach(item => {
       const product = getProductById(products, item.id);
       if (!product) return;
-      const key = cartKey(item.id);
-      nextCart[key] = {
-        key,
-        id: item.id,
-        qty: item.qty,
-        // Текущая цена из каталога, а не цена на момент прошлой покупки.
-        unitPrice: product.price,
-        image: product.image,
-        imageFit: product.imageFit,
-        imagePosition: product.imagePosition,
-        category: product.category,
-        menuCategory: product.menuCategory,
-        name: product.name,
-      };
+      const selected = (item.modifiers || []).map(m => {
+        const current = modifiers.find(p => p.id === (m.id || m.product_id));
+        return current ? { id: current.id, name: current.name, quantity: m.quantity, unitPrice: current.price } : null;
+      });
+      if (selected.some(m => !m)) return;
+      const line = makeCartItem(product, selected, item.qty, item.preparationNote);
+      if (line) nextCart[line.key] = line;
     });
 
     // Все позиции исчезли из меню — не стираем текущую корзину пустой.
@@ -823,7 +918,8 @@ export default function App() {
   // CartScreen ПОСЛЕ того, как заказ уже реально создан в Supabase (orders +
   // order_items), поэтому localOrderHistory (используется loyalty-программой,
   // профилем и историей заказов) всегда соответствует реальному заказу в БД.
-  const placeOrder = ({ pickupTime, pickupPoint, total, earnedBonuses, itemCount, supabaseOrderId, supabaseOrderNumber, serverStatus, createdAt: serverCreatedAt, orderedItems }) => {
+  const placeOrder = ({ customerId, pickupTime, pickupPoint, total, earnedBonuses, itemCount, supabaseOrderId, supabaseOrderNumber, serverStatus, createdAt: serverCreatedAt, orderedItems }) => {
+    if (customerId && customerId !== authUserRef.current) return;
     const items = orderedItems || Object.values(cart);
     const orderNumber = supabaseOrderNumber ? `№${supabaseOrderNumber}` : `SBL-${Math.floor(1000 + Math.random() * 9000)}`;
     const createdAt = serverCreatedAt || new Date().toISOString();
@@ -844,6 +940,9 @@ export default function App() {
         id: item.id,
         qty: item.qty,
         unitPrice: item.unitPrice,
+        baseUnitPrice: item.baseUnitPrice,
+        modifiers: item.modifiers || [],
+        preparationNote: item.preparationNote || '',
       })),
     };
 
@@ -852,7 +951,7 @@ export default function App() {
     setCart(previous => {
       const next = { ...previous };
       for (const item of items) {
-        const key = cartKey(item.id);
+        const key = cartKey(item.id, item.modifiers, item.preparationNote);
         if (!next[key]) continue;
         if (next[key].qty <= item.qty) delete next[key];
         else next[key] = { ...next[key], qty: next[key].qty - item.qty };
@@ -911,19 +1010,13 @@ export default function App() {
     loyalty.devReset();
   };
 
-  if (!isReady) {
-    return (
-      <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <LoadingScreen />
-      </SafeAreaProvider>
-    );
-  }
-
+  const appReady = isReady && (fontsLoaded || !!fontError);
   return (
+    <FontReadyContext.Provider value={fontsLoaded}>
     <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <NavigationContainer documentTitle={{ formatter: () => 'SBL' }}>
+      <StatusBar style={launchDone ? 'dark' : 'light'} />
+      {appReady ? <View style={{ flex: 1 }} accessibilityElementsHidden={!launchDone} importantForAccessibility={launchDone ? 'auto' : 'no-hide-descendants'}>
+      <NavigationContainer ref={navigationRef} onReady={() => setNavigationVersion(value => value + 1)} onStateChange={() => setNavigationVersion(value => value + 1)} documentTitle={{ formatter: () => 'SBL' }}>
         {orderComplete ? (
           <OrderSuccessScreen
             order={orderComplete}
@@ -933,14 +1026,19 @@ export default function App() {
         ) : (
           <RootStack
             account={account}
+            getCurrentCustomerId={() => authUserRef.current}
             onLogin={handleLogin}
             onLogout={handleLogout}
             cart={cart}
             favorites={favoriteIds}
             orderHistory={orderHistory}
             products={products}
+            modifiers={modifiers}
+            catalogLoading={catalogLoading}
+            catalogError={catalogError}
+            onRetryCatalog={() => { void catalogRefresh.current(); }}
             onAddToCart={addToCart}
-            onIncrement={(item) => addToCart(productsById[item.id])}
+            onIncrement={(item) => addToCart(productsById[item.id], item.modifiers || [], item.preparationNote || '')}
             onDecrement={decrementCart}
             onRefreshCheckout={refreshCheckoutPrices}
             onOrder={placeOrder}
@@ -967,12 +1065,19 @@ export default function App() {
         onClaim={loyalty.dismissCelebration}
         onDismiss={loyalty.dismissCelebration}
       />
-      {!!(catalogError || customerOrders.error || bonusAccount.error || loyalty.error) && (
+      {!!(customerOrders.error || bonusAccount.error || loyalty.error) && (
         <View style={{ position: 'absolute', top: 52, left: 16, right: 16, zIndex: 100, backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 14 }}>
-          <Text style={{ color: colors.textPrimary, fontSize: 13 }}>Не удалось обновить {catalogError ? 'меню' : customerOrders.error ? 'заказы' : 'бонусы и награды'}. Проверьте подключение к интернету.</Text>
-          <Text accessibilityRole="button" onPress={() => { void catalogRefresh.current(); void customerOrders.refresh(); void bonusAccount.refresh(); void loyalty.refresh(); }} style={{ color: colors.accent, fontWeight: '700', marginTop: 8 }}>Повторить</Text>
+          <Text style={{ color: colors.textPrimary, fontSize: 13 }}>Не удалось обновить {customerOrders.error ? 'заказы' : 'бонусы и награды'}. Проверьте подключение к интернету.</Text>
+          <Pressable accessibilityRole="button" onPress={() => { void customerOrders.refresh(); void bonusAccount.refresh(); void loyalty.refresh(); }} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.accent, fontWeight: '700' }}>Повторить</Text></Pressable>
         </View>
       )}
+      {!!linkNotice && <View style={{ position: 'absolute', bottom: 86, left: 16, right: 16, backgroundColor: colors.surfaceElevated, borderColor: colors.border, borderWidth: 1, borderRadius: 16, padding: 16 }}>
+        <Text accessibilityLiveRegion="polite" style={{ color: colors.textPrimary, fontSize: 14 }}>{linkNotice}</Text>
+        <Pressable accessibilityRole="button" onPress={() => setLinkNotice(null)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.accent, fontWeight: '700' }}>Понятно</Text></Pressable>
+      </View>}
+      </View> : <View style={{ flex: 1, backgroundColor: colors.launchBackground }} />}
+      {!launchDone && <BrandLaunch ready={appReady} onDone={() => setLaunchDone(true)} />}
     </SafeAreaProvider>
+    </FontReadyContext.Provider>
   );
 }

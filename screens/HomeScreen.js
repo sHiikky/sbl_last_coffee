@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, Image, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Pressable, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
+import Text from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import AppScreen from '../components/AppScreen';
 import HoloLine from '../components/HoloLine';
@@ -11,27 +12,22 @@ import HomeLoyaltyCard from '../components/HomeLoyaltyCard';
 import LoyaltyHomeWidget from '../components/loyalty/LoyaltyHomeWidget';
 import ActiveOrderBanner from '../components/home/ActiveOrderBanner';
 import PromoBanner from '../components/home/PromoBanner';
-import { colors, spacing, radius, shadow, typography, getHorizontalPadding, brand } from '../theme/tokens';
+import HomePublications from '../components/home/HomePublications';
+import { colors, spacing, radius, typography, getHorizontalPadding } from '../theme/tokens';
 import { cartKey, getProductById } from '../data/products';
 import useBonusAccount from '../hooks/useBonusAccount';
 import { getLevelProgress } from '../lib/bonusConfig';
 import { getActivePromoBanner } from '../lib/promoService';
+import useCafeHours from '../hooks/useCafeHours';
+import BrandLogo from '../components/BrandLogo';
 
-const LOGO_WIDTH = 66;
-const LOGO_HEIGHT = LOGO_WIDTH * (584 / 1233); // пропорции assets/logo-mark.png
+const LOGO_WIDTH = 88;
+const LOGO_HEIGHT = LOGO_WIDTH * (452 / 1554);
 
-function greeting() {
-  const h = new Date().getHours();
-  if (h < 6) return { title: 'Кофе уже ждёт' };
-  if (h < 12) return { title: 'Начнём день с блеска' };
-  if (h < 18) return { title: 'Новое зерно уже ждёт вас' };
-  return { title: 'Время притормозить и выпить кофе' };
-}
-
-export default function HomeScreen({ navigation, cart = {}, products = [], onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight, loyaltyState, activeOrder, onOpenActiveOrder, onActiveOrderFinished }) {
+export default function HomeScreen({ navigation, cart = {}, products = [], catalogLoading = false, catalogError = null, onRetryCatalog, onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight, loyaltyState, activeOrder, onOpenActiveOrder, onActiveOrderFinished }) {
   const { width } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
-  const g = greeting();
+  const hours = useCafeHours();
   const bonusAccount = useBonusAccount();
   const { level: bonusLevel, toNextLevel: bonusToNextLevel, progress: bonusProgress } = getLevelProgress(bonusAccount.lifetimePaid);
 
@@ -64,12 +60,21 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
   return (
     <AppScreen bottomInset={tabBarHeight}>
       <View style={[styles.logoRow, { paddingHorizontal: hPad, paddingTop: hPad }]}>
-        <Image source={require('../assets/logo-mark.png')} style={styles.logo} resizeMode="contain" />
+        <BrandLogo width={LOGO_WIDTH} />
+        <Pressable accessibilityRole="button" accessibilityLabel={`Кофейня: ежедневно ${hours.hoursLabel} по Томску. ${hours.statusLabel}. Открыть карту и адрес`} onPress={() => navigation.navigate('CafeLocation')} style={({ pressed }) => [styles.hoursBadge, pressed && styles.hoursPressed]}>
+          <View style={styles.hoursLine}><Ionicons name="time-outline" size={15} color={colors.textPrimary} /><Text style={styles.hoursTime}>{hours.hoursLabel}</Text><Ionicons name="chevron-forward" size={13} color={colors.textSecondary} /></View>
+          <View style={styles.hoursLine}><View style={[styles.hoursDot, { backgroundColor: hours.physicallyOpen ? colors.success : colors.textMuted }]} /><Text style={styles.hoursStatus}>{hours.statusLabel} · Томск</Text></View>
+        </Pressable>
       </View>
 
       <View style={[styles.headerRow, { paddingHorizontal: hPad }]}>
-        <Text style={[typography.sectionTitle, { color: colors.textPrimary, lineHeight: 26 }]} numberOfLines={2}>{g.title}</Text>
+        <Text style={[typography.sectionTitle, { color: colors.textPrimary, lineHeight: 26 }]} numberOfLines={2}>{hours.greeting}</Text>
       </View>
+
+      {!!catalogError && <View style={[styles.catalogNotice, { marginHorizontal: hPad }]}>
+        <View style={{ flex: 1 }}><Text style={styles.catalogNoticeTitle}>{products.length ? 'Показываем последнее меню' : 'Меню не обновилось'}</Text><Text style={styles.catalogNoticeCopy}>Проверьте подключение и повторите загрузку.</Text></View>
+        <Pressable accessibilityRole="button" accessibilityLabel="Обновить меню" accessibilityState={{ disabled: catalogLoading, busy: catalogLoading }} disabled={catalogLoading} onPress={onRetryCatalog} style={styles.catalogRetry}><Text style={styles.catalogRetryText}>{catalogLoading ? 'Обновляем…' : 'Повторить'}</Text></Pressable>
+      </View>}
 
       {activeOrder?.id && (
         <View style={{ marginHorizontal: hPad, marginBottom: spacing.md }}>
@@ -119,19 +124,7 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
         onToggleFavorite={onToggleFavorite}
       />
 
-      <View style={[styles.editorial, { marginHorizontal: hPad }, shadow.card]}>
-        <HoloLine marginHorizontal={0} height={3} style={{ marginBottom: 0 }} />
-        <View style={styles.editorialBody}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.editorialEyebrow}>Сегодня в {brand.name}</Text>
-            <Text style={styles.editorialTitle}>Новое зерно из Эфиопии</Text>
-            <Text style={styles.editorialSub}>Цветочные ноты, персик и жасмин — для напитков с блеском.</Text>
-          </View>
-          <View style={styles.editorialObject}>
-            <Ionicons name="sparkles-outline" size={20} color={colors.accent} />
-          </View>
-        </View>
-      </View>
+      <HomePublications hPad={hPad} products={products} onOpenProduct={goProduct} />
 
       <View style={{ marginTop: spacing.xxl }}>
         <View style={styles.sectionHeader}>
@@ -169,6 +162,17 @@ export default function HomeScreen({ navigation, cart = {}, products = [], onAdd
 
 const styles = StyleSheet.create({
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
+  hoursBadge: { minHeight: 48, borderRadius: radius.medium, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, backgroundColor: colors.surface1, gap: spacing.xs },
+  hoursPressed: { opacity: 0.75 },
+  hoursLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.xs },
+  hoursTime: { color: colors.textPrimary, fontSize: 13, fontWeight: '700' },
+  hoursStatus: { color: colors.textSecondary, fontSize: 12 },
+  hoursDot: { width: 5, height: 5, borderRadius: radius.pill },
+  catalogNotice: { marginTop: spacing.md, paddingLeft: spacing.md, paddingVertical: spacing.xs, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.surface1, borderRadius: radius.medium },
+  catalogNoticeTitle: { color: colors.textPrimary, fontSize: 13, fontWeight: '600' },
+  catalogNoticeCopy: { color: colors.textSecondary, fontSize: 12, lineHeight: 18 },
+  catalogRetry: { minHeight: 44, paddingHorizontal: spacing.md, alignItems: 'center', justifyContent: 'center' },
+  catalogRetryText: { color: colors.accent, fontSize: 13, fontWeight: '700' },
   // У PNG прозрачные поля (слева 74 из 1233 px, сверху 35 из 584 px), поэтому
   // отрицательные отступы выравнивают именно видимые края логотипа по сетке:
   // слева и сверху от safe area получается ровно hPad.
@@ -179,12 +183,6 @@ const styles = StyleSheet.create({
     marginTop: -LOGO_HEIGHT * (35 / 584),
   },
   headerRow: { flexDirection: 'row' },
-  editorial: { marginTop: spacing.xl, backgroundColor: colors.surface3, borderRadius: radius.large, overflow: 'hidden' },
-  editorialBody: { padding: spacing.lg, flexDirection: 'row', alignItems: 'center' },
-  editorialEyebrow: { fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: 'rgba(255,255,255,0.32)', marginBottom: 7, fontWeight: '700' },
-  editorialTitle: { fontSize: 16, fontWeight: '700', color: '#fff', marginBottom: 3 },
-  editorialSub: { fontSize: 12, color: 'rgba(255,255,255,0.4)' },
-  editorialObject: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: spacing.lg },
   sectionLink: { fontSize: 12, fontWeight: '600', color: colors.accent },
 });

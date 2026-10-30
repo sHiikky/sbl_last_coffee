@@ -4,7 +4,8 @@
 // lib/promoService.js). Управление баннерами — вручную через SQL, не из
 // приложения (см. CLAUDE.md).
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, shadow } from '../../theme/tokens';
 

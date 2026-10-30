@@ -2,7 +2,8 @@
 // Избранное — открывается из пункта «Избранное» в профиле. Сердечко ставится на
 // экране товара; здесь сохранённые товары показываются той же ProductCard.
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import Text from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ProductCard from '../components/ProductCard';

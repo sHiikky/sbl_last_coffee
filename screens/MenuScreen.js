@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, ScrollView, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, FlatList, ScrollView, Pressable, ActivityIndicator, useWindowDimensions, StyleSheet } from 'react-native';
+import Text from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import QuickProductCard from '../components/QuickProductCard';
 import EmptyState from '../components/EmptyState';
 import ScreenHeader from '../components/ScreenHeader';
 import Chip from '../components/Chip';
+import PrimaryButton from '../components/PrimaryButton';
 import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
 import { cartKey } from '../data/products';
 import { buildCategoryList, buildSubcategoryList, collapseSizeVariants } from '../lib/catalogService';
+import { resolveSubcategoryFilter } from '../lib/menuVisibility';
 
 // ─────────────────────────────────────────────────────────────────────────
 // АРХИТЕКТУРА SCROLL NAVIGATION
@@ -88,7 +92,7 @@ const SubcategoryChips = React.memo(function SubcategoryChips({ subcats, activeS
   );
 });
 
-export default function MenuScreen({ route, navigation, cart = {}, products = [], onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight }) {
+export default function MenuScreen({ route, navigation, cart = {}, products = [], catalogLoading = false, catalogError = null, onRetryCatalog, onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight }) {
   const mainCategories = useMemo(() => buildCategoryList(products), [products]);
   const mainChips = useMemo(
     () => [{ id: 'all', label: 'Все' }, ...mainCategories.map(id => ({ id, label: id }))],
@@ -120,6 +124,14 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 
   useEffect(() => { activeCategoryRef.current = activeCategory; }, [activeCategory]);
   useEffect(() => { mainCategoriesRef.current = mainCategories; }, [mainCategories]);
+  useEffect(() => {
+    if (activeCategory !== 'all' && !mainCategories.includes(activeCategory)) {
+      programmaticSequenceRef.current += 1;
+      navigationModeRef.current = 'idle';
+      if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current);
+      setActiveCategory('all');
+    }
+  }, [mainCategories, activeCategory]);
   useEffect(() => () => { if (unlockTimeoutRef.current) clearTimeout(unlockTimeoutRef.current); }, []);
 
   const listData = useMemo(() => {
@@ -133,7 +145,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
       if (!itemsInCategory.length) return;
 
       const subcats = buildSubcategoryList(products, mainCat);
-      const activeSub = subFilters[mainCat] || 'all';
+      const activeSub = resolveSubcategoryFilter(subcats, subFilters[mainCat]);
 
       rows.push({
         type: 'mainHeader',
@@ -449,25 +461,49 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
     );
   }, [hPad, columnGap, cardWidth, cart, favoriteIds, goProduct, onAddToCart, onDecrement, onToggleFavorite, setSubFilter]);
 
-  const listEmptyComponent = useMemo(() => (
-    <View style={{ paddingHorizontal: hPad, paddingTop: spacing.xl }}>
-      <EmptyState
-        icon="cafe-outline"
-        title={products.length ? 'Здесь пока пусто' : 'Меню загружается'}
-        subtitle={
-          products.length
-            ? 'В этой категории пока пусто'
-            : 'Если меню долго не появляется — проверьте подключение к интернету.'
-        }
-      />
-    </View>
-  ), [hPad, products.length]);
+  const listEmptyComponent = useMemo(() => {
+    if (catalogLoading) return (
+      <View style={{ paddingHorizontal: hPad }} accessible accessibilityRole="progressbar" accessibilityLabel="Загружаем меню" accessibilityState={{ busy: true }}>
+        <Text style={styles.loadingText}>Загружаем меню…</Text>
+        {[0, 1].map(row => <View key={row} style={[styles.gridRow, { gap: columnGap }]} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+          {[0, 1].map(column => <View key={column} style={[styles.skeletonCard, { width: cardWidth }]}>
+            <View style={styles.skeletonPhoto} /><View style={styles.skeletonTitle} /><View style={styles.skeletonPrice} />
+          </View>)}
+        </View>)}
+      </View>
+    );
+    return (
+      <View style={{ paddingHorizontal: hPad, paddingTop: spacing.xl }}>
+        <EmptyState
+          icon={catalogError ? 'cloud-offline-outline' : 'cafe-outline'}
+          title={catalogError ? 'Не удалось загрузить меню' : 'Меню пока пусто'}
+          subtitle={catalogError
+            ? 'Проверьте подключение и попробуйте ещё раз. Ваш выбор в корзине сохранён.'
+            : 'Сейчас нет доступных позиций. Обновите меню немного позже.'}
+          action={onRetryCatalog ? <PrimaryButton label="Обновить меню" onPress={onRetryCatalog} /> : null}
+        />
+      </View>
+    );
+  }, [hPad, catalogLoading, catalogError, onRetryCatalog, cardWidth, columnGap]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ paddingTop: insets.top }}>
-        <ScreenHeader title="Меню" />
+        <ScreenHeader title="Меню" action={onRetryCatalog ? <Pressable
+          style={styles.headerRefresh}
+          onPress={onRetryCatalog}
+          disabled={catalogLoading}
+          accessibilityRole="button"
+          accessibilityLabel="Обновить меню"
+          accessibilityState={{ disabled: catalogLoading }}
+        >{catalogLoading ? <ActivityIndicator color={colors.accent} /> : <Ionicons name="refresh-outline" size={22} color={colors.textPrimary} />}</Pressable> : null} />
       </View>
+
+      {!!catalogError && products.length > 0 && <View style={[styles.staleNotice, { marginHorizontal: hPad }]} accessibilityLiveRegion="polite">
+        <Ionicons name="cloud-offline-outline" size={20} color={colors.textPrimary} />
+        <View style={{ flex: 1 }}><Text style={styles.staleTitle}>Не удалось обновить меню</Text><Text style={styles.staleText}>Показаны ранее загруженные позиции. Цены и наличие проверим при оформлении.</Text></View>
+        {!!onRetryCatalog && <Pressable style={styles.retryButton} onPress={onRetryCatalog} disabled={catalogLoading} accessibilityRole="button" accessibilityLabel="Повторить обновление меню" accessibilityState={{ disabled: catalogLoading }}><Text style={styles.retryText}>{catalogLoading ? 'Обновляем…' : 'Повторить'}</Text></Pressable>}
+      </View>}
 
       <FlatList
         ref={mainListRef}
@@ -496,6 +532,17 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 }
 
 const styles = StyleSheet.create({
+  headerRefresh: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  loadingText: { fontSize: 13, color: colors.textSecondary, marginBottom: spacing.md },
+  skeletonCard: { borderRadius: radius.large, backgroundColor: colors.surfaceElevated, padding: spacing.md },
+  skeletonPhoto: { aspectRatio: 1, backgroundColor: colors.skeleton, borderRadius: radius.medium, marginBottom: spacing.md },
+  skeletonTitle: { height: 16, width: '80%', borderRadius: radius.small, backgroundColor: colors.skeleton, marginBottom: spacing.sm },
+  skeletonPrice: { height: 14, width: '35%', borderRadius: radius.small, backgroundColor: colors.skeleton },
+  staleNotice: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, marginTop: spacing.sm, borderRadius: radius.medium, backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: colors.borderStrong },
+  staleTitle: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.xs },
+  staleText: { fontSize: 12, lineHeight: 18, color: colors.textSecondary },
+  retryButton: { minHeight: 44, justifyContent: 'center', paddingLeft: spacing.sm },
+  retryText: { fontSize: 12, fontWeight: '700', color: colors.accent },
   subchipRow: {
     marginTop: spacing.sm,
     marginBottom: spacing.xs,

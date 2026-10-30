@@ -1,11 +1,12 @@
 // components/profile/AuthPrompt.js
 // Экран профиля для невошедшего пользователя: логотип SBL, заголовок с пояснением и кнопка входа по телефону.
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import Text from '../AppText';
+import BrandLogo from '../BrandLogo';
 import PrimaryButton from '../PrimaryButton';
 import { colors, spacing, getHorizontalPadding } from '../../theme/tokens';
 
-const LOGO_RATIO = 584 / 1233; // assets/logo-mark.png
 
 export default function AuthPrompt({ width, height, onPhone }) {
   const hPad = getHorizontalPadding(width);
@@ -15,12 +16,7 @@ export default function AuthPrompt({ width, height, onPhone }) {
   return (
     <View style={{ minHeight: height }}>
       <View style={{ height: heroHeight, alignItems: 'center', justifyContent: 'flex-end', paddingBottom: spacing.section }}>
-        <Image
-          source={require('../../assets/logo-mark.png')}
-          style={{ width: logoWidth, height: logoWidth * LOGO_RATIO }}
-          resizeMode="contain"
-          accessibilityLabel="SBL"
-        />
+        <BrandLogo width={logoWidth} />
       </View>
 
       <View style={{ paddingHorizontal: hPad, alignItems: 'center' }}>

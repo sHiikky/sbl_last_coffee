@@ -1,0 +1,101 @@
+SBL PICKUP CHECKOUT V2 - LOCAL CANDIDATE
+
+Migration: supabase/migrations/20261029100000_pickup_checkout.sql
+This file was not applied to Supabase. Deploy it together with the matching
+client/cashier changes: the old six-argument checkout loses API execution.
+
+get_ordering_catalog() -> SETOF public.products (PostgREST JSON array).
+Columns in the current schema, in order:
+id,sbis_id,name,description,category,price,image_url,is_visible,is_quick_pick,
+badge,sort_order,raw_payload,updated_at,image_override_url,subcategory,
+menu_category,menu_subcategory,display_name,is_modifier,tags,is_available.
+Returns available visible bases and ALL available modifiers, including hidden
+modifiers. Unpublished bases are excluded. Anon/authenticated may execute.
+
+get_ordering_config() -> JSON object:
+server_now,time_zone='Asia/Tomsk',point_id='lenina-72',
+point_address='Томск, проспект Ленина, 72',open_hour=11,close_hour=20,
+preparation_min=3,preparation_max=5,is_open,next_open_at.
+is_open means now is at/after 11:00 and now+5 minutes is no later than 20:00.
+At 19:55:00 it is open; at 19:55:00.001 it is closed. All times use the server.
+next_open_at is today's 11:00 before opening / while open, otherwise tomorrow.
+
+create_pickup_order(p_idempotency_key uuid,p_items jsonb,p_promo_code text,
+p_reward_requested boolean,p_bonus_redeem numeric,p_quote jsonb,
+p_contact jsonb,p_fulfillment jsonb) -> SETOF public.orders.
+Authenticated anonymous/registered customers are both allowed.
+Contact: {customer_id:auth.uid(),name:string(1..80),phone:'+7'+10digits,
+comment:optional string<=500}. A verified auth.users phone must match.
+Guest contacts are not claimed to be verified. Customer mismatch SESSION_CHANGED
+prevents a request prepared by account A from being submitted by session B.
+Fulfillment: {point_id:'lenina-72',pickup_at:null|ISO timestamp}.
+An ASAP request is saved at server time+5 minutes. A scheduled pickup must be
+at least five minutes ahead and no later than 20:00 on the same Tomsk day.
+pickup_point stores the human-readable address, not point_id.
+
+Items: [{product_id:uuid,quantity:1..99,
+ modifiers:[{product_id:modifierUuid,quantity:1..10}],preparation_note?:string}].
+Modifier quantity is PER PARENT UNIT. At most 20 distinct modifiers per line.
+Duplicate modifier IDs aggregate, still capped at ten; duplicate identical
+variants aggregate, still capped at 99. Different variants remain distinct.
+Defensive limits: 100 raw rows, 50 canonical rows, 300 total parent units.
+Only available visible non-modifiers may be bases; any available modifier may
+be attached to any base, regardless of the modifier's menu visibility.
+
+line_key = base UUID + sorted '|modifierUUIDxquantityPerUnit' segments,
+then optional '|note:'+preparation_note. No modifiers/note: line_key=base UUID.
+IDs are canonical lower-case UUID strings. Note normalization: replace CRLF/CR
+with LF, trim ONLY ASCII space/LF/tab at both ends, reject all remaining C0,
+DEL and C1 controls except LF, maximum 200 Unicode codepoints. The note is only
+a preparation preference: prices are always selected paid modifiers. Different
+normalized notes stay separate, and notes are included in the fingerprint.
+Quote: {version:2,items:[[lineKey,productId,parentQty,baseUnitPrice,
+ [[modifierId,qtyPerUnit,unitPrice],...]],...],payable:money}.
+Quote rows sort by line_key in byte order; modifier rows sort by UUID.
+All prices come from locked product rows. Quote mismatch is PRICE_CHANGED.
+total precedes redeemed points; payable=total-bonus_redeem.
+Reward removes ONE cheapest dessert BASE; ties use line_key. Added modifiers
+remain chargeable. SBL10 discounts (subtotal-reward_discount), rounded to cents.
+
+The RPC returns the complete current public.orders row, including contact,
+pickup, payment and manual-sale fields. The existing recovery RPC retains its
+original result columns and customer isolation.
+Idempotent same-key retries return before time, price or availability checks.
+Changed items/contact/fulfillment/quote under the same key are rejected.
+
+order_items adds line_key,base_unit_price,preparation_note,modifiers snapshots:
+[{product_id,name,quantity,unit_price}]. The original base catalog price is
+saved even on the gifted row. Gifted-unit price=modifier cost; paid remainder
+price=base+modifiers. Both rows share line_key and preparation_note for repeating
+the order. Note text never authorizes an unpriced addon.
+
+update_order_status(p_order_id uuid,p_status text,p_payment_confirmed boolean
+default false,p_manual_sale_recorded boolean default false) -> SETOF orders.
+Staff only. new->accepted/preparing/cancelled; accepted->preparing/cancelled;
+preparing->ready/cancelled; ready->completed/cancelled; completed->cancelled.
+Cancelled is final. Completing requires ready plus explicit payment confirmation.
+Repeated status calls are idempotent. Marking a paid completed order as manually
+recorded in Saby later keeps its original paid_at and does not repeat bonuses.
+Historical completed rows without paid_at are not retroactively marked paid.
+API roles cannot directly write orders/items, including former column grants.
+
+VALIDATION
+Installed native PostgreSQL 17, separate disposable local cluster 127.0.0.1:5543.
+No cloud credentials. Minimal local auth.users/auth.uid fixture, not an Auth server.
+All old migrations and the new migration applied successfully to an empty DB.
+behavior-rollback.sql: 48 PASS assertions; all data/clock changes ROLLBACK.
+concurrency-local.cjs: 21 PASS assertions with actual blocking-PID overlap for
+same-key checkout, competing bonus spend, and duplicate payment/handover.
+Cleanup restores all nine fixture table counts; private clock restored on exit.
+These checks do not validate Supabase deployment, SMS, HTTP/JWT infrastructure,
+Realtime delivery, mobile UI, or manual cash-register operations.
+
+INTEGRATION CHECK
+The final hardened notifications migration 20261029110000 was subsequently
+applied after pickup and all old migrations in a NEW clean sbl_notes_final
+database. Both behavioral suites passed together: 48 pickup assertions + 27
+notifications assertions (75 total). The notifications suite's
+local database-name guard was adapted in an ignored generated copy; its source
+file and production migration/worker were not edited by this audit.
+Actual result lines are saved in combined-results.txt. All fixture row counts
+returned to zero, and native PostgreSQL was stopped with its cluster preserved.

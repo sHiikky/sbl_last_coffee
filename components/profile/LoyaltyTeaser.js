@@ -2,20 +2,22 @@
 // Компактный светлый блок-переход в программу лояльности: только следующий шаг,
 // без повторения крупного значения "N из M" (оно уже показано в чёрной карточке).
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Text from '../AppText';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import HolographicSurface from '../HolographicSurface';
+import FlameIcon from '../FlameIcon';
 import { colors, spacing, radius } from '../../theme/tokens';
 import { pluralDays } from '../../loyalty/loyaltyText';
 
 export default function LoyaltyTeaser({ currentStreak = 0, remaining = 1, onPress }) {
   const handlePress = () => {
-    Haptics.selectionAsync();
+    Haptics.selectionAsync().catch(() => {});
     onPress?.();
   };
 
-  const title = currentStreak > 0 ? `🔥 ${currentStreak} ${pluralDays(currentStreak)} подряд` : 'Серия SBL';
+  const title = currentStreak > 0 ? `${currentStreak} ${pluralDays(currentStreak)} подряд` : 'Серия SBL';
   const subtitle = currentStreak <= 0
     ? 'Начните маршрут первой покупкой'
     : remaining <= 0
@@ -27,7 +29,7 @@ export default function LoyaltyTeaser({ currentStreak = 0, remaining = 1, onPres
       <HolographicSurface variant="panel" intensity={0.16} animated={false} borderRadius={radius.large} style={StyleSheet.absoluteFill} />
 
       <View style={styles.iconBox}>
-        <Ionicons name="flame-outline" size={21} color={colors.textPrimary} />
+        <FlameIcon size={30} />
       </View>
 
       <View style={{ flex: 1, marginLeft: spacing.md }}>
