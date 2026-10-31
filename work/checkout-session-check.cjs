@@ -61,7 +61,7 @@ function makeCart({ preparationGate = null } = {}) {
   } });
   function render() {
     stateIndex = 0; refIndex = 0;
-    return moduleObject.exports.default({ navigation: {}, getCurrentCustomerId: () => owner,
+    return moduleObject.exports.default({ navigation: {}, account: { id: 'guest' }, getCurrentCustomerId: () => owner,
       cart: { coffee: { id: 'coffee', key: 'coffee', name: 'Кофе', qty: 1, unitPrice: 100 } },
       onOrder: value => calls.orders.push(value), products: [], onRefreshCheckout: async () => {},
       loyaltyState: { rewards: [], refresh: async () => { calls.refreshes++; } } });

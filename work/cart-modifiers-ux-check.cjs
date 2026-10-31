@@ -60,7 +60,7 @@ vm.runInNewContext(code, { module: moduleObject, exports: moduleObject.exports, 
 } });
 const coffee = { id: 'coffee', key: 'coffee', name: 'Длинное название любимого напитка', qty: 2, unitPrice: 100 };
 const navigationCalls = [];
-const props = { navigation: { navigate: (...args) => navigationCalls.push(args) }, cart: { coffee }, tabBarHeight: 88, onIncrement() {}, onDecrement() {}, products: [] };
+const props = { navigation: { navigate: (...args) => navigationCalls.push(args) }, account: { id: 'user' }, cart: { coffee }, tabBarHeight: 88, onIncrement() {}, onDecrement() {}, products: [] };
 function render() { stateIndex = 0; return moduleObject.exports.default(props); }
 function all(node, predicate, found = []) {
   if (!node || typeof node !== 'object') return found;
@@ -89,3 +89,40 @@ all(tree, node => node.props?.accessibilityLabel === 'Показать кофе�
 assert.equal(navigationCalls[0][0], 'CafeLocation');
 assert.equal(all(tree, node => node.type === 'Text' && node.children.includes('200 ₽')).length >= 1, true, 'persistent total reflects cart amount');
 console.log('PASS: checkout outside scroll, two-line names, sole pickup info/map action and lossless comment collapse');
+
+// Реальный вид добавок каталога: объём срезан из displayName в sizeLabel (toAppProduct).
+{
+  const { presentAdditions, additionTitle } = load('lib/additionsPresentation.js');
+  const row = (id, name, displayName, price) => ({ id, name, displayName, price, isAvailable: true, isModifier: true });
+  const catalog = [
+    row('c2', '-молоко кокосовое 200 мл', 'молоко кокосовое', 120), row('c3', '-молоко кокосовое 300 мл', 'молоко кокосовое', 120),
+    row('a3', '-молоко миндальное 300 мл', 'молоко миндальное', 120), row('l3', '-молоко безлактозное 300мл', 'молоко безлактозное', 120),
+    row('alt', '-молоко альтер. 100 мл', 'молоко альтер.', 60), row('m100', 'Молоко 100мл.', 'Молоко', 50), row('m50', 'Молоко 50 мл', 'Молоко', 25),
+    row('syr', 'Сироп 10 мл', 'Сироп', 30), row('tea', 'Чай 6 гр', 'Чай', 100), row('ice', 'Мороженое 50гр', 'Мороженое', 100),
+    row('caviar', '+икра лососевая 25 гр', '+икра лососевая', 450), row('butter', '+масло 20 гр', '+масло', 50),
+  ];
+  const names = list => Array.from(list, item => item.displayName);
+  const drink = presentAdditions({ menuCategory: 'Напитки', sizeLabel: '300 мл' }, catalog);
+  assert.deepEqual(names(drink), ['Кокосовое молоко', 'Миндальное молоко', 'Безлактозное молоко', 'Молоко', 'Сироп']);
+  assert.equal(drink[0].id, 'c3', 'volume SKU follows the drink size');
+  assert.equal(presentAdditions({ menuCategory: 'Напитки', sizeLabel: '200 мл' }, catalog)[0].id, 'c2');
+  assert(drink.slice(0, 3).every(item => item.altMilk) && !drink.slice(3).some(item => item.altMilk));
+  assert(!drink.some(item => ['caviar', 'butter', 'tea', 'alt', 'm50'].includes(item.id)), 'no food additions, tea or duplicate milk on drinks');
+  assert.deepEqual(names(presentAdditions({ menuCategory: 'Еда' }, catalog)), ['Икра лососевая', 'Масло'], 'food gets only food additions, never milk or syrup');
+  assert.deepEqual(names(presentAdditions({ menuCategory: 'Десерты' }, catalog)), ['Мороженое']);
+  assert.equal(presentAdditions({ menuCategory: null }, catalog).length, 0);
+  assert.equal(presentAdditions({ menuCategory: 'Магазин' }, catalog).length, 0);
+  assert.equal(additionTitle(catalog[1]), 'Кокосовое молоко');
+  assert.equal(additionTitle(catalog[10]), 'Икра лососевая');
+    const full = [...catalog, row('honey', 'Мед 20гр', 'Мед', 45), row('marsh', 'Маршеллоу порц 25гр', 'Маршеллоу порц', 75), row('ginger', 'Имбирный фреш 15 мл', 'Имбирный фреш', 50), row('soda', 'Содовая 100 мл', 'Содовая', 30), row('peanut', 'Паста арахисовая 20гр.', 'Паста арахисовая', 50), row('cardamom', 'Кардамон/Можжевельник 2 гр', 'Кардамон/Можжевельник', 30), row('cream', 'Сливки 50мл.', 'Сливки', 50), row('cocoaPowder', '-какао порошок EXTRA BRUTE 5 гр', 'какао порошок EXTRA BRUTE', 50)];
+  const ids = (menuSubcategory, name) => Array.from(presentAdditions({ menuCategory: 'Напитки', menuSubcategory, displayName: name, sizeLabel: '300 мл' }, full), item => item.id);
+  assert(!ids('Кофе', 'Латте').includes('marsh') && !ids('Кофе', 'Латте').includes('tea') && !ids('Кофе', 'Латте').includes('caviar'), 'no marshmallow, tea or food on coffee');
+  assert(!ids('Кофе', 'Латте').includes('cocoaPowder'), 'no cocoa powder in latte');
+  assert.deepEqual(ids('Кофе', 'Эспрессо'), ['syr', 'cardamom'], 'black coffee: syrup and cardamom only');
+  assert(ids('Какао и альтернативы', 'Какао').includes('marsh') && ids('Какао и альтернативы', 'Какао').includes('ice'), 'cocoa gets marshmallow and ice cream');
+  assert.deepEqual(ids('Авторский кофе', 'Эспрессо-тоник'), ['syr', 'ginger', 'soda'], 'sour coffee: no milk');
+  assert(!ids('Авторские без кофе', 'Лимонад розовый лимон').some(id => ['c3', 'a3', 'l3', 'm100', 'ice'].includes(id)), 'lemonade: no milk or ice cream');
+  assert.deepEqual(ids('Чай и травяные', 'Чай черный'), ['honey', 'ginger', 'cardamom'], 'tea: honey, ginger, cardamom');
+  assert.equal(ids('Кофе в зёрнах', 'Кофе 250 г').length, 0, 'beans: no additions');
+console.log('PASS: additions on real catalog rows - one alt milk per kind by drink size, no food additions on drinks, no milk/syrup on food');
+}

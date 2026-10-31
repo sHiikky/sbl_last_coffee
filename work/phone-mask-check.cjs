@@ -74,7 +74,7 @@ vm.runInNewContext(code, { module: moduleObject, exports: moduleObject.exports, 
   if (name.startsWith('../components/')) return { __esModule: true, default: name };
   throw new Error('Unexpected phone input dependency: ' + name);
 } });
-let account = null;
+let account = { id: 'signed-in' };
 function findPhone(node) {
   if (!node || typeof node !== 'object') return null;
   if (node.props?.accessibilityLabel === 'Телефон для связи') return node;
@@ -102,7 +102,9 @@ account = { id: 'confirmed', phone: '+79991234567' };
 render(); effects[0](); input = render();
 assert.equal(input.props.value, full, 'verified phone gets the same presentation');
 assert.equal(input.props.editable, false, 'verified account contact remains immutable');
-account = null;
+account = { id: 'another-account' };
 render(); effects[0](); input = render();
 assert.equal(input.props.value, '', 'account change resets the formatted contact rather than retaining a previous owner');
+account = null;
+assert.equal(render(), null, 'guest sees the login prompt, never the checkout contact form');
 console.log('PASS: actual cart TextInput handlers format, track caret, show locked verified numbers and reset on account change');

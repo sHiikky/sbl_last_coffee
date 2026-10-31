@@ -22,6 +22,7 @@ import { productVariants, productSheetHeight, availableProductQuantity, changeAd
 import { shareProduct } from '../lib/productLinks';
 import useMotionPreference from '../hooks/useMotionPreference';
 import { groupModifiers } from '../lib/modifierGroups';
+import { presentAdditions, isAltMilk } from '../lib/additionsPresentation';
 
 export default function ProductScreen({ route, navigation, cart = {}, products = [], modifiers = [], onAddToCart, onToggleFavorite, favoriteIds = [] }) {
   const openedProduct=route.params.product;
@@ -34,10 +35,12 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
   const {reduceMotion,ready:motionReady}=useMotionPreference();
   const [additionCounts,setAdditionCounts]=useState({}),[requestedQuantity,setRequestedQuantity]=useState(1);
   const [selectedGroup,setSelectedGroup]=useState(null),[commentOpen,setCommentOpen]=useState(false),[detailsOpen,setDetailsOpen]=useState(false);
+  const detailsAnim=useRef(new Animated.Value(0)).current,[nutritionShown,setNutritionShown]=useState(false);
   const [preparationNote,setPreparationNote]=useState(''),[notice,setNotice]=useState(''),[added,setAdded]=useState(false);
-  const groups=useMemo(()=>groupModifiers(modifiers.filter(m=>m.isAvailable!==false)),[modifiers]);
+  const additions=useMemo(()=>presentAdditions(product,modifiers),[product,modifiers]);
+  const groups=useMemo(()=>groupModifiers(additions),[additions]);
   const activeGroup=groups.find(g=>g.id===selectedGroup)||groups[0];
-  const selectedModifiers=canonicalModifiers(modifiers.filter(m=>additionCounts[m.id]>0&&m.isAvailable!==false).map(m=>({id:m.id,name:m.displayName||m.name,quantity:additionCounts[m.id],unitPrice:m.price})));
+  const selectedModifiers=canonicalModifiers(additions.filter(m=>additionCounts[m.id]>0).map(m=>({id:m.id,name:m.displayName||m.name,quantity:additionCounts[m.id],unitPrice:m.price})));
   const unavailableAdditions=Object.keys(additionCounts).filter(id=>additionCounts[id]>0&&!modifiers.some(m=>m.id===id&&m.isAvailable!==false));
   const selectedKey=cartKey(product.id,selectedModifiers,preparationNote),inCart=cart[selectedKey]?.qty||0;
   const capacity=availableProductQuantity(inCart),quantity=Math.min(requestedQuantity,Math.max(1,capacity));
@@ -110,14 +113,26 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     if(submitted.current||closing.current||!isAvailable||unavailableAdditions.length||!capacity)return;
     submitted.current=true;
     try{
-      if(typeof onAddToCart!=='function'||onAddToCart(product,selectedModifiers,preparationNote,quantity)===false){
+      const result=typeof onAddToCart==='function'?onAddToCart(product,selectedModifiers,preparationNote,quantity):false;
+      if(result==='auth'){submitted.current=false;return;}
+      if(result===false){
         submitted.current=false;setNotice('Состав или наличие изменились. Проверьте выбранные добавки.');return;
       }
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(()=>{});
       setAdded(true);close(140);
     }catch(_){submitted.current=false;setNotice('Не удалось добавить позицию. Проверьте состав и пожелание.');}
   };
-  const adjust=(id,delta)=>setAdditionCounts(previous=>changeAdditionCount(previous,id,delta));
+  // Альтернативное молоко (кокосовое / миндальное / безлактозное): в напитке только одно.
+  // КБЖУ выплывает снизу с проявлением; при закрытии уходит и только потом убирается из вёрстки.
+  const toggleDetails=()=>{
+    const next=!detailsOpen;setDetailsOpen(next);
+    if(next){setNutritionShown(true);Animated.timing(detailsAnim,{toValue:1,duration:reduceMotion?0:320,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start();}
+    else Animated.timing(detailsAnim,{toValue:0,duration:reduceMotion?0:180,easing:Easing.in(Easing.cubic),useNativeDriver:true}).start(({finished})=>{if(finished)setNutritionShown(false);});
+  };
+  const adjust=(id,delta)=>setAdditionCounts(previous=>{
+    if(delta>0&&additions.find(m=>m.id===id)?.altMilk){const next={...previous};additions.forEach(m=>{if(m.altMilk)next[m.id]=0;});next[id]=1;return next;}
+    return changeAdditionCount(previous,id,delta);
+  });
   const disabled=!isAvailable||unavailableAdditions.length>0||capacity===0||added;
   const tileWidth=Math.max(150,Math.min(190,(Math.min(width,600)-hPad*2-12)/2));
   const photoHeight=height<700?148:184;
@@ -141,19 +156,19 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
             <Pressable onPress={()=>onToggleFavorite?.(product.id)} style={styles.favorite} accessibilityRole="button" accessibilityLabel={favorite?'Убрать из избранного':'Добавить в избранное'} accessibilityState={{selected:favorite}}><Ionicons name={favorite?'heart':'heart-outline'} size={21} color={material.text}/></Pressable>
             <Text nativeID={titleId} accessibilityRole="header" style={styles.name}>{name}</Text>
             {!!product.description&&<Text numberOfLines={detailsOpen?undefined:3} style={styles.description}>{product.description}</Text>}
-            {(!!product.nutrition||product.description?.length>100)&&<Pressable onPress={()=>setDetailsOpen(v=>!v)} accessibilityRole="button" accessibilityLabel="Подробнее о позиции" accessibilityState={{expanded:detailsOpen}} style={styles.detailsButton}><Text style={styles.detailsText}>{detailsOpen?'Свернуть':'Подробнее'}</Text><Ionicons name={detailsOpen?'chevron-up':'chevron-down'} size={14} color={material.secondary}/></Pressable>}
-            {detailsOpen&&!!product.nutrition&&<View style={styles.nutrition}>{[['Ккал','calories'],['Белки','protein'],['Жиры','fat'],['Углеводы','carbs']].map(([label,key])=>product.nutrition[key]!=null&&<View key={key}><Text style={styles.nutritionValue}>{product.nutrition[key]}{key==='calories'?'':' г'}</Text><Text style={styles.small}>{label}</Text></View>)}</View>}
+            {(!!product.nutrition||product.description?.length>100)&&<Pressable onPress={toggleDetails} accessibilityRole="button" accessibilityLabel="Подробнее о позиции" accessibilityState={{expanded:detailsOpen}} style={styles.detailsButton}><Text style={styles.detailsText}>{detailsOpen?'Свернуть':'Подробнее'}</Text><Ionicons name={detailsOpen?'chevron-up':'chevron-down'} size={14} color={material.secondary}/></Pressable>}
+            {nutritionShown&&!!product.nutrition&&<Animated.View style={[styles.nutrition,{opacity:detailsAnim,transform:[{translateY:detailsAnim.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}]}>{[['Ккал','calories'],['Белки','protein'],['Жиры','fat'],['Углеводы','carbs']].map(([label,key])=>product.nutrition[key]!=null&&<View key={key}><Text style={styles.nutritionValue}>{product.nutrition[key]}{key==='calories'?'':' г'}</Text><Text style={styles.small}>{label}</Text></View>)}</Animated.View>}
           </View>
           {!!notice&&<Text accessibilityLiveRegion="polite" style={styles.notice}>{notice}</Text>}
           {!isAvailable&&<Text style={styles.notice}>Эта позиция сейчас недоступна.</Text>}
           {unavailableAdditions.length>0&&<ProductGlass style={styles.warning}><Text style={styles.lightText}>Часть выбранных добавок закончилась. Проверьте состав.</Text><Pressable onPress={()=>setAdditionCounts(prev=>Object.fromEntries(Object.entries(prev).filter(([id])=>!unavailableAdditions.includes(id))))} accessibilityRole="button" style={styles.textAction}><Text style={styles.lightText}>Убрать недоступные добавки</Text></Pressable></ProductGlass>}
-          {variants.length>1&&<View style={styles.block}><Text style={styles.blockTitle}>Объём</Text><View style={styles.variants}>{variants.map(variant=><Pressable key={variant.id} onPress={()=>{if(!reduceMotion)void Haptics.selectionAsync().catch(()=>{});setSelectedId(variant.id);setNotice('');}} accessibilityRole="button" accessibilityLabel={`Объём ${variant.sizeLabel||'стандартный'}, ${formatPrice(variant.price)}`} accessibilityState={{selected:variant.id===product.id}}><ProductGlass selected={variant.id===product.id} style={styles.variant}><Text style={styles.lightText}>{variant.sizeLabel||'Стандарт'}</Text><Text style={styles.small}>{formatPrice(variant.price)}</Text></ProductGlass></Pressable>)}</View></View>}
+          {variants.length>1&&<View style={styles.block}><Text style={styles.blockTitle}>Объём</Text><View style={styles.variants}>{variants.map(variant=><Pressable key={variant.id} onPress={()=>{if(!reduceMotion)void Haptics.selectionAsync().catch(()=>{});setSelectedId(variant.id);setNotice('');setAdditionCounts(c=>Object.fromEntries(Object.entries(c).filter(([id])=>!modifiers.some(m=>m.id===id&&isAltMilk(m)))));}} accessibilityRole="button" accessibilityLabel={`Объём ${variant.sizeLabel||'стандартный'}, ${formatPrice(variant.price)}`} accessibilityState={{selected:variant.id===product.id}}><ProductGlass selected={variant.id===product.id} style={styles.variant}><Text style={styles.lightText}>{variant.sizeLabel||'Стандарт'}</Text><Text style={styles.small}>{formatPrice(variant.price)}</Text></ProductGlass></Pressable>)}</View></View>}
           {variants.length<2&&product.menuVolumes?.length>1&&<Text style={styles.small}>Объёмы из меню: {product.menuVolumes.join(' / ')} мл</Text>}
           {groups.length>0&&<View style={styles.block}>
             <View style={styles.sectionHeading}><Text style={styles.blockTitle}>Сделать по-своему</Text><Text style={styles.small}>Добавки на порцию</Text></View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.groupTabs}>{groups.map(group=><Pressable key={group.id} onPress={()=>setSelectedGroup(group.id)} style={[styles.groupTab,activeGroup?.id===group.id&&styles.groupTabActive]} accessibilityRole="button" accessibilityLabel={group.title} accessibilityState={{selected:activeGroup?.id===group.id}}><Text style={styles.groupTabText}>{group.title}{groupCount(group)>0?` · ${groupCount(group)}`:''}</Text></Pressable>)}</ScrollView>
+            {groups.length>1&&<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.groupTabs}>{groups.map(group=><Pressable key={group.id} onPress={()=>setSelectedGroup(group.id)} style={[styles.groupTab,activeGroup?.id===group.id&&styles.groupTabActive]} accessibilityRole="button" accessibilityLabel={group.title} accessibilityState={{selected:activeGroup?.id===group.id}}><Text style={styles.groupTabText}>{group.title}{groupCount(group)>0?` · ${groupCount(group)}`:''}</Text></Pressable>)}</ScrollView>}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles} accessibilityLabel={`Добавки: ${activeGroup?.title}`}>
-              {activeGroup?.items.map(addition=>{const count=additionCounts[addition.id]||0;const atLimit=count>=10||(!count&&selectedModifiers.length>=20);return <ProductGlass key={addition.id} selected={count>0} style={[styles.tile,{width:tileWidth}]}>
+              {activeGroup?.items.map(addition=>{const count=additionCounts[addition.id]||0;const atLimit=count>=(addition.altMilk?1:10)||(!count&&selectedModifiers.length>=20);return <ProductGlass key={addition.id} selected={count>0} style={[styles.tile,{width:tileWidth}]}>
                 <LinearGradient colors={ingredient} start={{x:.2,y:0}} end={{x:.9,y:1}} style={styles.ingredient}><Ionicons name={activeGroup.id==='milk'?'water-outline':activeGroup.id==='syrup'?'color-fill-outline':'add-outline'} size={18} color="rgba(52,34,18,0.62)"/></LinearGradient>
                 <Text numberOfLines={2} style={styles.additionName}>{addition.displayName||addition.name}</Text><Text style={styles.additionPrice}>+{formatPrice(addition.price)}</Text>
                 <View style={styles.tileControls}>{count>0?<><Pressable onPress={()=>adjust(addition.id,-1)} style={styles.countButton} accessibilityRole="button" accessibilityLabel={`Убрать добавку ${addition.displayName||addition.name}`}><Ionicons name="remove" size={18} color={material.text}/></Pressable><Text style={styles.countValue}>{count}</Text></>:<Text style={styles.small}>Добавить</Text>}<Pressable disabled={atLimit} onPress={()=>adjust(addition.id,1)} style={[styles.countButton,atLimit&&styles.dimmed]} accessibilityRole="button" accessibilityLabel={`Добавить добавку ${addition.displayName||addition.name}`} accessibilityState={{disabled:atLimit}}><Ionicons name="add" size={18} color={material.text}/></Pressable></View>

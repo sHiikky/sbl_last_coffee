@@ -35,7 +35,8 @@ import { getAvailableRewards } from './loyalty/loyaltyService';
 import { fetchOrderingCatalog } from './lib/catalogService';
 import { selectMenuProducts, hasProductPhoto } from './lib/menuVisibility';
 import { makeCartItem, cartMatchesSnapshot } from './lib/cartOptions';
-import { getVerifiedAccount, signOutAccount } from './lib/accountService';
+import { additionTitle, presentAdditions } from './lib/additionsPresentation';
+import { getVerifiedAccount, signOutAccount, ADMIN_LOGIN_ENABLED } from './lib/accountService';
 import useOrderNotifications from './hooks/useOrderNotifications';
 import { refreshCartPrices } from './lib/checkoutQuote';
 import useLoyaltyState from './loyalty/useLoyaltyState';
@@ -75,6 +76,7 @@ const pageSlideInterpolator = ({ current }) => ({
 const STORAGE_KEYS = {
   cart: 'sbl_cart',
   favorites: 'sbl_favorites',
+  adminAccount: 'sbl_admin_account', // локальный аккаунт режима администратора (EXPO_PUBLIC_ADMIN_LOGIN)
   account: 'sbl_account', // тестовый вход по телефону, см. screens/LoginScreen.js
   orders: 'sbl_orders',
   activeOrder: 'sbl_active_order',
@@ -121,7 +123,7 @@ function Tabs({
   const insets = useSafeAreaInsets();
   const fontsReady = useContext(FontReadyContext);
   const { reduceMotion } = useMotionPreference();
-  const cartCount = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
+  const cartCount = account ? Object.values(cart).reduce((sum, item) => sum + item.qty, 0) : 0;
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   return (
@@ -176,6 +178,7 @@ function Tabs({
         {props => (
           <HomeScreen
             {...props}
+            account={account}
             cart={cart}
             products={products}
             catalogLoading={catalogLoading}
@@ -430,6 +433,7 @@ export default function App() {
   const [authUserId, setAuthUserId] = useState(null);
   const [notificationOrder, setNotificationOrder] = useState(null);
   const authUserRef = useRef(undefined);
+  const adminAccountRef = useRef(null);
   const authRevision = useRef(0);
   const [catalogError, setCatalogError] = useState(null);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -678,6 +682,10 @@ export default function App() {
   // а не к аккаунту; Supabase-сессия покупателя анонимная и остаётся прежней.
   const handleLogin = (nextAccount) => {
     if (!nextAccount?.id || nextAccount.id !== authUserRef.current) return;
+    if (nextAccount.admin) {
+      adminAccountRef.current = nextAccount;
+      void AsyncStorage.setItem(STORAGE_KEYS.adminAccount, JSON.stringify(nextAccount)).catch(() => {});
+    }
     setAccount(nextAccount);
   };
 
@@ -704,11 +712,14 @@ export default function App() {
         setOrderHistory([]); setActiveOrder(null); setOrderComplete(null); setCheckoutRecoveryNotice(null);
         setNotificationOrder(null);
         void clearPendingCheckoutAttempt().catch(() => {});
-        void AsyncStorage.multiRemove([STORAGE_KEYS.orders, STORAGE_KEYS.activeOrder, STORAGE_KEYS.account]).catch(() => {});
+        void AsyncStorage.multiRemove([STORAGE_KEYS.orders, STORAGE_KEYS.activeOrder, STORAGE_KEYS.account, STORAGE_KEYS.adminAccount]).catch(() => {});
+        adminAccountRef.current = null;
       }
       authUserRef.current = nextId;
       setAuthUserId(nextId);
-      setAccount(getVerifiedAccount(session));
+      // Админ-аккаунт живёт только поверх той же анонимной сессии, где он создан.
+      const admin = ADMIN_LOGIN_ENABLED && adminAccountRef.current?.id === nextId ? adminAccountRef.current : null;
+      setAccount(getVerifiedAccount(session) || admin);
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => { revision += 1; applySession(session); });
     const initialRevision = revision;
@@ -733,6 +744,7 @@ export default function App() {
       STORAGE_KEYS.orders,
       STORAGE_KEYS.activeOrder,
       STORAGE_KEYS.account,
+      STORAGE_KEYS.adminAccount,
     ]).then(entries => {
       const map = Object.fromEntries(entries);
 
@@ -747,6 +759,7 @@ export default function App() {
       };
       restore(STORAGE_KEYS.cart, setCart);
       restore(STORAGE_KEYS.favorites, setFavoriteIds);
+      restore(STORAGE_KEYS.adminAccount, value => { if (value?.id && value.admin) adminAccountRef.current = value; });
       // Account, orders and active order are restored from the authenticated
       // server session, never from a previous user's device-only phone stub.
       // Кэш для мгновенной отрисовки баннера — refreshActiveOrder() выше
@@ -851,12 +864,17 @@ export default function App() {
   // корзины, без выбора опций поверх цены (раньше это делали sizeId/milkId/
   // temperatureId/addonIds, теперь не нужны).
   const addToCart = (product, selectedModifiers = [], preparationNote = '', quantity = 1) => {
+    // Гость смотрит меню, но корзина доступна только после входа по номеру.
+    if (!account) { navigationRef.current?.navigate('Login'); return 'auth'; }
     product = products.find(current => current.id === product?.id && current.isAvailable !== false);
     const currentModifiers = selectedModifiers.map(m => {
       const current = modifiers.find(candidate => candidate.id === (m.id || m.product_id));
-      return current && current.isAvailable !== false ? { id: current.id, name: current.displayName || current.name, quantity: m.quantity, unitPrice: current.price } : null;
+      return current && current.isAvailable !== false ? { id: current.id, name: additionTitle(current), quantity: m.quantity, unitPrice: current.price } : null;
     });
     if (currentModifiers.some(m => !m)) return false;
+    // Добавка должна подходить этой позиции (не икра в кофе, не молоко в еде).
+    const allowedAdditions = new Set(presentAdditions(product, modifiers).map(m => m.id));
+    if (currentModifiers.some(m => !allowedAdditions.has(m.id))) return false;
     const item = makeCartItem(product, currentModifiers, quantity, preparationNote);
     if (!item) return false;
     setCart(prev => ({ ...prev, [item.key]: { ...item, qty: Math.min(99, (prev[item.key]?.qty || 0) + quantity) } }));
@@ -887,12 +905,14 @@ export default function App() {
   };
 
   const toggleFavorite = (productId) => {
+    if (!account) { navigationRef.current?.navigate('Login'); return; }
     setFavoriteIds(prev => (
       prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]
     ));
   };
 
   const repeatOrder = (order) => {
+    if (!account) { navigationRef.current?.navigate('Login'); return; }
     if (!order?.items?.length) return;
     const nextCart = {};
 
@@ -901,9 +921,12 @@ export default function App() {
       if (!product) return;
       const selected = (item.modifiers || []).map(m => {
         const current = modifiers.find(p => p.id === (m.id || m.product_id));
-        return current ? { id: current.id, name: current.name, quantity: m.quantity, unitPrice: current.price } : null;
+        return current ? { id: current.id, name: additionTitle(current), quantity: m.quantity, unitPrice: current.price } : null;
       });
       if (selected.some(m => !m)) return;
+      // Строки с добавками, которые этой позиции больше не подходят, в корзину не возвращаем.
+      const allowedAdditions = new Set(presentAdditions(product, modifiers).map(m => m.id));
+      if (selected.some(m => !allowedAdditions.has(m.id))) return;
       const line = makeCartItem(product, selected, item.qty, item.preparationNote);
       if (line) nextCart[line.key] = line;
     });

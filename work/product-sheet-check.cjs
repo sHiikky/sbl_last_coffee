@@ -30,7 +30,7 @@ function makeScreen(extra={}){
   const native={Platform:{OS:'ios'},View:'View',Text:'Text',TextInput:'TextInput',ScrollView:'ScrollView',Pressable:'Pressable',KeyboardAvoidingView:'KeyboardAvoidingView',Share:{share:async()=>{}},
     StyleSheet:{create:x=>x,absoluteFill:{}},Animated,Easing:{in:x=>x,out:x=>x,cubic:1},useWindowDimensions:()=>({width:390,height:844}),PanResponder:{create:config=>({panHandlers:config})},BackHandler:{addEventListener:()=>({remove(){}})}};
   const mocks={react:React,'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:44,bottom:34})},'@react-navigation/native':{useFocusEffect(){}},'expo-status-bar':{StatusBar:'StatusBar'},'expo-haptics':{impactAsync:async()=>{},selectionAsync:async()=>{},ImpactFeedbackStyle:{Light:'light'}},'@expo/vector-icons':{Ionicons:'Icon'},'expo-linear-gradient':{LinearGradient:'Gradient'},
-    '../theme/tokens':tokens,'../theme/productSheet':material,'../data/products':{cartKey:cartDomain.optionCartKey,formatPrice:n=>`${n} ₽`},'../lib/cartOptions':cartDomain,'../lib/photoComposition':{getPhotoComposition:()=>({fit:'contain',zoom:.9,offsetX:0,offsetY:0})},'../lib/productVisuals':visualModule,'../lib/productSheetModel':model,'../lib/productLinks':{shareProduct:async()=>({copied:true})},'../hooks/useMotionPreference':()=>extra.motionPreference||({reduceMotion:true,ready:true}),'../lib/modifierGroups':load('lib/modifierGroups.js')};
+    '../theme/tokens':tokens,'../theme/productSheet':material,'../data/products':{cartKey:cartDomain.optionCartKey,formatPrice:n=>`${n} ₽`},'../lib/cartOptions':cartDomain,'../lib/photoComposition':{getPhotoComposition:()=>({fit:'contain',zoom:.9,offsetX:0,offsetY:0})},'../lib/productVisuals':visualModule,'../lib/productSheetModel':model,'../lib/productLinks':{shareProduct:async()=>({copied:true})},'../hooks/useMotionPreference':()=>extra.motionPreference||({reduceMotion:true,ready:true}),'../lib/modifierGroups':load('lib/modifierGroups.js'),'../lib/additionsPresentation':load('lib/additionsPresentation.js')};
   const code=babel.transformSync(fs.readFileSync(path.join(__dirname,'../screens/ProductScreen.js'),'utf8'),{babelrc:false,configFile:false,plugins:['@babel/plugin-transform-react-jsx','@babel/plugin-transform-modules-commonjs']}).code;
   const mod={exports:{}};vm.runInNewContext(code,{module:mod,exports:mod.exports,console,require:n=>{if(n in mocks)return mocks[n];if(n.startsWith('../components/'))return n;throw Error(n);}});
   const props={route:{params:{product:base}},navigation:{goBack:()=>backs.push('back'),navigate(){}},products:[base,large],modifiers:[syrup,milk],onAddToCart:(...args)=>{calls.push(args);return true;},...extra};
@@ -41,7 +41,7 @@ function all(node,predicate){if(!node||typeof node!=='object')return[];return [.
 const label=(tree,text)=>all(tree,n=>n.props?.accessibilityLabel===text)[0];
 const add=tree=>all(tree,n=>n.props?.accessibilityLabel?.startsWith('Добавить в корзину '))[0];
 const ui=makeScreen();let tree=ui.render();
-label(tree,'Сиропы').props.onPress();tree=ui.render();
+label(tree,'Сиропы')?.props.onPress();tree=ui.render(); // при одной группе вкладок нет
 label(tree,'Добавить добавку Сироп').props.onPress();tree=ui.render();label(tree,'Добавить добавку Сироп').props.onPress();tree=ui.render();
 label(tree,'Увеличить количество напитков').props.onPress();tree=ui.render();assert.equal(add(tree).props.accessibilityLabel,'Добавить в корзину 2 шт. за 680 ₽');
 label(tree,'Пожелание бариста').props.onPress();tree=ui.render();label(tree,'Пожелание к позиции').props.onChangeText('Без\t трубочки');tree=ui.render();
@@ -50,7 +50,7 @@ const submit=add(tree);submit.props.onPress();submit.props.onPress();assert.equa
 assert.equal(ui.animations.at(-1).config.duration,0,'Reduced Motion closes instantly');ui.animations.at(-1).callback({finished:true});assert.equal(ui.backs.length,1);
 const changed=makeScreen();tree=changed.render();label(tree,'Объём 400 мл, 340 ₽').props.onPress();tree=changed.render();assert.equal(add(tree).props.accessibilityLabel,'Добавить в корзину 1 шт. за 340 ₽');
 changed.props.products=[base,{...large,price:390}];tree=changed.render();assert.equal(add(tree).props.accessibilityLabel,'Добавить в корзину 1 шт. за 390 ₽','live SKU price after refresh');
-const stopped=makeScreen();tree=stopped.render();label(tree,'Сиропы').props.onPress();tree=stopped.render();label(tree,'Добавить добавку Сироп').props.onPress();stopped.props.modifiers=[milk];tree=stopped.render();assert(label(tree,'Позиция недоступна').props.disabled);label(tree,'Позиция недоступна').props.onPress();assert.equal(stopped.calls.length,0);
+const stopped=makeScreen();tree=stopped.render();label(tree,'Сиропы')?.props.onPress();tree=stopped.render();label(tree,'Добавить добавку Сироп').props.onPress();stopped.props.modifiers=[milk];tree=stopped.render();assert(label(tree,'Позиция недоступна').props.disabled);label(tree,'Позиция недоступна').props.onPress();assert.equal(stopped.calls.length,0);
 const full=makeScreen({cart:{coffee:cartDomain.makeCartItem(base,[],99)}});tree=full.render();assert(label(tree,'В корзине уже 99').props.disabled);
 const refused=makeScreen({onAddToCart:()=>false});tree=refused.render();add(tree).props.onPress();assert.equal(refused.animations.length,0,'rejected add never closes as success');
 const motionPreference={reduceMotion:true,ready:false};const entrance=makeScreen({motionPreference});entrance.render();entrance.effects[1]();assert.equal(entrance.animations.length,0,'wait for the actual OS preference');
@@ -59,8 +59,12 @@ entrance.effects[1]();assert.equal(entrance.animations.length,1,'preference upda
 // Run the actual App callback independently to verify batch merging and current prices.
 const app=fs.readFileSync(path.join(__dirname,'../App.js'),'utf8');const start=app.indexOf('  const addToCart = '),end=app.indexOf('  const refreshCheckoutPrices',start);
 let merged={},updates=0;const body=app.slice(start,end)+'\nreturn addToCart;';
-const appAdd=new Function('products','modifiers','makeCartItem','setCart',body)([base],[{...syrup,price:35}],cartDomain.makeCartItem,fn=>{updates++;merged=fn(merged);});
+let loginRoute=null;const navigationRef={current:{navigate:name=>{loginRoute=name;}}};
+const makeAppAdd=(account,items=[base])=>new Function('account','navigationRef','products','modifiers','makeCartItem','setCart','additionTitle','presentAdditions',body)(account,navigationRef,items,[{...syrup,price:35}],cartDomain.makeCartItem,fn=>{updates++;merged=fn(merged);},load('lib/additionsPresentation.js').additionTitle,load('lib/additionsPresentation.js').presentAdditions);
+const guestAdd=makeAppAdd(null);assert.equal(guestAdd(base,[],'',1),'auth','guest cannot add: login required');assert.equal(loginRoute,'Login');assert.equal(updates,0,'guest add never touches the cart');
+const appAdd=makeAppAdd({id:'user',phone:'+79990000000'});
 appAdd(base,[{...syrup,quantity:2}], 'Ваниль',3);const line=Object.values(merged)[0];assert.equal(line.qty,3);assert.equal(line.unitPrice,350);assert.equal(updates,1);
 appAdd(base,[{...syrup,quantity:2}],'Ваниль',2);assert.equal(Object.values(merged)[0].qty,5);assert.equal(Object.keys(merged).length,1);
 assert.equal(appAdd(base,[{id:'missing',quantity:1}],'',1),false);
+const toast={...base,id:'toast',menuCategory:'Еда'};assert.equal(makeAppAdd({id:'user'},[toast])(toast,[{...syrup,quantity:1}],'',1),false,'no syrup/milk additions on food');
 console.log('PASS: actual product sheet quantities, modifiers, note preservation, double-tap guard, SKU/price refresh, stop-list, capacity, Reduced Motion, rejected add; actual App batch cart merge and current modifier prices');

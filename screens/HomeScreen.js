@@ -24,7 +24,7 @@ import BrandLogo from '../components/BrandLogo';
 const LOGO_WIDTH = 88;
 const LOGO_HEIGHT = LOGO_WIDTH * (452 / 1554);
 
-export default function HomeScreen({ navigation, cart = {}, products = [], catalogLoading = false, catalogError = null, onRetryCatalog, onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight, loyaltyState, activeOrder, onOpenActiveOrder, onActiveOrderFinished }) {
+export default function HomeScreen({ navigation, cart = {}, products = [], catalogLoading = false, catalogError = null, onRetryCatalog, account = null, onAddToCart, onDecrement, onToggleFavorite, favoriteIds = [], tabBarHeight, loyaltyState, activeOrder, onOpenActiveOrder, onActiveOrderFinished }) {
   const { width } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
   const hours = useCafeHours();
@@ -77,7 +77,8 @@ export default function HomeScreen({ navigation, cart = {}, products = [], catal
       </View>}
 
       {activeOrder?.id && (
-        <View style={{ marginHorizontal: hPad, marginBottom: spacing.md }}>
+        // 24 px сверху и 24 px снизу (12 своих + 12 отступа перед HoloLine): баннер по центру между заголовком и линией.
+        <View style={{ marginHorizontal: hPad, marginTop: spacing.xxl, marginBottom: spacing.md }}>
           <ActiveOrderBanner
             activeOrder={activeOrder}
             onPress={onOpenActiveOrder}
@@ -102,12 +103,12 @@ export default function HomeScreen({ navigation, cart = {}, products = [], catal
           level={bonusLevel.level}
           toNextLevel={bonusToNextLevel}
           progress={bonusProgress}
-          onPressInfo={() => navigation.navigate('Loyalty')}
+          onPressInfo={() => navigation.navigate(account ? 'Loyalty' : 'Login')}
         />
       </View>
 
       <View style={{ marginHorizontal: hPad, marginTop: spacing.md }}>
-        <LoyaltyHomeWidget loyaltyState={loyaltyState} onPress={() => navigation.navigate('Loyalty')} />
+        <LoyaltyHomeWidget loyaltyState={loyaltyState} onPress={() => navigation.navigate(account ? 'Loyalty' : 'Login')} />
       </View>
 
       <HorizontalProductSection

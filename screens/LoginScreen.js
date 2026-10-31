@@ -10,10 +10,13 @@ import * as Haptics from 'expo-haptics';
 import PrimaryButton from '../components/PrimaryButton';
 import BrandLogo from '../components/BrandLogo';
 import AccountDocumentsScreen from './AccountDocumentsScreen';
-import { PHONE_AUTH_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, describeAuthError } from '../lib/accountService';
+import { PHONE_AUTH_ENABLED, ADMIN_LOGIN_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, adminSignIn, describeAuthError } from '../lib/accountService';
 import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
 
 const CODE_LENGTH = OTP_LENGTH;
+// Режим администратора (без СМС): любой номер, любой код. Только если СМС-вход выключен.
+const ADMIN_MODE = ADMIN_LOGIN_ENABLED && !PHONE_AUTH_ENABLED;
+const AUTH_AVAILABLE = PHONE_AUTH_ENABLED || ADMIN_MODE;
 
 // Из введённого текста достаёт до 10 цифр номера после +7.
 // `prevDigits` нужен для Backspace: он может удалить только скобку/пробел
@@ -80,7 +83,8 @@ export default function LoginScreen({ navigation, onLogin }) {
   }, [step]);
 
   const submitPhone = async () => {
-    if (!phoneValid || busyRef.current || !PHONE_AUTH_ENABLED) return;
+    if (!phoneValid || busyRef.current || !AUTH_AVAILABLE) return;
+    if (ADMIN_MODE) { setError(''); setChallenge({ admin: true, phone: digits }); setCode(''); setStep('code'); return; }
     busyRef.current = true;
     setError('');
     setLoading(true);
@@ -100,12 +104,12 @@ export default function LoginScreen({ navigation, onLogin }) {
   };
 
   const submitCode = async () => {
-    if (busyRef.current || code.length !== CODE_LENGTH || !challenge) return;
+    if (busyRef.current || !challenge || (challenge.admin ? code.length < 1 : code.length !== CODE_LENGTH)) return;
     busyRef.current = true;
     setError('');
     setLoading(true);
     try {
-      const account = await verifyPhoneSignIn({ ...challenge, token: code });
+      const account = challenge.admin ? await adminSignIn(challenge.phone) : await verifyPhoneSignIn({ ...challenge, token: code });
       await onLogin?.(account);
       if (!mountedRef.current) return;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
@@ -125,7 +129,7 @@ export default function LoginScreen({ navigation, onLogin }) {
   };
 
   const resend = async () => {
-    if (secondsLeft > 0 || busyRef.current || !challenge) return;
+    if (secondsLeft > 0 || busyRef.current || !challenge || challenge.admin) return;
     busyRef.current = true;
     setLoading(true);
     setError('');
@@ -179,7 +183,8 @@ export default function LoginScreen({ navigation, onLogin }) {
               Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.
             </Text>
 
-            {!PHONE_AUTH_ENABLED && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.</Text></View>}
+            {ADMIN_MODE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Режим администратора: подойдёт любой номер и любой код, СМС не отправляется.</Text></View>}
+            {!AUTH_AVAILABLE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.</Text></View>}
 
             <Text style={styles.label}>Номер телефона</Text>
             <View style={[styles.field, error ? styles.fieldError : null]}>
@@ -204,7 +209,7 @@ export default function LoginScreen({ navigation, onLogin }) {
               <PrimaryButton
                 label="Получить код"
                 onPress={submitPhone}
-                disabled={!phoneValid || !PHONE_AUTH_ENABLED || secondsLeft > 0}
+                disabled={!phoneValid || !AUTH_AVAILABLE || secondsLeft > 0}
                 loading={loading}
                 fullWidth
               />
@@ -220,7 +225,7 @@ export default function LoginScreen({ navigation, onLogin }) {
           <>
             <Text style={styles.title}>Введите код</Text>
             <Text style={styles.subtitle}>
-              Мы отправили код на {destination}
+              {challenge?.admin ? `Режим администратора: введите любой код для ${destination}` : `Мы отправили код на ${destination}`}
             </Text>
 
             <TouchableOpacity activeOpacity={1} onPress={() => codeInputRef.current?.focus()} style={styles.codeRow}>
@@ -253,9 +258,9 @@ export default function LoginScreen({ navigation, onLogin }) {
 
             {!!error && <Text style={styles.errorText}>{error}</Text>}
 
-            <View style={{ marginTop: spacing.xl }}><PrimaryButton label="Подтвердить код" onPress={submitCode} loading={loading} disabled={code.length !== CODE_LENGTH} fullWidth /></View>
+            <View style={{ marginTop: spacing.xl }}><PrimaryButton label="Подтвердить код" onPress={submitCode} loading={loading} disabled={challenge?.admin ? code.length < 1 : code.length !== CODE_LENGTH} fullWidth /></View>
 
-            <TouchableOpacity
+            {!challenge?.admin && <TouchableOpacity
               onPress={resend}
               disabled={secondsLeft > 0 || loading}
               style={styles.resend}
@@ -265,7 +270,7 @@ export default function LoginScreen({ navigation, onLogin }) {
               <Text style={[styles.resendText, secondsLeft > 0 && { color: colors.textMuted }]}>
                 {secondsLeft > 0 ? `Отправить код ещё раз через ${secondsLeft} с` : 'Отправить код ещё раз'}
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
 
             {challenge?.mode === 'sms' && <Text style={styles.legal}>Этот номер уже зарегистрирован. После подтверждения откроется его аккаунт; гостевые заказы автоматически в него не переносятся.</Text>}
           </>

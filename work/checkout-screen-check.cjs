@@ -51,7 +51,7 @@ function makeScreen({ rpcError = null, storageError = null, saveError = null } =
     throw Error(n);
   } });
   let refreshed=0;
-  const tree=moduleObject.exports.default({ navigation:{},cart:{coffee:{id:'coffee',qty:1,unitPrice:100}},products:[],onOrder:x=>orders.push(x),onRefreshCheckout:async()=>{refreshed++;},loyaltyState:{rewards:[],refresh:async()=>{} } });
+  const tree=moduleObject.exports.default({ navigation:{},account:{id:'guest'},cart:{coffee:{id:'coffee',qty:1,unitPrice:100}},products:[],onOrder:x=>orders.push(x),onRefreshCheckout:async()=>{refreshed++;},loyaltyState:{rewards:[],refresh:async()=>{} } });
   function find(node) {
     if (!node || typeof node !== 'object') return null;
     if(node.props?.fullWidth && node.props?.haptic==='success')return node;

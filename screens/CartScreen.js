@@ -240,6 +240,7 @@ export default function CartScreen({
   // сервера, чтобы локальное состояние никогда не расходилось с реальным
   // заказом.
   const runOrder = async () => {
+    if (!account) { navigation.navigate('Login'); return; }
     const customer = await getUserOrThrow();
     const ownerChanged = () => !mountedRef.current || (!!getCurrentCustomerId && getCurrentCustomerId() !== customer.id);
     if (ownerChanged()) return;
@@ -503,6 +504,23 @@ export default function CartScreen({
       )}
     </View>
   ) : null;
+
+  // Гость корзиной и заказом не пользуется: сначала вход по номеру.
+  if (!account) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: insets.top }}>
+        <ScreenHeader title="Корзина" />
+        <View style={{ flex: 1, justifyContent: 'center' }}>
+          <EmptyState
+            icon="person-outline"
+            title="Войдите, чтобы заказывать"
+            subtitle="Меню можно смотреть без входа. Чтобы добавить напиток в корзину и оформить заказ, войдите по номеру телефона."
+            action={<PrimaryButton label="Войти по номеру" onPress={() => navigation.navigate('Login')} />}
+          />
+        </View>
+      </View>
+    );
+  }
 
   if (items.length === 0) {
     return (
