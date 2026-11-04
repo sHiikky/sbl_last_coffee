@@ -432,7 +432,7 @@ export default function CartScreen({
         onCheckoutAttemptUncertain?.(idempotencyKey);
       }
 
-      if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'MODIFIER_NOT_AVAILABLE', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
+      if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'MODIFIER_NOT_AVAILABLE', 'MODIFIER_NOT_ALLOWED', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
         setAppliedRewardId(null);
         setRedeemBonuses(false);
         let refreshed = false;
@@ -444,12 +444,12 @@ export default function CartScreen({
         } catch (refreshError) {
           console.warn('[checkout] price refresh failed', refreshError);
         }
-        const unavailable = classification.code === 'PRODUCT_NOT_AVAILABLE';
-        const benefitsChanged = !['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE'].includes(classification.code);
+        const unavailable = ['PRODUCT_NOT_AVAILABLE','MODIFIER_NOT_ALLOWED','MODIFIER_NOT_AVAILABLE'].includes(classification.code);
+        const benefitsChanged = !['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE','MODIFIER_NOT_ALLOWED','MODIFIER_NOT_AVAILABLE'].includes(classification.code);
         const message = benefitsChanged
           ? 'Подарок или доступные бонусы изменились. Проверьте итог и выберите их заново перед оформлением. Заказ не создан.'
           : unavailable
-          ? (refreshed ? 'Некоторые товары сейчас недоступны и удалены из корзины. Проверьте состав и итог перед повторным оформлением. Заказ не создан.' : 'Некоторые товары сейчас недоступны. Заказ не создан. Проверьте подключение и обновите корзину.')
+          ? (refreshed ? 'Доступность товаров или разрешённые добавки изменились. Затронутые позиции удалены из корзины. Проверьте состав и итог. Заказ не создан.' : 'Товары или выбранные добавки недоступны. Заказ не создан. Проверьте подключение и обновите корзину.')
           : refreshed
           ? 'Цены или скидки изменились. Корзина обновлена. Проверьте итог, при необходимости примените подарок и бонусы заново и нажмите «Оформить заказ» ещё раз. Заказ не создан.'
           : 'Цены или скидки изменились. Заказ не создан. Не удалось загрузить новые цены — проверьте подключение и повторите попытку.';
@@ -559,10 +559,10 @@ export default function CartScreen({
               category={item.category}
               aspectRatio={1}
               borderRadius={radius.medium - 4}
-              contentFit={item.imageFit || 'contain'}
-              contentPosition={item.imagePosition || 'center'}
-              zoom={item.imageZoom || 1.08}
-              style={{ width: 64 }}
+              contentFit="contain"
+              contentPosition="center"
+              zoom={0.88}
+              style={{ width: 64, height: 64 }}
             />
             <View style={{ flex: 1, marginLeft: spacing.md }}>
               <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>

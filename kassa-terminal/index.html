@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>Касса — SBL coffee</title>
+<link rel="stylesheet" href="catalog-admin.css">
 <style>
   :root{
     --bg:#17110D;
@@ -253,6 +254,7 @@
       <svg class="on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
       <svg class="off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
     </button>
+    <button class="logout-btn" id="catalogBtn">Товары</button>
     <button class="logout-btn" id="contentBtn">Публикации</button>
     <button class="logout-btn" id="stopListBtn">Стоп-лист</button>
     <button class="logout-btn" id="logoutBtn">Выйти</button>
@@ -268,6 +270,47 @@
     <button id="stopListRefresh" class="logout-btn">Обновить</button>
     <p id="stopListError" role="status"></p>
     <div id="stopListRows"></div>
+  </section>
+  <section id="catalogPanel" class="catalog-panel hidden" aria-label="Товары и добавки">
+    <div class="catalog-head"><h2>Товары и добавки</h2><div><button type="button" id="catalogRefresh" class="logout-btn">Обновить</button> <button type="button" id="catalogNew" class="logout-btn">Новый товар</button></div></div>
+    <p class="catalog-hint">Добавьте фото и данные позиции, выберите добавки и покажите товар в меню. Приложение обновляет каталог при открытии и каждые 30 секунд. Каждый объём — отдельная позиция.</p>
+    <p id="catalogStatus" class="catalog-hint catalog-status" role="status" aria-live="polite"></p>
+    <div class="catalog-layout">
+      <aside><input id="catalogSearch" type="search" placeholder="Название или категория" aria-label="Найти товар"><label class="catalog-hint"><input id="catalogShowModifiers" type="checkbox"> Показывать добавки</label><div id="catalogRows" class="catalog-list"></div></aside>
+      <form id="catalogForm" class="catalog-form">
+        <div class="catalog-meta"><strong id="catalogEditing">Новый товар</strong><span id="catalogSource" class="catalog-pill"></span></div>
+        <fieldset><legend>Основное</legend><div class="catalog-fields">
+          <label class="catalog-wide">Название<input id="catalogName" maxlength="120" required placeholder="Например, Кедровый латте"></label>
+          <label>Категория<input id="catalogCategory" list="catalogCategories" maxlength="80" required placeholder="Напитки"><datalist id="catalogCategories"><option value="Напитки"><option value="Еда"><option value="Десерты"><option value="Магазин"></datalist></label>
+          <label>Подкатегория<input id="catalogSubcategory" list="catalogSubcategories" maxlength="80" placeholder="Авторский кофе"><datalist id="catalogSubcategories"></datalist></label>
+          <label>Объём или вес<input id="catalogSize" maxlength="40" placeholder="300 мл / 180 г"></label>
+          <label class="catalog-check"><input id="catalogIsModifier" type="checkbox">Это платная добавка</label>
+          <label>Цена, ₽<input id="catalogPrice" inputmode="decimal" placeholder="350" required></label>
+          <label>Источник цены<select id="catalogPriceMode"><option value="manual">Задать вручную</option><option value="sbis">Использовать цену СБИС</option></select></label>
+          <p id="catalogPriceHint" class="catalog-hint catalog-wide"></p>
+        </div></fieldset>
+        <fieldset><legend>Фотография</legend><div class="catalog-image"><img id="catalogPreview" alt="Фото товара" class="hidden"><div><label>Загрузить с компьютера<input id="catalogFile" type="file" accept="image/jpeg,image/png,image/webp"></label><p class="catalog-hint">JPG, PNG или WebP. Большое фото будет уменьшено, прозрачный фон сохранится.</p><p id="catalogUploadStatus" class="catalog-hint" aria-live="polite"></p></div></div><label>Или прямая HTTPS-ссылка<input id="catalogImage" type="url" maxlength="2048" placeholder="https://..."></label></fieldset>
+        <fieldset><legend>О позиции</legend><div class="catalog-fields">
+          <label class="catalog-wide">Описание<textarea id="catalogDescription" maxlength="3000" placeholder="Вкус, подача и особенности"></textarea></label>
+          <label class="catalog-wide">Состав<textarea id="catalogIngredients" maxlength="3000" placeholder="Кофе, молоко, кедровая паста"></textarea></label>
+          <label class="catalog-wide">Аллергены<input id="catalogAllergens" maxlength="500" placeholder="Например, молоко и орехи"></label>
+        </div></fieldset>
+        <fieldset><legend>КБЖУ</legend><p class="catalog-hint">Заполняйте только известные значения. Пустое поле не превращается в ноль.</p><label class="catalog-check"><input id="catalogNutritionInherit" type="checkbox">Сохранить КБЖУ из действующего меню</label><div class="catalog-fields">
+          <label class="catalog-wide">Значения указаны<select id="catalogNutritionBasis"><option value="portion">На порцию</option><option value="100g">На 100 г</option><option value="100ml">На 100 мл</option><option value="unknown">Основа не указана</option></select></label>
+          <label>Энергия, ккал<input id="catalogCalories" inputmode="decimal"></label><label>Белки, г<input id="catalogProtein" inputmode="decimal"></label>
+          <label>Жиры, г<input id="catalogFat" inputmode="decimal"></label><label>Углеводы, г<input id="catalogCarbs" inputmode="decimal"></label>
+        </div></fieldset>
+        <fieldset id="catalogAdditionsField"><legend>Разрешённые добавки</legend><label class="catalog-check"><input id="catalogAllAdditions" type="checkbox">Все добавки каталога</label><p class="catalog-hint">Снимите «Все добавки» и отметьте нужные. Если ничего не выбрано, товар заказывается без добавок.</p><div id="catalogModifiers" class="catalog-modifiers"></div></fieldset>
+        <fieldset><legend>Показ в приложении</legend><div class="catalog-fields">
+          <label class="catalog-check"><input id="catalogAvailable" type="checkbox" checked>Доступен для заказа</label>
+          <label class="catalog-check"><input id="catalogQuickPick" type="checkbox">В быстром выборе</label>
+          <label>Метка на карточке<input id="catalogBadge" maxlength="32" placeholder="Новинка"></label>
+          <label>Порядок внутри раздела<input id="catalogSort" type="number" min="0" max="1000000" step="1" value="0"></label>
+        </div></fieldset>
+        <p id="catalogDirty" class="catalog-hint"></p>
+        <div class="catalog-actions"><button type="button" id="catalogSaveHidden" class="logout-btn">Сохранить скрытым</button><button type="button" id="catalogPublish" class="btn btn-new">Сохранить и показать в меню</button></div>
+      </form>
+    </div>
   </section>
   <section id="contentPanel" class="content-panel hidden" aria-label="Новости и акции">
     <div class="content-head">
@@ -339,6 +382,7 @@
 </div>
 
 <script src="content-admin.js"></script>
+<script src="catalog-admin.js"></script>
 <script>
 (function(){
   var SUPABASE_URL = 'https://vxefueynagwuavlyeiqc.supabase.co';
@@ -356,6 +400,7 @@
   var logoutBtn = document.getElementById('logoutBtn'), stopPanel = document.getElementById('stopListPanel');
   var stopError = document.getElementById('stopListError');
   var contentAdmin = window.SblContentAdmin ? window.SblContentAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
+  var catalogAdmin = window.SblCatalogAdmin ? window.SblCatalogAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
   var ACTIVE_FILTER = 'status.in.(new,accepted,preparing,ready),and(status.eq.completed,paid_at.not.is.null,manual_sale_recorded_at.is.null)';
   var ORDER_FIELDS = 'id,order_number,status,total,bonus_redeemed,created_at,customer_name,customer_phone,pickup_point,pickup_at,comment,payment_method,paid_at,manual_sale_recorded_at,order_items(product_id,product_name,quantity,price,base_unit_price,line_key,modifiers,preparation_note)';
 
@@ -475,6 +520,7 @@
   function stopBoard(){
     boardActive = false; boardSession++; loadRevision++; stopRevision++;
     if (contentAdmin) contentAdmin.reset();
+    if (catalogAdmin) catalogAdmin.reset();
     boardTimers.forEach(clearInterval); boardTimers = [];
     window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline);
     window.removeEventListener('focus', handleForeground); document.removeEventListener('visibilitychange', handleForeground);

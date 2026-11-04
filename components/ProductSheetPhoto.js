@@ -2,6 +2,7 @@ import React, { useId, useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Defs, ClipPath, Polygon, Image as SvgImage } from 'react-native-svg';
 import ProductImage from './ProductImage';
+import SoftEdgeProductPhoto from './SoftEdgeProductPhoto';
 import { photoTranslation } from '../lib/photoComposition';
 
 // The existing URL/editor frame stays authoritative. Only this exact latte
@@ -21,5 +22,5 @@ export default function ProductSheetPhoto({ product, visual, frame, height = 184
       </View>
     </View>;
   }
-  return <ProductImage source={product.image} transparent aspectRatio={240/height} style={{width:240,height}} borderRadius={0} contentFit={frame.fit} zoom={frame.zoom} offsetX={frame.offsetX} offsetY={frame.offsetY} accessibilityLabel={product.displayName || product.name} />;
+  return <SoftEdgeProductPhoto product={product} frame={frame} height={height} />;
 }

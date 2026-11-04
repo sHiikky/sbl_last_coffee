@@ -8,7 +8,9 @@ import { productSheet as material } from '../theme/productSheet';
 export default function ProductGlass({ children, selected = false, style }) {
   const corner=StyleSheet.flatten(style)?.borderRadius??radius.large;
   return <View style={[styles.wrap, selected && styles.selected, style]}>
-    <BlurView pointerEvents="none" intensity={20} tint="dark" experimentalBlurMethod={Platform.OS === 'android' ? 'none' : undefined} style={[StyleSheet.absoluteFill,{borderRadius:corner,overflow:'hidden'}]} />
+    {/* Safari composites backdrop blur across neighbouring scrolling tiles.
+        Web keeps the translucent gradients; native retains its own blur layer. */}
+    {Platform.OS !== 'web' && <BlurView pointerEvents="none" intensity={20} tint="dark" experimentalBlurMethod={Platform.OS === 'android' ? 'none' : undefined} style={[StyleSheet.absoluteFill,{borderRadius:corner,overflow:'hidden'}]} />}
     <LinearGradient pointerEvents="none" colors={selected ? material.glassSelected : material.glass} start={{x:0,y:0}} end={{x:1,y:1}} style={[StyleSheet.absoluteFill,{borderRadius:corner}]} />
     <LinearGradient pointerEvents="none" colors={['rgba(255,255,255,0.18)','rgba(255,255,255,0)']} style={styles.rim} />
     {children}

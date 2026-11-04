@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Pressable, Linking, Easing, Dimensions, AppState, Alert, Platform } from 'react-native';
 import Text, { FontReadyContext } from './components/AppText';
 import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -418,6 +419,20 @@ export default function App() {
   const [fontsLoaded, fontError] = useFonts(fontAssets);
   const [isReady, setIsReady] = useState(false);
   const [launchDone, setLaunchDone] = useState(false);
+  useEffect(() => {
+    if (Platform.OS !== 'android') return undefined;
+    // Hide the OS navigation strip throughout the black intro, then restore it.
+    let active = true;
+    const syncBars = async () => {
+      try {
+        await NavigationBar.setVisibilityAsync(launchDone ? 'visible' : 'hidden');
+        if (active) await NavigationBar.setButtonStyleAsync(launchDone ? 'dark' : 'light');
+      } catch (_) {}
+    };
+    void syncBars();
+    const sub = AppState.addEventListener('change', state => { if (state === 'active') void syncBars(); });
+    return () => { active = false; sub.remove(); };
+  }, [launchDone]);
   const [navigationVersion, setNavigationVersion] = useState(0);
   const navigationRef = useRef(null);
   const [pendingProductId, setPendingProductId] = useState(null);
@@ -1036,7 +1051,7 @@ export default function App() {
   const appReady = isReady && (fontsLoaded || !!fontError);
   return (
     <FontReadyContext.Provider value={fontsLoaded}>
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{flex:1,backgroundColor:launchDone?colors.background:colors.launchBackground}}>
       <StatusBar style={launchDone ? 'dark' : 'light'} />
       {appReady ? <View style={{ flex: 1 }} accessibilityElementsHidden={!launchDone} importantForAccessibility={launchDone ? 'auto' : 'no-hide-descendants'}>
       <NavigationContainer ref={navigationRef} onReady={() => setNavigationVersion(value => value + 1)} onStateChange={() => setNavigationVersion(value => value + 1)} documentTitle={{ formatter: () => 'SBL' }}>

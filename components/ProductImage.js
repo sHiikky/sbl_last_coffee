@@ -114,7 +114,9 @@ export default function ProductImage({
           <Image
             key={sourceKey}
             source={source}
-            style={[StyleSheet.absoluteFill, zoom !== 1 && { transform: [{ scale: zoom }] }]}
+            style={[StyleSheet.absoluteFill,
+              layout.width > 0 && layout.height > 0 && { width: layout.width, height: layout.height },
+              zoom !== 1 && { transform: [{ scale: zoom }] }]}
             contentFit={contentFit}
             contentPosition={contentPosition}
             transition={200}

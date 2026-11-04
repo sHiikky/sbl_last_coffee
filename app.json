@@ -1,13 +1,41 @@
 {
   "expo": {
     "name": "SBL",
-    "slug": "snack-2351ccc7-33bf-4c3b-9ec4-ae33a576ff1a",
+    "slug": "sbl-coffee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "plugins": ["expo-notifications", ["expo-location", {"locationWhenInUsePermission":"Разрешите SBL показать ваше местоположение на карте кофейни.","isIosBackgroundLocationEnabled":false,"isAndroidBackgroundLocationEnabled":false,"isAndroidForegroundServiceEnabled":false}], ["expo-splash-screen", {"backgroundColor":"#050505","image":"./assets/brand/splash-full.png","imageWidth":250,"resizeMode":"contain"}]],
+    "plugins": [
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Разрешите SBL показать ваше местоположение на карте кофейни.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#050505",
+          "image": "./assets/brand/splash-full.png",
+          "imageWidth": 250,
+          "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "visibility": "hidden",
+          "barStyle": "light",
+          "backgroundColor": "#050505"
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/brand/splash-full.png",
       "resizeMode": "contain",
@@ -23,17 +51,30 @@
         "foregroundImage": "./assets/brand/app-icon.png",
         "backgroundColor": "#eceae5"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/brand/app-icon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "bff41dba-7718-423d-8898-1003aae445db"
+        "projectId": "00f1af5f-48f9-418b-aa4f-233eead9fd9a"
       }
     },
-    "owner": "shikky",
-    "scheme": "sbl"
+    "owner": "shikkyy",
+    "scheme": "sbl",
+    "androidNavigationBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#050505"
+    },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#050505"
+    }
   }
 }

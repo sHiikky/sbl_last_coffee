@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, ScrollView, Pressable, Platform, Share, StyleSheet, Animated, Easing, useWindowDimensions, KeyboardAvoidingView, PanResponder, BackHandler } from 'react-native';
+import { View, ScrollView, Pressable, Platform, Share, StyleSheet, Animated, Easing, useWindowDimensions, KeyboardAvoidingView, Keyboard, PanResponder, BackHandler } from 'react-native';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,7 +15,7 @@ import HolographicSurface from '../components/HolographicSurface';
 import { colors, spacing, radius, typography, getHorizontalPadding } from '../theme/tokens';
 import { productSheet as material } from '../theme/productSheet';
 import { formatPrice, cartKey } from '../data/products';
-import { canonicalModifiers, additionsTotal, formatAdditions } from '../lib/cartOptions';
+import { canonicalModifiers, additionsTotal, formatAdditions, isModifierAllowed } from '../lib/cartOptions';
 import { getPhotoComposition } from '../lib/photoComposition';
 import { getProductVisual } from '../lib/productVisuals';
 import { productVariants, productSheetHeight, availableProductQuantity, changeAdditionCount } from '../lib/productSheetModel';
@@ -34,14 +34,15 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
   const hPad=getHorizontalPadding(width),sheetHeight=productSheetHeight(height,insets.top);
   const {reduceMotion,ready:motionReady}=useMotionPreference();
   const [additionCounts,setAdditionCounts]=useState({}),[requestedQuantity,setRequestedQuantity]=useState(1);
-  const [selectedGroup,setSelectedGroup]=useState(null),[commentOpen,setCommentOpen]=useState(false),[detailsOpen,setDetailsOpen]=useState(false);
-  const detailsAnim=useRef(new Animated.Value(0)).current,[nutritionShown,setNutritionShown]=useState(false);
+  const [selectedGroup,setSelectedGroup]=useState(null),[commentOpen,setCommentOpen]=useState(false);
+  const scrollRef=useRef(null),noteFocused=useRef(false);
+  const [keyboardOpen,setKeyboardOpen]=useState(false);
   const [preparationNote,setPreparationNote]=useState(''),[notice,setNotice]=useState(''),[added,setAdded]=useState(false);
-  const additions=useMemo(()=>presentAdditions(product,modifiers),[product,modifiers]);
+  const additions=useMemo(()=>presentAdditions(product,modifiers).filter(m=>isModifierAllowed(product,m.id)),[product,modifiers]);
   const groups=useMemo(()=>groupModifiers(additions),[additions]);
   const activeGroup=groups.find(g=>g.id===selectedGroup)||groups[0];
   const selectedModifiers=canonicalModifiers(additions.filter(m=>additionCounts[m.id]>0).map(m=>({id:m.id,name:m.displayName||m.name,quantity:additionCounts[m.id],unitPrice:m.price})));
-  const unavailableAdditions=Object.keys(additionCounts).filter(id=>additionCounts[id]>0&&!modifiers.some(m=>m.id===id&&m.isAvailable!==false));
+  const unavailableAdditions=Object.keys(additionCounts).filter(id=>additionCounts[id]>0&&(!isModifierAllowed(product,id)||!modifiers.some(m=>m.id===id&&m.isAvailable!==false)));
   const selectedKey=cartKey(product.id,selectedModifiers,preparationNote),inCart=cart[selectedKey]?.qty||0;
   const capacity=availableProductQuantity(inCart),quantity=Math.min(requestedQuantity,Math.max(1,capacity));
   const extras=additionsTotal(selectedModifiers),unitPrice=Math.round((product.price+extras)*100)/100,total=Math.round(unitPrice*quantity*100)/100;
@@ -91,6 +92,12 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     document.addEventListener('keydown',onKey);
     return()=>{cancelAnimationFrame(frameId);document.removeEventListener('keydown',onKey);if(previous?.isConnected)previous.focus?.();};
   },[]);
+  useEffect(()=>{
+    if(Platform.OS==='web')return undefined;
+    const show=Keyboard.addListener('keyboardDidShow',()=>{setKeyboardOpen(true);if(noteFocused.current)scrollRef.current?.scrollToEnd({animated:true});});
+    const hide=Keyboard.addListener('keyboardDidHide',()=>setKeyboardOpen(false));
+    return()=>{show.remove();hide.remove();};
+  },[]);
   const pan=useMemo(()=>PanResponder.create({
     onMoveShouldSetPanResponder:(_,g)=>!closing.current&&g.dy>6&&Math.abs(g.dy)>Math.abs(g.dx),
     onPanResponderMove:(_,g)=>{if(!closing.current)translate.setValue(Math.max(0,g.dy));},
@@ -123,12 +130,6 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     }catch(_){submitted.current=false;setNotice('Не удалось добавить позицию. Проверьте состав и пожелание.');}
   };
   // Альтернативное молоко (кокосовое / миндальное / безлактозное): в напитке только одно.
-  // КБЖУ выплывает снизу с проявлением; при закрытии уходит и только потом убирается из вёрстки.
-  const toggleDetails=()=>{
-    const next=!detailsOpen;setDetailsOpen(next);
-    if(next){setNutritionShown(true);Animated.timing(detailsAnim,{toValue:1,duration:reduceMotion?0:320,easing:Easing.out(Easing.cubic),useNativeDriver:true}).start();}
-    else Animated.timing(detailsAnim,{toValue:0,duration:reduceMotion?0:180,easing:Easing.in(Easing.cubic),useNativeDriver:true}).start(({finished})=>{if(finished)setNutritionShown(false);});
-  };
   const adjust=(id,delta)=>setAdditionCounts(previous=>{
     if(delta>0&&additions.find(m=>m.id===id)?.altMilk){const next={...previous};additions.forEach(m=>{if(m.altMilk)next[m.id]=0;});next[id]=1;return next;}
     return changeAdditionCount(previous,id,delta);
@@ -142,22 +143,24 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     <StatusBar style="light" />
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill,{backgroundColor:material.scrim,opacity:translate.interpolate({inputRange:[0,Math.max(1,sheetHeight)],outputRange:[1,0],extrapolate:'clamp'})}]} />
     <Pressable style={StyleSheet.absoluteFill} onPress={()=>close()} accessibilityLabel="Закрыть карточку" accessibilityRole="button" {...(Platform.OS==='web'?{tabIndex:-1}:{accessible:false})} />
-    <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS==='ios'?'padding':undefined} style={styles.keyboard}>
+    <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS==='ios'?'padding':Platform.OS==='android'?'height':undefined} style={styles.keyboard}>
       <Animated.View ref={sheetRef} accessibilityViewIsModal {...(Platform.OS==='web'?{role:'dialog','aria-modal':true,'aria-labelledby':titleId}:{})} style={[styles.sheet,{height:sheetHeight,transform:[{translateY:translate}]}]}>
         <ProductAtmosphere visual={visual} source={product.image} />
         <View style={styles.header}>
           <Pressable {...pan.panHandlers} onPress={()=>close()} style={styles.handle} accessibilityRole="button" accessibilityLabel="Свернуть карточку"><View style={styles.handleLine}/></Pressable>
           <View style={styles.headerActions}><Pressable onPress={handleShare} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Поделиться"><Ionicons name="share-outline" size={19} color={material.text}/></Pressable><Pressable ref={closeButton} onPress={()=>close()} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Закрыть карточку товара"><Ionicons name="close" size={21} color={material.text}/></Pressable></View>
         </View>
-        <ScrollView style={styles.scroll} contentContainerStyle={{paddingHorizontal:hPad,paddingBottom:spacing.lg}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        <ScrollView ref={scrollRef} onContentSizeChange={()=>{if(noteFocused.current)scrollRef.current?.scrollToEnd({animated:true});}} style={styles.scroll} contentContainerStyle={{paddingHorizontal:hPad,paddingBottom:spacing.lg}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <View style={styles.hero}>
             <Text style={styles.kicker}>{['SBL',product.menuSubcategory,product.sizeLabel].filter(Boolean).join(' · ')}</Text>
             <View style={styles.photo}><ProductSheetPhoto product={product} visual={visual} frame={frame} height={photoHeight}/></View>
             <Pressable onPress={()=>onToggleFavorite?.(product.id)} style={styles.favorite} accessibilityRole="button" accessibilityLabel={favorite?'Убрать из избранного':'Добавить в избранное'} accessibilityState={{selected:favorite}}><Ionicons name={favorite?'heart':'heart-outline'} size={21} color={material.text}/></Pressable>
             <Text nativeID={titleId} accessibilityRole="header" style={styles.name}>{name}</Text>
-            {!!product.description&&<Text numberOfLines={detailsOpen?undefined:3} style={styles.description}>{product.description}</Text>}
-            {(!!product.nutrition||product.description?.length>100)&&<Pressable onPress={toggleDetails} accessibilityRole="button" accessibilityLabel="Подробнее о позиции" accessibilityState={{expanded:detailsOpen}} style={styles.detailsButton}><Text style={styles.detailsText}>{detailsOpen?'Свернуть':'Подробнее'}</Text><Ionicons name={detailsOpen?'chevron-up':'chevron-down'} size={14} color={material.secondary}/></Pressable>}
-            {nutritionShown&&!!product.nutrition&&<Animated.View style={[styles.nutrition,{opacity:detailsAnim,transform:[{translateY:detailsAnim.interpolate({inputRange:[0,1],outputRange:[18,0]})}]}]}>{[['Ккал','calories'],['Белки','protein'],['Жиры','fat'],['Углеводы','carbs']].map(([label,key])=>product.nutrition[key]!=null&&<View key={key}><Text style={styles.nutritionValue}>{product.nutrition[key]}{key==='calories'?'':' г'}</Text><Text style={styles.small}>{label}</Text></View>)}</Animated.View>}
+            {!!product.description&&<Text style={styles.description}>{product.description}</Text>}
+            {!!product.ingredients&&<Text style={styles.description}>Состав: {product.ingredients}</Text>}
+            {!!product.allergens&&<Text style={styles.description}>Аллергены: {product.allergens}</Text>}
+            {!!product.nutrition&&product.nutritionBasis!=='unknown'&&<Text style={styles.small}>{({portion:'На порцию','100g':'На 100 г','100ml':'На 100 мл'})[product.nutritionBasis]}</Text>}
+            {!!product.nutrition&&<View style={styles.nutrition}>{[['Ккал','calories'],['Белки','protein'],['Жиры','fat'],['Углеводы','carbs']].map(([label,key])=>product.nutrition[key]!=null&&<View key={key}><Text style={styles.nutritionValue}>{product.nutrition[key]}{key==='calories'?'':' г'}</Text><Text style={styles.small}>{label}</Text></View>)}</View>}
           </View>
           {!!notice&&<Text accessibilityLiveRegion="polite" style={styles.notice}>{notice}</Text>}
           {!isAvailable&&<Text style={styles.notice}>Эта позиция сейчас недоступна.</Text>}
@@ -176,17 +179,17 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
             </ScrollView>
             <Text style={styles.additionsSummary} accessibilityLiveRegion="polite">{selectedModifiers.length?`${formatAdditions(selectedModifiers)} · +${formatPrice(extras)} на порцию`:'Без дополнительных добавок'}</Text>
           </View>}
-          <View style={styles.comment}><Pressable onPress={()=>setCommentOpen(v=>!v)} accessibilityRole="button" accessibilityLabel="Пожелание бариста" accessibilityState={{expanded:commentOpen}} style={styles.commentToggle}><Text style={styles.lightText}>Пожелание бариста</Text><Ionicons name={commentOpen?'remove':'add'} size={20} color={material.secondary}/></Pressable>{commentOpen&&<><ProductGlass><TextInput accessibilityLabel="Пожелание к позиции" placeholder="Например, вкус выбранного сиропа" placeholderTextColor={material.faint} value={preparationNote} onChangeText={text=>setPreparationNote(text.replace(/\r\n?/g,'\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g,''))} maxLength={200} multiline style={styles.note}/></ProductGlass><Text style={styles.commentHint}>Пожелание не меняет цену. Платные добавки выбирайте выше.</Text></>}</View>
+          <View style={styles.comment}><Pressable onPress={()=>setCommentOpen(v=>!v)} accessibilityRole="button" accessibilityLabel="Пожелание бариста" accessibilityState={{expanded:commentOpen}} style={styles.commentToggle}><Text style={styles.lightText}>Пожелание бариста</Text><Ionicons name={commentOpen?'remove':'add'} size={20} color={material.secondary}/></Pressable>{commentOpen&&<><ProductGlass>{keyboardOpen&&<Pressable accessibilityRole="button" accessibilityLabel="Закончить ввод пожелания" onPress={()=>Keyboard.dismiss()} style={styles.noteDone}><Text style={styles.lightText}>Готово</Text></Pressable>}<TextInput onFocus={()=>{noteFocused.current=true;scrollRef.current?.scrollToEnd({animated:true});}} onBlur={()=>{noteFocused.current=false;}} accessibilityLabel="Пожелание к позиции" placeholder="Например, вкус выбранного сиропа" placeholderTextColor={material.faint} value={preparationNote} onChangeText={text=>setPreparationNote(text.replace(/\r\n?/g,'\n').replace(/[\u0000-\u0009\u000b-\u001f\u007f-\u009f]/g,''))} maxLength={200} multiline style={styles.note}/></ProductGlass><Text style={styles.commentHint}>Пожелание не меняет цену. Платные добавки выбирайте выше.</Text></>}</View>
           {inCart>0&&<Pressable accessibilityRole="button" onPress={()=>{navigation.goBack();navigation.navigate('Tabs',{screen:'CartTab'});}} style={styles.textAction}><Text style={styles.small}>С таким составом в корзине: {inCart} · Открыть корзину</Text></Pressable>}
         </ScrollView>
-        <ProductGlass style={[styles.footer,{paddingBottom:Math.max(insets.bottom,spacing.md),backgroundColor:visual.footer}]}>
+        {!keyboardOpen&&<ProductGlass style={[styles.footer,{paddingBottom:Math.max(insets.bottom,spacing.md),backgroundColor:visual.footer}]}>
           <View style={styles.actionRow}><ProductGlass style={styles.quantity}>
             <Pressable disabled={quantity<=1||added} onPress={()=>setRequestedQuantity(v=>Math.max(1,v-1))} style={[styles.countButton,quantity<=1&&styles.dimmed]} accessibilityRole="button" accessibilityLabel="Уменьшить количество напитков"><Ionicons name="remove" size={20} color={material.text}/></Pressable><Text style={styles.quantityValue}>{quantity}</Text><Pressable disabled={quantity>=capacity||added} onPress={()=>setRequestedQuantity(v=>Math.min(capacity,v+1))} style={[styles.countButton,quantity>=capacity&&styles.dimmed]} accessibilityRole="button" accessibilityLabel="Увеличить количество напитков"><Ionicons name="add" size={20} color={material.text}/></Pressable>
           </ProductGlass><Pressable onPress={handleAdd} disabled={disabled} accessibilityRole="button" accessibilityLabel={disabled?(added?'Добавлено':capacity===0?'В корзине уже 99':'Позиция недоступна'):`Добавить в корзину ${quantity} шт. за ${formatPrice(total)}`} accessibilityState={{disabled}} style={[styles.addButton,disabled&&!added&&styles.dimmed]}>
             <View pointerEvents="none" style={StyleSheet.absoluteFill}><HolographicSurface animated variant="line" intensity={1.35} borderRadius={radius.pill} style={StyleSheet.absoluteFill}/></View>
             <Text style={styles.addButtonText} numberOfLines={1}>{added?'Добавлено':!isAvailable||unavailableAdditions.length?'Недоступно':capacity===0?'В корзине 99':`Добавить · ${formatPrice(total)}`}</Text>
           </Pressable></View>
-        </ProductGlass>
+        </ProductGlass>}
       </Animated.View>
     </KeyboardAvoidingView>
   </View>;
@@ -208,6 +211,7 @@ const styles=StyleSheet.create({
   groupTabs:{gap:spacing.sm,paddingBottom:spacing.md},groupTab:{minHeight:44,paddingHorizontal:spacing.md,alignItems:'center',justifyContent:'center',borderRadius:radius.pill,borderWidth:1,borderColor:material.border},groupTabActive:{backgroundColor:'rgba(255,255,255,0.14)',borderColor:material.selectedBorder},groupTabText:{fontSize:12,color:material.text},
   tiles:{gap:spacing.md,paddingBottom:spacing.sm},tile:{padding:spacing.md,minHeight:182},ingredient:{width:34,height:34,borderRadius:17,alignItems:'center',justifyContent:'center',marginBottom:spacing.sm},additionName:{fontSize:14,fontWeight:'600',lineHeight:19,color:material.text,minHeight:38},additionPrice:{fontSize:12,lineHeight:18,color:material.secondary,marginTop:spacing.xs},
   tileControls:{marginTop:spacing.sm,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},countButton:{width:44,height:44,alignItems:'center',justifyContent:'center'},countValue:{fontSize:15,fontWeight:'600',color:material.text},additionsSummary:{fontSize:12,lineHeight:19,color:material.faint,marginTop:spacing.xs},
+  noteDone:{minHeight:44,paddingHorizontal:spacing.md,alignItems:'flex-end',justifyContent:'center'},
   comment:{borderTopWidth:1,borderTopColor:material.border},commentToggle:{minHeight:52,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},note:{minHeight:72,padding:spacing.md,color:material.text,fontSize:14,lineHeight:21,textAlignVertical:'top'},commentHint:{fontSize:12,lineHeight:18,color:material.faint,marginTop:spacing.sm},textAction:{minHeight:44,justifyContent:'center'},
   footer:{borderRadius:0,borderWidth:0,borderTopWidth:1,paddingTop:spacing.md,paddingHorizontal:spacing.lg},actionRow:{flexDirection:'row',gap:spacing.sm,alignItems:'center'},quantity:{flexDirection:'row',alignItems:'center',borderRadius:radius.pill,height:54},quantityValue:{fontSize:15,fontWeight:'600',minWidth:18,textAlign:'center',color:material.text},
   addButton:{height:54,flex:1,minWidth:0,borderRadius:radius.pill,overflow:'hidden',alignItems:'center',justifyContent:'center',paddingHorizontal:spacing.md},addButtonText:{...typography.cardTitle,fontSize:15,fontWeight:'700',color:material.ink,textAlign:'center'},dimmed:{opacity:.4},

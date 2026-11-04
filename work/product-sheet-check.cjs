@@ -20,14 +20,14 @@ const large={...base,id:'large',sizeLabel:'400 мл',price:340};
 const syrup={id:'syrup',name:'Сироп',displayName:'Сироп',price:30,isAvailable:true};
 const milk={id:'milk',name:'Молоко',price:25,isAvailable:true};
 function makeScreen(extra={}){
-  let slots=[],cursor=0;const calls=[],backs=[],animations=[],effects=[];
+  let slots=[],cursor=0;const calls=[],backs=[],animations=[],effects=[],keyboardListeners={}; let keyboardDismissed=0;
   const React={createElement:(type,props,...children)=>({type,props:{...props,children}}),Fragment:'Fragment',
     useState(initial){const i=cursor++;if(!(i in slots))slots[i]=typeof initial==='function'?initial():initial;return [slots[i],v=>{slots[i]=typeof v==='function'?v(slots[i]):v;}];},
     useRef(initial){const i=cursor++;if(!(i in slots))slots[i]={current:initial};return slots[i];},
     useMemo(fn){cursor++;return fn();},useCallback(fn){cursor++;return fn;},useEffect(fn){cursor++;effects.push(fn);}};
   class Value{constructor(n){this.n=n;}setValue(n){this.n=n;}interpolate(){return 0;}stopAnimation(){}}
   const Animated={Value,View:'AnimatedView',timing:(_value,config)=>({start:callback=>animations.push({config,callback}),stop(){}}),spring:()=>({start(){}})};
-  const native={Platform:{OS:'ios'},View:'View',Text:'Text',TextInput:'TextInput',ScrollView:'ScrollView',Pressable:'Pressable',KeyboardAvoidingView:'KeyboardAvoidingView',Share:{share:async()=>{}},
+  const native={Platform:{OS:extra.platform||'ios'},Keyboard:{addListener:(name,callback)=>{keyboardListeners[name]=callback;return{remove:()=>delete keyboardListeners[name]};},dismiss:()=>{keyboardDismissed++;}},View:'View',Text:'Text',TextInput:'TextInput',ScrollView:'ScrollView',Pressable:'Pressable',KeyboardAvoidingView:'KeyboardAvoidingView',Share:{share:async()=>{}},
     StyleSheet:{create:x=>x,absoluteFill:{}},Animated,Easing:{in:x=>x,out:x=>x,cubic:1},useWindowDimensions:()=>({width:390,height:844}),PanResponder:{create:config=>({panHandlers:config})},BackHandler:{addEventListener:()=>({remove(){}})}};
   const mocks={react:React,'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:44,bottom:34})},'@react-navigation/native':{useFocusEffect(){}},'expo-status-bar':{StatusBar:'StatusBar'},'expo-haptics':{impactAsync:async()=>{},selectionAsync:async()=>{},ImpactFeedbackStyle:{Light:'light'}},'@expo/vector-icons':{Ionicons:'Icon'},'expo-linear-gradient':{LinearGradient:'Gradient'},
     '../theme/tokens':tokens,'../theme/productSheet':material,'../data/products':{cartKey:cartDomain.optionCartKey,formatPrice:n=>`${n} ₽`},'../lib/cartOptions':cartDomain,'../lib/photoComposition':{getPhotoComposition:()=>({fit:'contain',zoom:.9,offsetX:0,offsetY:0})},'../lib/productVisuals':visualModule,'../lib/productSheetModel':model,'../lib/productLinks':{shareProduct:async()=>({copied:true})},'../hooks/useMotionPreference':()=>extra.motionPreference||({reduceMotion:true,ready:true}),'../lib/modifierGroups':load('lib/modifierGroups.js'),'../lib/additionsPresentation':load('lib/additionsPresentation.js')};
@@ -35,7 +35,7 @@ function makeScreen(extra={}){
   const mod={exports:{}};vm.runInNewContext(code,{module:mod,exports:mod.exports,console,require:n=>{if(n in mocks)return mocks[n];if(n.startsWith('../components/'))return n;throw Error(n);}});
   const props={route:{params:{product:base}},navigation:{goBack:()=>backs.push('back'),navigate(){}},products:[base,large],modifiers:[syrup,milk],onAddToCart:(...args)=>{calls.push(args);return true;},...extra};
   const render=()=>{cursor=0;effects.length=0;return mod.exports.default(props);};
-  return{props,render,calls,backs,animations,effects};
+  return{props,render,calls,backs,animations,effects,keyboardListeners,get keyboardDismissed(){return keyboardDismissed;}};
 }
 function all(node,predicate){if(!node||typeof node!=='object')return[];return [...(predicate(node)?[node]:[]),...(node.props?.children||[]).flat(Infinity).flatMap(n=>all(n,predicate))];}
 const label=(tree,text)=>all(tree,n=>n.props?.accessibilityLabel===text)[0];
@@ -68,3 +68,21 @@ appAdd(base,[{...syrup,quantity:2}],'Ваниль',2);assert.equal(Object.values
 assert.equal(appAdd(base,[{id:'missing',quantity:1}],'',1),false);
 const toast={...base,id:'toast',menuCategory:'Еда'};assert.equal(makeAppAdd({id:'user'},[toast])(toast,[{...syrup,quantity:1}],'',1),false,'no syrup/milk additions on food');
 console.log('PASS: actual product sheet quantities, modifiers, note preservation, double-tap guard, SKU/price refresh, stop-list, capacity, Reduced Motion, rejected add; actual App batch cart merge and current modifier prices');
+
+const android=makeScreen({platform:'android',products:[{...base,nutrition:{calories:0,protein:2,fat:3,carbs:4},nutritionBasis:'portion'}]});
+let androidTree=android.render();
+assert.equal(all(androidTree,n=>n.type==='KeyboardAvoidingView')[0].props.behavior,'height');
+assert.equal(label(androidTree,'Подробнее о позиции'),undefined);
+assert.ok(all(androidTree,n=>n.props?.children?.includes('Ккал')).length,'Nutrition is visible before any tap, including zero calories');
+label(androidTree,'Пожелание бариста').props.onPress();androidTree=android.render();
+const scroll=all(androidTree,n=>n.type==='ScrollView'&&n.props.ref)[0];let scrolls=0;scroll.props.ref.current={scrollToEnd:()=>scrolls++};
+label(androidTree,'Пожелание к позиции').props.onFocus();assert.equal(scrolls,1);
+const keyboardCleanup=android.effects[4]();android.keyboardListeners.keyboardDidShow();androidTree=android.render();
+assert.equal(add(androidTree),undefined,'Keyboard editing frees space occupied by checkout dock');
+assert.ok(scrolls>=2,'After keyboard layout the note is brought back into view');
+label(androidTree,'Пожелание к позиции').props.onChangeText('Без сахара');
+label(androidTree,'Закончить ввод пожелания').props.onPress();assert.equal(android.keyboardDismissed,1);
+android.keyboardListeners.keyboardDidHide();androidTree=android.render();
+assert.ok(add(androidTree),'Dock returns when the keyboard closes');assert.equal(label(androidTree,'Пожелание к позиции').props.value,'Без сахара');
+keyboardCleanup();assert.equal(Object.keys(android.keyboardListeners).length,0);
+console.log('PASS: Android keyboard scrolling, Done, dock restoration, note preservation and always-visible nutrition');

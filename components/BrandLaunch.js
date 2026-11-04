@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, AppState, Easing, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Animated, AppState, Easing, Platform, StyleSheet, View, Vibration, useWindowDimensions } from 'react-native';
 import Text from './AppText';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -53,7 +53,10 @@ export default function BrandLaunch({ ready, onDone }) {
       pulse = setTimeout(() => {
         if (mounted && running && !pulsed.current && AppState.currentState === 'active') {
           pulsed.current = true;
-          try { void Promise.resolve(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)).catch(() => {}); } catch (_) {}
+          try {
+            if (Platform.OS === 'android') Vibration.vibrate(180);
+            else void Promise.resolve(Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)).catch(() => {});
+          } catch (_) {}
         }
       }, READ_TIME + SWEEP_TIME / 2);
     }
@@ -68,12 +71,13 @@ export default function BrandLaunch({ ready, onDone }) {
       if (state === 'active' || !running) return;
       running = false;
       clearTimeout(pulse);
+      if (Platform.OS === 'android') Vibration.cancel();
       animation.stop();
       sweep.setValue(1);
       // Resume to the app, never restart the intro after returning to foreground.
       if (mounted) setFinished(true);
     });
-    return () => { mounted = false; running = false; clearTimeout(pulse); subscription?.remove?.(); animation.stop(); };
+    return () => { mounted = false; running = false; clearTimeout(pulse); if (Platform.OS === 'android') Vibration.cancel(); subscription?.remove?.(); animation.stop(); };
   }, [preferenceReady, reduceMotion, sweep]);
 
   useEffect(() => {

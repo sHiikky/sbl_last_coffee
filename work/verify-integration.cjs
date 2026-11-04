@@ -19,6 +19,7 @@ const checks = [
   'work/menu-photo-visibility-check.cjs',
   'work/product-sheet-check.cjs',
   'work/typography-onest/check.cjs',
+  'work/catalog-admin/client-check.cjs',
 ];
 for (const file of checks) {
   const result = spawnSync(process.execPath, [file], { cwd: root, stdio: 'inherit' });

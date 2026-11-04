@@ -68,7 +68,7 @@ import { resolveSubcategoryFilter } from '../lib/menuVisibility';
 // последней секции (footerSpacerHeight), не для реальной раскладки.
 const MAIN_HEADER_GAP = spacing.md;
 const EST_MAIN_HEADER_H = MAIN_HEADER_GAP;
-const EST_SUBCHIPS_H = 46;
+const EST_SUBCHIPS_H = 48;
 const EST_SUBHEADER_H = 34;
 const EST_EMPTY_ROW_H = 60;
 
@@ -81,7 +81,7 @@ const SubcategoryChips = React.memo(function SubcategoryChips({ subcats, activeS
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ paddingHorizontal: hPad, alignItems: 'center', gap: spacing.xs }}
+      contentContainerStyle={{ paddingHorizontal: hPad, paddingVertical: spacing.sm, alignItems: 'center', gap: spacing.xs }}
       style={styles.subchipRow}
     >
       <Chip small variant="main" label="Все" active={activeSub === 'all'} onPress={() => onSelect('all')} />
@@ -517,6 +517,8 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
         onMomentumScrollEnd={onMomentumScrollEnd}
         onLayout={onFlatListLayout}
         scrollEventThrottle={16}
+        decelerationRate={0.98}
+        overScrollMode="never"
         contentContainerStyle={contentContainerStyle}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"

@@ -11,7 +11,7 @@ const RULES = [
   { icon: 'cafe-outline', text: 'Выданный заказ = отметка за день. Несколько заказов в день дают одну отметку' },
   { icon: 'flame-outline', text: 'Не пропускай дни, чтобы сохранить серию' },
   { icon: 'gift-outline', text: `Каждые ${LOYALTY_CONFIG.cycleLength} дней подряд — десерт в подарок. Серия продолжается без ограничения` },
-  { icon: 'time-outline', text: 'День считается по времени Томска. Подарок действует 30 суток' },
+  { icon: 'time-outline', text: 'Подарок действует 30 суток' },
 ];
 
 export default function LoyaltyRulesCard() {

@@ -1,5 +1,5 @@
 // Canonical finish: copied from the Home line, shared by every brand surface.
-export const HOLOGRAPHIC_DURATION = 18000;
+export const HOLOGRAPHIC_DURATION = 12000;
 export const HOLOGRAPHIC_BASE = ['#FFFFFF', '#F4F7FF', '#E2E8F5', '#F8FBFF', '#FFFFFF'];
 export const HOLOGRAPHIC_SPECTRUM = [
   'rgba(255,255,255,0)', 'rgba(58,110,255,0.85)',

@@ -1,0 +1,111 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+work/integration-backups/
+work/production-backups/
+work/cashier-local.html
+work/merged-web-preview/
+
+# Expo
+.expo/
+dist/
+dist-integration/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# не относится к приложению / локальное
+.env.*
+!.env.example
+ngrok3/
+cranky-yellow-cheese/
+output/
+tmp/
+scripts/
+.agents/
+меню сблеском/
+
+# Local package cache and generated colour-analysis samples
+work/.npm-cache/
+work/font-tooling/
+work/product-concepts/palette-pixels.json
+
+# Downloaded third-party webpage mirrors and local build logs
+work/product-concepts/style-lab/font-research/
+work/product-sheet-*.log
+work/.release-local/
+
+# Local design history and downloaded audit material; kept on the owner's PC
+/Claude outputs/
+/work/product-concepts/
+/work/launch-concepts/
+/work/photo-audit/
+/work/special-menu-photos/
+/work/design-review/
+/work/brand-refresh/
+/work/product-sheet/
+/work/ux-20261029/
+/work/photo-editor/qa/
+/work/pickup-checkout/preview/
+/work/pickup-checkout/combined-results.txt
+/work/pickup-checkout/concurrency-results.json
+/work/DATABASE_VERIFICATION.txt
+/work/FRONTEND_INTEGRATION.txt
+/work/GITHUB_RELEASE_20261030.txt
+/work/SBIS_INTEGRATION_STATUS.txt
+/work/sbis-catalog-67-audit.json
+/work/sanitize-legacy-sbis.cjs
+/work/typography-onest/RESULT.txt
+/work/typography-onest/adopt-text.cjs
+/work/**/*.png
+/work/**/*.jpg
+/work/**/*.jpeg
+/work/.photo-cache/
+/work/photo-tools/palette-pixels.json
+
+# Superseded app artwork (current resources live in assets/brand)
+/assets/adaptive-icon.png
+/assets/favicon.png
+/assets/icon.png
+/assets/logo-launch.png
+/assets/logo-mark.png
+/assets/splash-icon-dark.png
+
+# APK contains only the customer application
+/work/
+/supabase/
+/kassa-terminal/
+/CLAUDE.md
+/start-tunnel.ps1
