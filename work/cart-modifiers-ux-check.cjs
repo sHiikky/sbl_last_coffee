@@ -43,6 +43,7 @@ const mocks = {
   '../theme/tokens': { colors: {}, spacing: { xs: 4, sm: 8, md: 12, lg: 16 }, radius: {}, shadow: {}, getHorizontalPadding: () => 16 },
   '../data/products': { PICKUP_TIMES: ['Через 3–5 минут'], PICKUP_POINTS: ['SBL · Ленина, 72'], formatPrice: value => value + ' ₽', cartKey: String },
   '../loyalty/loyaltyService': { getAvailableRewards: () => [], isRewardApplicable: () => false, getEligibleCartItemsForReward: () => [] },
+  '../lib/promoCodes': {quotePromo:async()=>({discount:10,code:'TEST'}),promoMessage:()=> 'Промокод недействителен'},
   '../lib/supabaseClient': { getUserOrThrow: async () => ({ id: 'guest' }) },
   '../lib/checkoutQuote': { money: value => Math.round(value * 100) / 100 },
   '../lib/orderService': {},

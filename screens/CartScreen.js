@@ -17,6 +17,7 @@ import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/
 import { PICKUP_TIMES, PICKUP_POINTS, formatPrice, cartKey } from '../data/products';
 import { getAvailableRewards, isRewardApplicable, getEligibleCartItemsForReward } from '../loyalty/loyaltyService';
 import { getUserOrThrow } from '../lib/supabaseClient';
+import { quotePromo, promoMessage } from '../lib/promoCodes';
 import { buildCheckoutQuote, money } from '../lib/checkoutQuote';
 import {
   createOrder,
@@ -78,6 +79,11 @@ export default function CartScreen({
 }) {
   const [promo, setPromo] = useState('');
   const [promoState, setPromoState] = useState(null);
+  const [promoQuote, setPromoQuote] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const promoRequest = useRef(0);
+  const promoSignatureRef = useRef('');
+  useEffect(() => () => { promoRequest.current++; }, []);
   const [ordering, setOrdering] = useState(false);
   const [pickupTime] = useState(PICKUP_TIMES[0]);
   const [customerName, setCustomerName] = useState('');
@@ -199,7 +205,11 @@ export default function CartScreen({
   const rewardEligibleItems = availableReward ? getEligibleCartItemsForReward(cart, availableReward) : [];
   const rewardApplied = rewardApplicable && appliedRewardId === availableReward?.id;
   const rewardDiscount = rewardApplied ? (rewardEligibleItems[0]?.baseUnitPrice ?? rewardEligibleItems[0]?.unitPrice ?? 0) : 0;
-  const discount = promoState === 'ok' ? money((subtotal - rewardDiscount) * 0.1) : 0;
+  const rewardKey = rewardApplied && rewardEligibleItems[0] ? cartKey(rewardEligibleItems[0].id, rewardEligibleItems[0].modifiers, rewardEligibleItems[0].preparationNote) : null;
+  const promoSignature = JSON.stringify([account?.id, promo.trim().toUpperCase(), items, rewardKey, rewardDiscount]);
+  promoSignatureRef.current = promoSignature;
+  const promoValid = promoState === 'ok' && promoQuote?.signature === promoSignature;
+  const discount = promoValid ? promoQuote.discount : 0;
 
   const serviceFee = subtotal > 0 ? 0 : 0;
   const total = Math.max(0, subtotal - discount - rewardDiscount + serviceFee);
@@ -216,10 +226,22 @@ export default function CartScreen({
   const bonusRate = getBonusLevel(bonusAccount.lifetimePaid).rate;
   const earnedBonuses = Math.floor(payTotal * bonusRate);
 
-  const applyPromo = () => {
-    const ok = promo.trim().toUpperCase() === 'SBL10';
-    Haptics.notificationAsync(ok ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Error);
-    setPromoState(ok ? 'ok' : 'err');
+  const applyPromo = async () => {
+    if (promoState === 'loading' || ordering) return;
+    const request = ++promoRequest.current, signature = promoSignature;
+    setPromoState('loading'); setPromoQuote(null); setPromoError('');
+    try {
+      await getUserOrThrow();
+      const result = await quotePromo(promo, items, rewardKey, rewardDiscount);
+      if (!mountedRef.current || request !== promoRequest.current || signature !== promoSignatureRef.current) return;
+      setPromoQuote({ ...result, signature }); setPromoState('ok');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } catch (error) {
+      if (!mountedRef.current || request !== promoRequest.current || signature !== promoSignatureRef.current) return;
+      setPromoError(promoMessage(error)); setPromoState('err');
+    } finally {
+      if (mountedRef.current && request === promoRequest.current && signature !== promoSignatureRef.current) setPromoState(null);
+    }
   };
 
   const toggleReward = () => {
@@ -246,7 +268,7 @@ export default function CartScreen({
     if (ownerChanged()) return;
     const contact = { ...validateContact({ name: customerName, phone: account?.phone || completePhoneInput(customerPhone) || '', comment: orderComment }), customer_id: customer.id };
     const fulfillment = { point_id: CAFE.pointId, pickup_at: null };
-    const promoCode = promoState === 'ok' ? promo.trim().toUpperCase() : null;
+    const promoCode = promoValid ? promoQuote.code : null;
     const rewardRequested = rewardApplied;
     const bonusRedeem = redeemBonuses ? maxBonusRedeemable : 0;
     const expectedQuote = buildCheckoutQuote(items, payTotal);
@@ -432,6 +454,11 @@ export default function CartScreen({
         onCheckoutAttemptUncertain?.(idempotencyKey);
       }
 
+      if (['PROMO_INVALID', 'PROMO_NOT_APPLICABLE'].includes(classification.code)) {
+        setPromoState('err'); setPromoQuote(null); setPromoError(promoMessage(error));
+        showMessage('Промокод не применён', promoMessage(error) + ' Заказ не создан.'); return;
+      }
+      if (classification.code === 'PRICE_CHANGED') { setPromoState(null); setPromoQuote(null); }
       if (['PRICE_CHANGED', 'PRODUCT_NOT_AVAILABLE', 'MODIFIER_NOT_AVAILABLE', 'MODIFIER_NOT_ALLOWED', 'REWARD_UNAVAILABLE', 'REWARD_ENTITLEMENT_REQUIRED', 'BONUS_BALANCE_CHANGED', 'BONUS_REDEEM_INVALID'].includes(classification.code)) {
         setAppliedRewardId(null);
         setRedeemBonuses(false);
@@ -674,19 +701,23 @@ export default function CartScreen({
               <Ionicons name="pricetag-outline" size={16} color={colors.textMuted} style={{ marginRight: spacing.sm }} />
               <TextInput
                 value={promo}
-                onChangeText={text => { setPromo(text); setPromoState(null); }}
-                placeholder="Промокод (SBL10)"
+                onChangeText={text => { promoRequest.current++; setPromo(text); setPromoState(null); setPromoQuote(null); setPromoError(''); }}
+                placeholder="Промокод"
+                autoCapitalize="characters"
+                autoCorrect={false}
+                maxLength={32}
                 placeholderTextColor={colors.textMuted}
                 style={{ flex: 1, fontSize: 13, color: colors.textPrimary }}
                 returnKeyType="done"
               />
-              <TouchableOpacity onPress={applyPromo} accessibilityRole="button" accessibilityLabel="Применить промокод">
-                <Text style={{ fontSize: 12, fontWeight: '700', color: promoState === 'ok' ? colors.success : colors.accent }}>
-                  {promoState === 'ok' ? '✓ −10%' : 'Применить'}
+              <TouchableOpacity onPress={applyPromo} disabled={promoState === 'loading' || ordering} accessibilityRole="button" accessibilityLabel="Применить промокод">
+                <Text style={{ fontSize: 12, fontWeight: '700', color: promoValid ? colors.success : colors.accent }}>
+                  {promoState === 'loading' ? 'Проверяем…' : promoValid ? '✓ −' + formatPrice(discount) : 'Применить'}
                 </Text>
               </TouchableOpacity>
             </View>
-            {promoState === 'err' && <Text style={{ fontSize: 11, color: colors.danger, marginTop: 6 }}>Промокод недействителен</Text>}
+            {promoState === 'ok' && !promoValid && <Text style={{fontSize:11,color:colors.textMuted,marginTop:6}}>Корзина изменилась. Примените промокод заново.</Text>}
+            {promoState === 'err' && <Text style={{ fontSize: 11, color: colors.danger, marginTop: 6 }}>{promoError}</Text>}
 
             <View style={[styles.summaryBox, shadow.card]}>
               <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Сумма</Text><Text style={styles.summaryValue}>{formatPrice(subtotal)}</Text></View>

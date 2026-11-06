@@ -47,6 +47,7 @@ function makeCart({ preparationGate = null } = {}) {
     '../loyalty/loyaltyService': { getAvailableRewards: () => [], isRewardApplicable: () => false, getEligibleCartItemsForReward: () => [] },
     '../lib/supabaseClient': { getUserOrThrow: async () => ({ id: owner }) },
     '../lib/checkoutQuote': { money: value => value, buildCheckoutQuote: (_items, payable) => ({ version: 2, items: [], payable }) },
+    '../lib/promoCodes': {quotePromo:async()=>({code:'TEST',discount:10}),promoMessage:()=> 'Промокод недействителен'},
     '../lib/cartOptions': { formatAdditions: () => '' }, '../lib/orderService': service,
     '../lib/phoneInput': loadDomain('lib/phoneInput.js'),
     '../lib/ordering': { CAFE: { pointId: 'lenina-72' }, validateContact: value => value, orderingState: () => ({ isOpen: true }), fetchOrderingConfig: async () => ({}), formatPickupTime: () => '13:00' },

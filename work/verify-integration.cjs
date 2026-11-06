@@ -20,6 +20,8 @@ const checks = [
   'work/product-sheet-check.cjs',
   'work/typography-onest/check.cjs',
   'work/catalog-admin/client-check.cjs',
+  'work/promo-codes/client-check.cjs',
+  'work/promo-codes/cart-check.cjs',
 ];
 for (const file of checks) {
   const result = spawnSync(process.execPath, [file], { cwd: root, stdio: 'inherit' });

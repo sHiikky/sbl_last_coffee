@@ -8,6 +8,7 @@
 <title>Касса — SBL coffee</title>
 <link rel="stylesheet" href="cashier.css">
 <link rel="stylesheet" href="catalog-admin.css">
+<link rel="stylesheet" href="promo-admin.css">
 </head>
 <body>
 
@@ -45,6 +46,7 @@
     <nav class="tabs" aria-label="Разделы кассы">
       <button type="button" class="tab is-active" id="ordersBtn">Заказы <span class="tab-badge hidden" id="ordersTabBadge" aria-label="Новых заказов">0</span></button>
       <button type="button" class="tab" id="catalogBtn">Товары</button>
+      <button type="button" class="tab" id="promosBtn">Промокоды</button>
       <button type="button" class="tab" id="contentBtn">Публикации</button>
       <button type="button" class="tab" id="stopListBtn">Стоп-лист</button>
     </nav>
@@ -84,6 +86,19 @@
     <div id="stopListRows" class="stop-list"></div>
   </section>
 
+  <section id="promosPanel" class="panel hidden" aria-label="Промокоды">
+<div class="panel-head"><div><h2>Промокоды</h2><p class="panel-lead">Скидки для заказов в приложении. Все условия проверяются при оформлении.</p></div><div class="panel-actions"><button id="promosRefresh" class="btn-ghost" type="button">Обновить</button><button id="promosNew" class="btn btn-new" type="button">+ Новый промокод</button></div></div>
+<p id="promosStatus" class="panel-status" role="status" aria-live="polite"></p>
+<div class="promo-layout"><aside><label class="sr-only" for="promosSearch">Поиск промокодов</label><input id="promosSearch" class="search" type="search" placeholder="Код или название"><label class="sr-only" for="promosFilter">Статус</label><select id="promosFilter"><option value="all">Все статусы</option><option value="active">Действуют</option><option value="scheduled">Запланированы</option><option value="paused">Выключены</option><option value="expired">Завершены</option></select><p id="promosCount" class="promo-hint"></p><div id="promosRows" class="promo-list"></div></aside>
+<form id="promosForm" class="promo-editor"><fieldset id="promosFields"><div class="promo-editor-head"><h3 id="promosEditing">Новый промокод</h3><span id="promosDirty" class="promo-hint"></span></div>
+<div class="promo-grid"><label>Промокод<input id="promosCode" maxlength="32" autocomplete="off" placeholder="Например, COFFEE20" required><small>2–32 символа: латинские буквы, цифры, _ и дефис.</small></label><label>Название для сотрудников<input id="promosName" maxlength="120" placeholder="Например, Утренний кофе" required></label></div>
+<h4>Размер скидки</h4><div class="promo-grid"><label>Тип скидки<select id="promosType"><option value="percent">Процент от стоимости</option><option value="fixed">Фиксированная сумма, ₽</option></select></label><label>Размер скидки<input id="promosValue" inputmode="decimal" placeholder="Например, 10" required></label><label>Не больше, ₽<input id="promosCap" inputmode="decimal" placeholder="Без ограничения"><small>Максимальная скидка на заказ.</small></label></div>
+<h4>Сумма заказа</h4><div class="promo-grid"><label>От, ₽<input id="promosMin" inputmode="decimal" placeholder="0"></label><label>До, ₽<input id="promosMax" inputmode="decimal" placeholder="Без ограничения"></label></div><p class="promo-hint">Сумма всей корзины до скидок. Обе границы включены.</p>
+<h4>На что действует</h4><label>Товары<select id="promosScope"><option value="all">Все товары</option><option value="products">Выбранные товары</option><option value="categories">Выбранные категории</option></select></label><div id="promosTargets" class="hidden"><input id="promosTargetSearch" type="search" placeholder="Найти товар или категорию" aria-label="Поиск товаров или категорий"><p id="promosSelected" class="promo-hint"></p><div id="promosChoices" class="promo-choices"></div></div>
+<h4>Срок действия · время Томска</h4><div class="promo-grid"><label>Начало<input id="promosStart" type="datetime-local"><small>Пусто — действует сразу.</small></label><label>Окончание<input id="promosEnd" type="datetime-local"><small>С указанного времени уже не действует.</small></label></div>
+<label class="check-row promo-enable"><input id="promosActive" type="checkbox"> Включить промокод</label>
+<div class="promo-summary"><h4>Условия для покупателя</h4><p id="promosSummary"></p><p class="promo-hint">Скидка действует на выбранные позиции вместе с добавками. Бесплатный товар по награде не участвует. Можно сочетать со списанием бонусов. Один промокод на заказ.</p></div>
+<div class="promo-save"><button id="promosSave" class="btn btn-new" type="submit">Сохранить промокод</button><span class="promo-hint">Изменения применятся к новым заказам.</span></div></fieldset></form></div></section>
   <!-- ===== Товары и добавки ===== -->
   <section id="catalogPanel" class="panel catalog-panel hidden" aria-label="Товары и добавки">
     <div class="panel-head">
@@ -231,6 +246,7 @@
 
 <script src="content-admin.js"></script>
 <script src="catalog-admin.js"></script>
+<script src="promo-admin.js"></script>
 <script src="ui-controls.js"></script>
 <script>
 (function(){
@@ -250,7 +266,9 @@
   var stopError = document.getElementById('stopListError');
   var contentAdmin = window.SblContentAdmin ? window.SblContentAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
   var catalogAdmin = window.SblCatalogAdmin ? window.SblCatalogAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
+  var promoAdmin = window.SblPromoAdmin ? window.SblPromoAdmin.create({getDb:function(){return db;},isActive:function(){return boardActive;},getSession:function(){return boardSession;},confirm:function(message){return confirm(message);}}) : null;
   var PANELS = [
+    { key:'promos', btn:'promosBtn', panel:'promosPanel' },
     { key:'catalog', btn:'catalogBtn', panel:'catalogPanel' },
     { key:'content', btn:'contentBtn', panel:'contentPanel' },
     { key:'stop', btn:'stopListBtn', panel:'stopListPanel' }
@@ -383,6 +401,7 @@
     boardActive = false; boardSession++; loadRevision++; stopRevision++;
     if (contentAdmin) contentAdmin.reset();
     if (catalogAdmin) catalogAdmin.reset();
+    if(promoAdmin) promoAdmin.reset();
     boardTimers.forEach(clearInterval); boardTimers = [];
     window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline);
     window.removeEventListener('focus', handleForeground); document.removeEventListener('visibilitychange', handleForeground);
@@ -398,7 +417,7 @@
   }
   function tickClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Asia/Tomsk', hour: '2-digit', minute: '2-digit' }); }
   function updateElapsedLabels(){ document.querySelectorAll('.ord-time').forEach(function(el){ el.textContent = elapsedText(el.dataset.created); el.dataset.level = ageLevel(el.dataset.created); }); }
-  function handleOnline(){ if (!boardActive) return; syncError = ''; loadOrders(); if (!stopPanel.classList.contains('hidden')) loadStopList(); if (contentAdmin && contentAdmin.isOpen()) contentAdmin.refresh(); }
+  function handleOnline(){ if (!boardActive) return; if(promoAdmin && promoAdmin.isOpen()) promoAdmin.refresh(); syncError = ''; loadOrders(); if (!stopPanel.classList.contains('hidden')) loadStopList(); if (contentAdmin && contentAdmin.isOpen()) contentAdmin.refresh(); }
   function handleOffline(){ if (!boardActive) return; loadRevision++; stopRevision++; syncError = 'Нет связи'; renderConnection(); }
   function handleForeground(){ if (boardActive && document.visibilityState !== 'hidden') loadOrders(); }
   function handlePoll(){ if (boardActive && online() && document.visibilityState !== 'hidden') loadOrders(); }

@@ -62,6 +62,7 @@ const mocks = {
   '../theme/tokens': { colors: {}, spacing: {}, radius: {}, shadow: {}, getHorizontalPadding: () => 16 },
   '../data/products': { PICKUP_TIMES: ['Скоро'], PICKUP_POINTS: ['SBL'], formatPrice: String, cartKey: String },
   '../loyalty/loyaltyService': { getAvailableRewards: () => [], isRewardApplicable: () => false, getEligibleCartItemsForReward: () => [] },
+  '../lib/promoCodes': {quotePromo:async()=>({discount:10,code:'TEST'}),promoMessage:()=> 'Промокод недействителен'},
   '../lib/supabaseClient': {}, '../lib/checkoutQuote': { money: value => value }, '../lib/orderService': {},
   '../hooks/useBonusAccount': { __esModule: true, default: () => ({ balance: 0, lifetimePaid: 0 }) },
   '../lib/bonusConfig': { getBonusLevel: () => ({ rate: .05 }), maxRedeemable: () => 0 },

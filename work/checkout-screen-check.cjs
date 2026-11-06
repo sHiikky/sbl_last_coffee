@@ -8,7 +8,7 @@ function makeScreen({ rpcError = null, storageError = null, saveError = null } =
   let stateIndex = 0;
   const React = {
     createElement(type, props, ...children) { return { type, props: props || {}, children }; },
-    useState(initial) { const index=stateIndex++; let value = index===4?'Test':index===5?'+79990000001':initial; return [value, next => { value = typeof next === 'function' ? next(value) : next; }]; },
+    useState(initial) { const index=stateIndex++; let value = index===6?'Test':index===7?'+79990000001':initial; return [value, next => { value = typeof next === 'function' ? next(value) : next; }]; },
     useRef(value) { return { current: value }; },
     useEffect() {},
   };
@@ -38,6 +38,7 @@ function makeScreen({ rpcError = null, storageError = null, saveError = null } =
     '../lib/supabaseClient': { getUserOrThrow:async()=>({id:'guest'}) },
     '../lib/checkoutQuote': { money:n=>Math.round(n*100)/100, buildCheckoutQuote:(_items,payable)=>({items:[['coffee',1,100]],payable}) },
     '../lib/orderService': service,
+    '../lib/promoCodes': {quotePromo:async()=>({discount:10,code:'TEST'}),promoMessage:()=> 'Промокод недействителен'},
     '../lib/cartOptions':{formatAdditions:()=>''},
     '../lib/phoneInput':require('./load-domain.cjs')('lib/phoneInput.js'),
     '../lib/ordering':{CAFE:{pointId:'lenina-72'},validateContact:x=>x,orderingState:()=>({isOpen:true}),fetchOrderingConfig:async()=>({}),formatPickupTime:()=> '12:00'},
