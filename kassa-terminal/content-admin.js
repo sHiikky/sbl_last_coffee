@@ -74,6 +74,9 @@
       if (url && image.getAttribute('src')!==url) { image.src=url; image.classList.remove('hidden'); }
       if (!url) { image.removeAttribute('src'); image.classList.add('hidden'); }
       el('publicationDirty').textContent=dirty?'Есть несохранённые изменения':current && current.version===0?'Новая публикация ещё не сохранена':'Изменения сохранены';
+      el('publicationDirty').classList.toggle('is-dirty',!!dirty || !!current && current.version===0);
+      el('publicationTitleCount').textContent=Array.from(v.title).length+' / 100';
+      el('publicationBodyCount').textContent=Array.from(v.body).length+' / 3000';
     }
     function select(row){
       current=row;
@@ -84,9 +87,10 @@
       el('publicationStarts').value=toTomskInput(row.starts_at); el('publicationEnds').value=toTomskInput(row.ends_at);
       el('publicationEditing').textContent=row.version?'Редактирование · версия '+row.version:'Новая публикация';
       el('publicationCurrentState').textContent=labels[row.visibility || row.status] || 'Черновик';
+      el('publicationCurrentState').dataset.state=row.visibility || row.status || 'draft';
       el('publicationSaveDraft').textContent=row.status==='published'?'Снять с публикации и сохранить черновик':'Сохранить черновик';
       el('publicationPublish').textContent=row.status==='published'?'Обновить публикацию':'Опубликовать';
-      dirty=false; showPreview(); setBusy(busy);
+      dirty=false; showPreview(); renderList(); setBusy(busy);
     }
     function newDraft(){
       if (busy || !confirmDiscard()) return;
@@ -100,8 +104,10 @@
       var selected=rows.filter(function(row){ return (el('publicationShowArchive').checked || row.status!=='archived') && (row.title+' '+row.body).toLocaleLowerCase('ru').includes(search); });
       if (!selected.length) { root.appendChild(node('p','content-hint','Публикаций пока нет. Создайте новость или акцию — гости увидят только опубликованные материалы.')); return; }
       selected.forEach(function(row){
-        var button=node('button','publication-row'); button.type='button'; button.dataset.publicationOpen=row.id;
-        button.append(node('span','publication-row-title',row.title),node('span','publication-row-meta',(row.kind==='promotion'?'Акция':'Новость')+' · '+(labels[row.visibility] || labels[row.status])+' · '+new Date(row.updated_at).toLocaleDateString('ru-RU',{timeZone:'Asia/Tomsk'})));
+        var button=node('button','publication-row'+(current && current.id===row.id?' is-selected':'')); button.type='button'; button.dataset.publicationOpen=row.id;
+        var stateKey=row.visibility || row.status, chip=node('span','state-chip',labels[stateKey] || labels[row.status] || labels.draft); chip.dataset.state=stateKey;
+        var head=node('span','publication-row-head'); head.append(node('span','publication-row-title',row.title),chip);
+        button.append(head,node('span','publication-row-meta',(row.kind==='promotion'?'Акция':'Новость')+' · '+new Date(row.updated_at).toLocaleDateString('ru-RU',{timeZone:'Asia/Tomsk'})));
         button.addEventListener('click',function(){ if (!busy && confirmDiscard()) { select(row); message(''); } }); root.appendChild(button);
       }); setBusy(busy);
     }

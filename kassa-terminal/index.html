@@ -2,281 +2,104 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#17110D">
 <title>Касса — SBL coffee</title>
+<link rel="stylesheet" href="cashier.css">
 <link rel="stylesheet" href="catalog-admin.css">
-<style>
-  :root{
-    --bg:#17110D;
-    --panel:#211812;
-    --card:#2C2019;
-    --line: rgba(247,240,228,0.10);
-    --cream:#F7F0E4;
-    --cream-dim: rgba(247,240,228,0.58);
-    --cream-dim2: rgba(247,240,228,0.32);
-    --amber:#F5A93F;
-    --amber-deep:#8A5A16;
-    --mint:#33C2A0;
-    --mint-deep:#155F4C;
-    --green:#4CC26B;
-    --green-deep:#1F6B37;
-    --red:#D9695A;
-    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
-    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
-  }
-  *{ box-sizing:border-box; }
-  html,body{ margin:0; padding:0; height:100%; }
-  body{
-    background:var(--bg); color:var(--cream); font-family:var(--font-ui);
-    min-height:100vh; -webkit-tap-highlight-color:transparent; overflow-x:hidden;
-  }
-  .hidden{ display:none !important; }
-  button{ font-family:inherit; cursor:pointer; }
-  input,textarea,select{ font-family:inherit; }
-
-  ::view-transition-group(*){ animation-duration:320ms; animation-timing-function:cubic-bezier(.4,0,.2,1); }
-
-  /* ---------- login ---------- */
-  #loginView{
-    min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
-  }
-  .login-card{
-    width:100%; max-width:360px; background:var(--panel); border:1px solid var(--line);
-    border-radius:22px; padding:34px 30px; text-align:center;
-  }
-  .login-cup{
-    width:46px; height:46px; margin:0 auto 14px; color:var(--amber);
-  }
-  .login-card h1{
-    font-family:var(--font-display); font-style:italic; font-weight:600; font-size:24px; margin:0 0 4px;
-  }
-  .login-card p{ margin:0 0 26px; font-size:13px; color:var(--cream-dim); }
-  .field{ text-align:left; margin-bottom:14px; }
-  .field label{ display:block; font-size:11px; color:var(--cream-dim); margin-bottom:6px; letter-spacing:.04em; }
-  .field input{
-    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--cream);
-    border-radius:10px; padding:11px 13px; font-size:14px; outline:none; transition:border-color .15s;
-  }
-  .field input:focus{ border-color:var(--amber); }
-  .login-btn{
-    width:100%; background:var(--amber); color:#2A1B05; border:none; border-radius:100px;
-    padding:13px; font-size:14px; font-weight:700; margin-top:6px; transition:transform .12s, background .15s;
-  }
-  .login-btn:hover{ background:#f7b95d; }
-  .login-btn:active{ transform:scale(.97); }
-  .login-btn:disabled{ opacity:.6; }
-  .login-error{ min-height:18px; color:var(--red); font-size:12.5px; margin-top:12px; }
-
-  /* ---------- board ---------- */
-  #boardView{ min-height:100vh; }
-  .topbar{
-    display:flex; align-items:center; gap:16px; padding:16px 26px; border-bottom:1px solid var(--line);
-    position:sticky; top:0; background:var(--bg); z-index:5;
-  }
-  .brand{ display:flex; align-items:center; gap:10px; }
-  .brand-dot{ width:9px; height:9px; border-radius:50%; background:var(--amber); }
-  .topbar h2{
-    font-family:var(--font-display); font-style:italic; font-weight:600; font-size:19px; margin:0;
-  }
-  .topbar .sub{ font-size:11px; color:var(--cream-dim2); }
-  .spacer{ flex:1; }
-  .clock{ font-family:var(--font-mono); font-size:14px; color:var(--cream-dim); }
-  .live-wrap{ display:flex; align-items:center; gap:7px; font-size:11px; color:var(--cream-dim2); }
-  .live-dot{ width:9px; height:9px; border-radius:50%; background:var(--cream-dim2); position:relative; transition:background .3s; }
-  .live-dot.is-live{ background:var(--green); }
-  .live-dot.is-live::after{
-    content:''; position:absolute; inset:-4px; border-radius:50%; border:1px solid var(--green);
-    opacity:.7; animation:pulseDot 1.8s ease-out infinite;
-  }
-  @keyframes pulseDot{ 0%{ transform:scale(.6); opacity:.7; } 100%{ transform:scale(1.9); opacity:0; } }
-
-  .icon-btn{
-    background:none; border:1px solid var(--line); color:var(--cream-dim); width:36px; height:36px;
-    border-radius:50%; display:flex; align-items:center; justify-content:center; transition:border-color .15s, color .15s;
-  }
-  .icon-btn:hover{ border-color:var(--amber); color:var(--amber); }
-  .icon-btn svg{ width:17px; height:17px; }
-  .icon-btn .off-icon{ display:none; }
-  .icon-btn.is-muted .on-icon{ display:none; }
-  .icon-btn.is-muted .off-icon{ display:block; }
-  .logout-btn{
-    background:none; border:1px solid var(--line); color:var(--cream-dim); border-radius:100px;
-    padding:8px 16px; font-size:12.5px; transition:border-color .15s, color .15s;
-  }
-  .logout-btn:hover{ border-color:var(--red); color:var(--red); }
-
-  .board{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; padding:22px 26px 60px; align-items:start; }
-  @media (max-width:920px){ .board{ grid-template-columns:1fr; } }
-
-  .column-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-  .column-head .dot{ width:8px; height:8px; border-radius:50%; }
-  .column-head.new .dot{ background:var(--amber); }
-  .column-head.preparing .dot{ background:var(--mint); }
-  .column-head.ready .dot{ background:var(--green); }
-  .column-head h3{ font-size:13px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; margin:0; color:var(--cream-dim); }
-  .count-badge{
-    font-family:var(--font-mono); font-size:11px; background:rgba(247,240,228,0.08); color:var(--cream-dim);
-    padding:2px 9px; border-radius:100px; margin-left:auto;
-  }
-
-  .column-list{ display:flex; flex-direction:column; gap:14px; min-height:80px; }
-  .empty{
-    font-size:12.5px; color:var(--cream-dim2); text-align:center; padding:30px 10px;
-    border:1px dashed var(--line); border-radius:16px;
-  }
-
-  .card{
-    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px;
-    display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden;
-    transition:transform .18s ease, box-shadow .18s ease;
-  }
-  .card:hover{ transform:translateY(-2px); box-shadow:0 14px 28px -16px rgba(0,0,0,.6); }
-  .card-top{ display:flex; align-items:baseline; justify-content:space-between; }
-  .ord-num{ font-family:var(--font-mono); font-weight:700; font-size:18px; }
-  .ord-time{ font-size:11px; color:var(--cream-dim2); font-family:var(--font-mono); }
-  .card-items{ display:flex; flex-direction:column; gap:4px; }
-  .item-row{ display:flex; justify-content:space-between; font-size:13px; color:var(--cream-dim); }
-  .item-row .qty{ font-family:var(--font-mono); color:var(--cream-dim2); }
-  .order-details{ display:flex; flex-direction:column; gap:5px; font-size:12.5px; color:var(--cream-dim); }
-  .order-details a{ color:var(--cream); }
-  .order-comment{ white-space:pre-wrap; overflow-wrap:anywhere; }
-  .item-block{ display:flex; flex-direction:column; gap:4px; padding:4px 0; }
-  .item-modifier{ padding-left:12px; font-size:12px; color:var(--cream-dim); }
-  .payment-choice{ display:flex; align-items:flex-start; gap:9px; font-size:12.5px; line-height:1.4; }
-  .payment-choice input{ margin-top:3px; accent-color:var(--green); }
-  .board-status{ margin:16px 26px 0; padding:12px 16px; border:1px solid var(--red); border-radius:12px; color:var(--cream); font-size:13px; }
-  .board-status button{ margin-left:12px; }
-  .sync-time{ padding:0 26px; color:var(--cream-dim); font-size:11px; }
-  .accounting-panel{ padding:0 26px 36px; }
-  .accounting-panel h3{ font-size:15px; }
-  .accounting-panel p{ color:var(--cream-dim); font-size:12.5px; }
-  #colAccounting{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; }
-  .btn:disabled,.cancel-link:disabled,.logout-btn:disabled{ opacity:.45; cursor:not-allowed; transform:none; filter:none; }
-  .card-total{ font-size:15px; font-weight:700; }
-  .btn{
-    width:100%; border:none; border-radius:100px; padding:12px; font-size:13.5px; font-weight:700;
-    transition:transform .12s ease, filter .15s;
-  }
-  .btn:hover{ filter:brightness(1.08); }
-  .btn:active{ transform:scale(.96); }
-  .btn-new{ background:var(--amber); color:#2A1B05; }
-  .btn-preparing{ background:var(--mint); color:#06251E; }
-  .btn-ready{ background:var(--green); color:#0B2412; }
-  .cancel-link{
-    background:none; border:none; color:var(--cream-dim2); font-size:11.5px; text-decoration:underline;
-    align-self:center; padding:2px 4px;
-  }
-  .cancel-link:hover{ color:var(--red); }
-
-  .done-overlay{
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    background:rgba(76,194,107,0.14); border-radius:18px; opacity:0; transform:scale(.4); pointer-events:none;
-  }
-  .card--done .done-overlay{ animation:doneBounce .45s cubic-bezier(.34,1.56,.64,1) forwards; }
-  .card--done .card-items, .card--done .card-top, .card--done .card-total,
-  .card--done .btn, .card--done .cancel-link{ opacity:.15; filter:blur(1px); transition:opacity .3s, filter .3s; }
-  .done-overlay svg{ width:44px; height:44px; color:var(--green); }
-  @keyframes doneBounce{
-    0%{ transform:scale(.4); opacity:0; }
-    60%{ transform:scale(1.18); opacity:1; }
-    100%{ transform:scale(1); opacity:1; }
-  }
-
-  /* ---------- news / promotions editor ---------- */
-  .content-panel{ margin:20px 26px; padding:24px; background:var(--panel); border:1px solid var(--line); border-radius:22px; }
-  .content-head{ display:flex; gap:12px; justify-content:space-between; align-items:center; flex-wrap:wrap; }
-  .content-head h2{ margin:0; font-size:21px; }
-  .content-hint{ color:var(--cream-dim); font-size:13px; line-height:1.6; }
-  .content-error{ color:var(--red); }
-  .content-layout{ display:grid; grid-template-columns:minmax(210px, .7fr) minmax(300px, 1.3fr); gap:26px; margin-top:20px; }
-  .content-fields{ display:grid; gap:16px; }
-  .content-fields label{ display:flex; flex-direction:column; gap:7px; font-size:12px; color:var(--cream-dim); }
-  .content-fields input,.content-fields select,.content-fields textarea,.content-search{ background:var(--bg); border:1px solid var(--line); border-radius:10px; color:var(--cream); padding:12px; width:100%; font-size:14px; }
-  .content-fields input:focus,.content-fields textarea:focus,.content-fields select:focus,.content-search:focus{ outline:2px solid var(--amber); outline-offset:2px; }
-  .content-fields textarea{ resize:vertical; min-height:130px; line-height:1.5; }
-  .content-schedule{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .content-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
-  .content-actions button{ width:auto; min-height:44px; padding:12px 18px; }
-  .content-actions .logout-btn{ border-radius:100px; }
-  .publication-row{ display:flex; flex-direction:column; gap:7px; width:100%; text-align:left; border:1px solid var(--line); background:var(--card); color:var(--cream); padding:14px; border-radius:14px; margin-top:10px; }
-  .publication-row:hover{ border-color:var(--amber); }
-  .publication-row-title{ font-size:14px; font-weight:600; overflow-wrap:anywhere; }
-  .publication-row-meta{ font-size:11px; color:var(--cream-dim); }
-  .content-preview{ margin-top:24px; border:1px solid var(--line); background:var(--card); border-radius:18px; overflow:hidden; }
-  .content-preview img{ width:100%; aspect-ratio:16 / 9; object-fit:cover; display:block; }
-  .content-preview-body{ padding:18px; }
-  .content-preview-body h3{ margin:8px 0; font-size:23px; overflow-wrap:anywhere; }
-  .content-preview-body p{ white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; line-height:1.6; }
-  .content-meta{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--cream-dim); margin-bottom:14px; }
-  @media(max-width:800px){ .content-layout{ grid-template-columns:1fr; } .content-panel{ margin:16px; padding:16px; } .content-schedule{ grid-template-columns:1fr; } .topbar{ flex-wrap:wrap; } }
-</style>
 </head>
 <body>
 
 <div id="loginView">
-  <div class="login-card">
-    <svg class="login-cup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+  <main class="login-card">
+    <svg class="login-cup" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
       <path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8Z"/>
       <path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/>
       <path d="M7 3.5c0 1-1 1-1 2s1 1 1 2M11 3.5c0 1-1 1-1 2s1 1 1 2"/>
     </svg>
     <h1>SBL coffee</h1>
-    <p>Панель кассира</p>
+    <p class="login-sub">Касса · вход для сотрудников</p>
     <form id="loginForm">
       <div class="field">
         <label for="emailInput">Email</label>
         <input type="email" id="emailInput" autocomplete="username" required>
       </div>
-      <div class="field">
+      <div class="field field-pass">
         <label for="passwordInput">Пароль</label>
         <input type="password" id="passwordInput" autocomplete="current-password" required>
+        <button type="button" class="pass-toggle" id="passwordToggle" aria-controls="passwordInput">Показать</button>
       </div>
       <button type="submit" class="login-btn" id="loginBtn">Войти</button>
-      <div class="login-error" id="loginError"></div>
+      <div class="login-error" id="loginError" role="alert"></div>
     </form>
-  </div>
+  </main>
 </div>
 
 <div id="boardView" class="hidden">
-  <div class="topbar">
+  <header class="topbar">
     <div class="brand">
-      <span class="brand-dot"></span>
-      <h2>SBL coffee</h2>
+      <span class="brand-name">SBL coffee</span>
+      <span class="brand-sub">касса</span>
     </div>
-    <span class="sub">панель кассира</span>
-    <div class="spacer"></div>
-    <span class="clock" id="clock">--:--</span>
-    <div class="live-wrap" title="Подключение к базе в реальном времени">
-      <span class="live-dot" id="liveDot"></span><span id="liveLabel">Подключаемся</span>
+    <nav class="tabs" aria-label="Разделы кассы">
+      <button type="button" class="tab is-active" id="ordersBtn">Заказы <span class="tab-badge hidden" id="ordersTabBadge" aria-label="Новых заказов">0</span></button>
+      <button type="button" class="tab" id="catalogBtn">Товары</button>
+      <button type="button" class="tab" id="contentBtn">Публикации</button>
+      <button type="button" class="tab" id="stopListBtn">Стоп-лист</button>
+    </nav>
+    <div class="topbar-right">
+      <div class="live-wrap" title="Подключение к базе в реальном времени">
+        <span class="live-dot" id="liveDot"></span><span id="liveLabel">Подключаемся</span>
+      </div>
+      <span class="clock" id="clock" title="Время по Томску">--:--</span>
+      <button class="icon-btn" id="muteBtn" type="button" title="Звук новых заказов" aria-label="Звук новых заказов">
+        <svg class="on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+        <svg class="off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+      </button>
+      <button class="btn-ghost btn-sm" id="logoutBtn" type="button">Выйти</button>
     </div>
-    <button class="icon-btn" id="muteBtn" title="Звук новых заказов">
-      <svg class="on-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
-      <svg class="off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
-    </button>
-    <button class="logout-btn" id="catalogBtn">Товары</button>
-    <button class="logout-btn" id="contentBtn">Публикации</button>
-    <button class="logout-btn" id="stopListBtn">Стоп-лист</button>
-    <button class="logout-btn" id="logoutBtn">Выйти</button>
-  </div>
+  </header>
 
   <div id="boardStatus" class="board-status hidden" role="status" aria-live="polite">
-    <span id="boardStatusText"></span><button type="button" class="logout-btn" id="refreshOrdersBtn">Обновить</button>
+    <span id="boardStatusText"></span><button type="button" class="btn-ghost btn-sm" id="refreshOrdersBtn">Обновить</button>
   </div>
   <p class="sync-time" id="lastSyncLabel"></p>
-  <section id="stopListPanel" class="hidden" style="padding:24px; background:var(--card)">
-    <h2>Доступность меню</h2>
-    <input id="stopListSearch" placeholder="Найти товар" aria-label="Найти товар" style="padding:12px;margin:12px 0;width:100%;max-width:400px">
-    <button id="stopListRefresh" class="logout-btn">Обновить</button>
-    <p id="stopListError" role="status"></p>
-    <div id="stopListRows"></div>
+
+  <!-- ===== Стоп-лист ===== -->
+  <section id="stopListPanel" class="panel hidden" aria-label="Стоп-лист">
+    <div class="panel-head">
+      <div>
+        <h2>Стоп-лист</h2>
+        <p class="panel-lead">Отметьте позиции, которых сейчас нет. Позицию в стопе нельзя заказать в приложении; вернуть её в продажу можно в один тап.</p>
+      </div>
+      <div class="panel-actions"><button id="stopListRefresh" class="btn-ghost btn-sm" type="button">Обновить</button></div>
+    </div>
+    <div class="toolbar">
+      <input id="stopListSearch" class="search" type="search" placeholder="Найти позицию" aria-label="Найти позицию">
+      <label class="check-row"><input id="stopListOnly" type="checkbox"> Только в стопе</label>
+      <span class="toolbar-count" id="stopListCount"></span>
+    </div>
+    <p id="stopListError" class="panel-status" role="status"></p>
+    <div id="stopListRows" class="stop-list"></div>
   </section>
-  <section id="catalogPanel" class="catalog-panel hidden" aria-label="Товары и добавки">
-    <div class="catalog-head"><h2>Товары и добавки</h2><div><button type="button" id="catalogRefresh" class="logout-btn">Обновить</button> <button type="button" id="catalogNew" class="logout-btn">Новый товар</button></div></div>
-    <p class="catalog-hint">Добавьте фото и данные позиции, выберите добавки и покажите товар в меню. Приложение обновляет каталог при открытии и каждые 30 секунд. Каждый объём — отдельная позиция.</p>
-    <p id="catalogStatus" class="catalog-hint catalog-status" role="status" aria-live="polite"></p>
+
+  <!-- ===== Товары и добавки ===== -->
+  <section id="catalogPanel" class="panel catalog-panel hidden" aria-label="Товары и добавки">
+    <div class="panel-head">
+      <div>
+        <h2>Товары и добавки</h2>
+        <p class="panel-lead">Фото, цена, состав и добавки позиции. Приложение обновляет каталог при открытии и каждые 30 секунд. Каждый объём — отдельная позиция.</p>
+      </div>
+      <div class="panel-actions"><button type="button" id="catalogRefresh" class="btn-ghost btn-sm">Обновить</button> <button type="button" id="catalogNew" class="btn btn-new btn-sm">Новый товар</button></div>
+    </div>
+    <p id="catalogStatus" class="panel-status catalog-status" role="status" aria-live="polite"></p>
     <div class="catalog-layout">
-      <aside><input id="catalogSearch" type="search" placeholder="Название или категория" aria-label="Найти товар"><label class="catalog-hint"><input id="catalogShowModifiers" type="checkbox"> Показывать добавки</label><div id="catalogRows" class="catalog-list"></div></aside>
+      <aside class="catalog-aside">
+        <input id="catalogSearch" type="search" placeholder="Название или категория" aria-label="Найти товар">
+        <label class="check-row"><input id="catalogShowModifiers" type="checkbox"> Показывать добавки</label>
+        <div id="catalogRows" class="catalog-list"></div>
+      </aside>
       <form id="catalogForm" class="catalog-form">
         <div class="catalog-meta"><strong id="catalogEditing">Новый товар</strong><span id="catalogSource" class="catalog-pill"></span></div>
         <fieldset><legend>Основное</legend><div class="catalog-fields">
@@ -307,82 +130,108 @@
           <label>Метка на карточке<input id="catalogBadge" maxlength="32" placeholder="Новинка"></label>
           <label>Порядок внутри раздела<input id="catalogSort" type="number" min="0" max="1000000" step="1" value="0"></label>
         </div></fieldset>
-        <p id="catalogDirty" class="catalog-hint"></p>
-        <div class="catalog-actions"><button type="button" id="catalogSaveHidden" class="logout-btn">Сохранить скрытым</button><button type="button" id="catalogPublish" class="btn btn-new">Сохранить и показать в меню</button></div>
+        <div class="catalog-actions">
+          <p id="catalogDirty" class="catalog-hint"></p>
+          <div class="action-group">
+            <button type="button" id="catalogSaveHidden" class="btn-ghost">Сохранить скрытым</button>
+            <button type="button" id="catalogPublish" class="btn btn-new">Сохранить и показать в меню</button>
+          </div>
+        </div>
       </form>
     </div>
   </section>
-  <section id="contentPanel" class="content-panel hidden" aria-label="Новости и акции">
-    <div class="content-head">
-      <h2>Новости и акции</h2>
-      <div><button type="button" class="logout-btn" id="contentRefresh">Обновить список</button> <button type="button" class="logout-btn" id="publicationNew">Новая публикация</button></div>
-    </div>
-    <p class="content-hint">Материалы появляются в разделе «Жизнь SBL» на главном экране. Черновики и архив гостям не видны. Все сотрудники с доступом к кассе могут редактировать публикации.</p>
-    <p class="content-hint">Текст акции не меняет цены, промокоды или бонусные правила. Условия скидки должны быть настроены отдельно и совпадать с описанием.</p>
-    <p id="contentStatus" class="content-hint" role="status" aria-live="polite"></p>
-    <p id="contentServerTime" class="content-hint"></p>
-    <div class="content-layout">
+
+  <!-- ===== Новости и акции ===== -->
+  <section id="contentPanel" class="panel content-panel hidden" aria-label="Новости и акции">
+    <div class="panel-head">
       <div>
-        <input id="publicationSearch" class="content-search" placeholder="Найти публикацию" aria-label="Найти публикацию">
-        <label class="content-hint"><input id="publicationShowArchive" type="checkbox"> Показывать архив</label>
-        <div id="publicationRows"></div>
+        <h2>Новости и акции</h2>
+        <p class="panel-lead">Материалы появляются в разделе «Жизнь SBL» на главном экране приложения. Черновики и архив гостям не видны. Редактировать могут все сотрудники с доступом к кассе.</p>
       </div>
-      <div>
-        <div class="content-meta"><strong id="publicationEditing">Новая публикация</strong><span id="publicationCurrentState">Черновик</span></div>
-        <form id="publicationForm" class="content-fields">
-          <label>Тип материала<select id="publicationKind"><option value="news">Новость</option><option value="promotion">Акция</option></select></label>
-          <label>Заголовок · до 100 символов<input id="publicationTitle" maxlength="100" placeholder="Например, встречаем осень с новым меню"></label>
-          <label>Текст · до 3000 символов<textarea id="publicationBody" maxlength="3000" placeholder="Расскажите, что нового в кофейне. Для акции укажите понятные условия."></textarea></label>
-          <label>Фотография · необязательно<input id="publicationImage" type="url" placeholder="https://.../photo.webp"></label>
-          <label>Переход к товару · необязательно<select id="publicationProduct"><option value="">Без перехода к товару</option></select></label>
-          <div><button type="button" class="logout-btn" id="publicationUseProductPhoto">Взять фото выбранного товара</button></div>
-          <div class="content-schedule">
-            <label>Начало · время Томска (UTC+7)<input id="publicationStarts" type="datetime-local"><span>Пусто — опубликовать сейчас.</span></label>
-            <label>Окончание · время Томска (UTC+7)<input id="publicationEnds" type="datetime-local"><span>Для опубликованной акции обязательно.</span></label>
+      <div class="panel-actions"><button type="button" class="btn-ghost btn-sm" id="contentRefresh">Обновить список</button> <button type="button" class="btn btn-new btn-sm" id="publicationNew">Новая публикация</button></div>
+    </div>
+    <p id="contentStatus" class="panel-status" role="status" aria-live="polite"></p>
+    <div class="content-layout">
+      <div class="content-list-col">
+        <input id="publicationSearch" class="search" type="search" placeholder="Найти публикацию" aria-label="Найти публикацию">
+        <label class="check-row"><input id="publicationShowArchive" type="checkbox"> Показывать архив</label>
+        <div id="publicationRows"></div>
+        <p id="contentServerTime" class="field-hint"></p>
+      </div>
+      <div class="content-editor">
+        <div class="content-meta"><strong id="publicationEditing">Новая публикация</strong><span id="publicationCurrentState" class="state-chip">Черновик</span></div>
+        <form id="publicationForm" class="content-form">
+          <div class="form-section">
+            <h3 class="form-section-title">1 · Текст</h3>
+            <label>Тип материала<select id="publicationKind"><option value="news">Новость</option><option value="promotion">Акция</option></select></label>
+            <label><span class="label-row"><span>Заголовок</span><span class="counter" id="publicationTitleCount">0 / 100</span></span><input id="publicationTitle" maxlength="100" placeholder="Например, встречаем осень с новым меню"></label>
+            <label><span class="label-row"><span>Текст</span><span class="counter" id="publicationBodyCount">0 / 3000</span></span><textarea id="publicationBody" maxlength="3000" placeholder="Расскажите, что нового в кофейне. Для акции укажите понятные условия."></textarea></label>
+            <p class="field-hint">Текст акции не меняет цены, промокоды и бонусные правила. Условия скидки настраиваются отдельно и должны совпадать с описанием.</p>
+          </div>
+          <div class="form-section">
+            <h3 class="form-section-title">2 · Фото и товар</h3>
+            <label>Фотография · необязательно<input id="publicationImage" type="url" placeholder="https://.../photo.webp"></label>
+            <label>Переход к товару · необязательно<select id="publicationProduct"><option value="">Без перехода к товару</option></select></label>
+            <div><button type="button" class="btn-ghost btn-sm" id="publicationUseProductPhoto">Взять фото выбранного товара</button></div>
+          </div>
+          <div class="form-section">
+            <h3 class="form-section-title">3 · Расписание · время Томска (UTC+7)</h3>
+            <div class="content-schedule">
+              <label>Начало<input id="publicationStarts" type="datetime-local"><span class="field-hint">Пусто — опубликовать сразу.</span></label>
+              <label>Окончание<input id="publicationEnds" type="datetime-local"><span class="field-hint">Для опубликованной акции обязательно.</span></label>
+            </div>
           </div>
         </form>
-        <p id="publicationDirty" class="content-hint">Изменения сохранены</p>
         <div class="content-actions">
-          <button type="button" class="logout-btn" id="publicationSaveDraft">Сохранить черновик</button>
-          <button type="button" class="btn btn-new" id="publicationPublish">Опубликовать</button>
-          <button type="button" class="logout-btn" id="publicationArchive">В архив</button>
+          <p id="publicationDirty" class="dirty-note">Изменения сохранены</p>
+          <div class="action-group">
+            <button type="button" class="btn-ghost btn-danger" id="publicationArchive">В архив</button>
+            <button type="button" class="btn-ghost" id="publicationSaveDraft">Сохранить черновик</button>
+            <button type="button" class="btn btn-new" id="publicationPublish">Опубликовать</button>
+          </div>
         </div>
+      </div>
+      <aside class="content-preview-col">
+        <p class="preview-label">Так увидят гости</p>
         <div class="content-preview" aria-label="Предпросмотр публикации">
           <img id="publicationPreviewImage" class="hidden" alt="Предпросмотр фотографии публикации" referrerpolicy="no-referrer">
-          <div class="content-preview-body"><span id="publicationPreviewKind" class="content-hint">Новость</span><h3 id="publicationPreviewTitle">Заголовок публикации</h3><p id="publicationPreviewBody">Здесь будет текст для гостей кофейни.</p></div>
+          <div class="content-preview-body"><span id="publicationPreviewKind">Новость</span><h3 id="publicationPreviewTitle">Заголовок публикации</h3><p id="publicationPreviewBody">Здесь будет текст для гостей кофейни.</p></div>
         </div>
-      </div>
+      </aside>
     </div>
   </section>
-  <div class="board">
-    <div>
+
+  <!-- ===== Заказы ===== -->
+  <main class="board" id="boardMain">
+    <section aria-labelledby="hNew">
       <div class="column-head new">
-        <span class="dot"></span><h3>Новые</h3><span class="count-badge" id="countNew">0</span>
+        <span class="dot" aria-hidden="true"></span><h3 id="hNew">Новые</h3><span class="count-badge" id="countNew">0</span>
       </div>
       <div class="column-list" id="colNew"></div>
-    </div>
-    <div>
+    </section>
+    <section aria-labelledby="hPrep">
       <div class="column-head preparing">
-        <span class="dot"></span><h3>Готовится</h3><span class="count-badge" id="countPreparing">0</span>
+        <span class="dot" aria-hidden="true"></span><h3 id="hPrep">Готовятся</h3><span class="count-badge" id="countPreparing">0</span>
       </div>
       <div class="column-list" id="colPreparing"></div>
-    </div>
-    <div>
+    </section>
+    <section aria-labelledby="hReady">
       <div class="column-head ready">
-        <span class="dot"></span><h3>Готово к выдаче</h3><span class="count-badge" id="countReady">0</span>
+        <span class="dot" aria-hidden="true"></span><h3 id="hReady">Готово к выдаче</h3><span class="count-badge" id="countReady">0</span>
       </div>
       <div class="column-list" id="colReady"></div>
-    </div>
-  </div>
+    </section>
+  </main>
   <section id="accountingPanel" class="accounting-panel hidden">
     <h3>Выдано — внести продажу в СБИС <span id="countAccounting" class="count-badge">0</span></h3>
-    <p>Оплата и выдача уже подтверждены. После ручного внесения продажи отметьте её здесь.</p>
+    <p>Оплата и выдача уже подтверждены. После ручного внесения продажи в СБИС отметьте её здесь.</p>
     <div id="colAccounting"></div>
   </section>
 </div>
 
 <script src="content-admin.js"></script>
 <script src="catalog-admin.js"></script>
+<script src="ui-controls.js"></script>
 <script>
 (function(){
   var SUPABASE_URL = 'https://vxefueynagwuavlyeiqc.supabase.co';
@@ -401,7 +250,12 @@
   var stopError = document.getElementById('stopListError');
   var contentAdmin = window.SblContentAdmin ? window.SblContentAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
   var catalogAdmin = window.SblCatalogAdmin ? window.SblCatalogAdmin.create({ getDb:function(){ return db; }, isActive:function(){ return boardActive; }, getSession:function(){ return boardSession; }, confirm:function(message){ return confirm(message); } }) : null;
-  var ACTIVE_FILTER = 'status.in.(new,accepted,preparing,ready),and(status.eq.completed,paid_at.not.is.null,manual_sale_recorded_at.is.null)';
+  var PANELS = [
+    { key:'catalog', btn:'catalogBtn', panel:'catalogPanel' },
+    { key:'content', btn:'contentBtn', panel:'contentPanel' },
+    { key:'stop', btn:'stopListBtn', panel:'stopListPanel' }
+  ];
+  var ACTIVE_FILTER ='status.in.(new,accepted,preparing,ready),and(status.eq.completed,paid_at.not.is.null,manual_sale_recorded_at.is.null)';
   var ORDER_FIELDS = 'id,order_number,status,total,bonus_redeemed,created_at,customer_name,customer_phone,pickup_point,pickup_at,comment,payment_method,paid_at,manual_sale_recorded_at,order_items(product_id,product_name,quantity,price,base_unit_price,line_key,modifiers,preparation_note)';
 
   function online(){ return navigator.onLine !== false; }
@@ -416,7 +270,15 @@
     var time = new Date(value).getTime();
     if (!Number.isFinite(time)) return '';
     var mins = Math.max(0, Math.floor((Date.now() - time) / 60000));
-    return mins < 1 ? 'только что' : mins + ' мин';
+    if (mins < 1) return 'только что';
+    if (mins < 60) return mins + ' мин';
+    return Math.floor(mins / 60) + ' ч ' + (mins % 60) + ' мин';
+  }
+  function ageLevel(value){
+    var time = new Date(value).getTime();
+    if (!Number.isFinite(time)) return 'ok';
+    var mins = Math.max(0, Math.floor((Date.now() - time) / 60000));
+    return mins >= 15 ? 'late' : mins >= 8 ? 'warn' : 'ok';
   }
   function textElement(tag, className, value){
     var el = document.createElement(tag); el.className = className || ''; el.textContent = value; return el;
@@ -530,10 +392,12 @@
     realtimeConnected = false; syncError = ''; actionError = ''; stopPanel.classList.add('hidden'); stopError.textContent = '';
     ['colNew','colPreparing','colReady','colAccounting','stopListRows'].forEach(function(id){ document.getElementById(id).replaceChildren(); });
     ['countNew','countPreparing','countReady','countAccounting'].forEach(function(id){ document.getElementById(id).textContent = '0'; });
-    document.getElementById('accountingPanel').classList.add('hidden'); renderConnection();
+    document.getElementById('ordersTabBadge').textContent = '0'; document.getElementById('ordersTabBadge').classList.add('hidden');
+    document.getElementById('stopListCount').textContent = ''; document.title = 'Касса — SBL coffee';
+    document.getElementById('accountingPanel').classList.add('hidden'); renderConnection(); syncView();
   }
   function tickClock(){ document.getElementById('clock').textContent = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Asia/Tomsk', hour: '2-digit', minute: '2-digit' }); }
-  function updateElapsedLabels(){ document.querySelectorAll('.ord-time').forEach(function(el){ el.textContent = elapsedText(el.dataset.created); }); }
+  function updateElapsedLabels(){ document.querySelectorAll('.ord-time').forEach(function(el){ el.textContent = elapsedText(el.dataset.created); el.dataset.level = ageLevel(el.dataset.created); }); }
   function handleOnline(){ if (!boardActive) return; syncError = ''; loadOrders(); if (!stopPanel.classList.contains('hidden')) loadStopList(); if (contentAdmin && contentAdmin.isOpen()) contentAdmin.refresh(); }
   function handleOffline(){ if (!boardActive) return; loadRevision++; stopRevision++; syncError = 'Нет связи'; renderConnection(); }
   function handleForeground(){ if (boardActive && document.visibilityState !== 'hidden') loadOrders(); }
@@ -600,9 +464,12 @@
     paintColumn('colAccounting', groups.accounting, 'accounting');
     document.getElementById('countNew').textContent = groups.new.length; document.getElementById('countPreparing').textContent = groups.preparing.length;
     document.getElementById('countReady').textContent = groups.ready.length; document.getElementById('countAccounting').textContent = groups.accounting.length;
-    document.getElementById('accountingPanel').classList.toggle('hidden', !groups.accounting.length); refreshControls();
+    document.getElementById('accountingPanel').classList.toggle('hidden', !groups.accounting.length);
+    var badge = document.getElementById('ordersTabBadge'); badge.textContent = groups.new.length; badge.classList.toggle('hidden', !groups.new.length);
+    document.title = (groups.new.length ? '(' + groups.new.length + ') ' : '') + 'Касса — SBL coffee';
+    refreshControls();
   }
-  var emptyText = { new: 'Пока новых заказов нет', preparing: 'Ничего не готовится', ready: 'Готовых заказов нет', accounting: 'Все продажи отмечены' };
+  var emptyText = { new: 'Новых заказов нет. Новый заказ появится здесь со звуком.', preparing: 'Сейчас ничего не готовится', ready: 'Готовых заказов нет', accounting: 'Все продажи отмечены' };
   var actionLabel = { new: 'Взять в работу', preparing: 'Готово', ready: 'Оплачено и выдано', accounting: 'Продажа внесена в СБИС' };
   var nextStatus = { new: 'preparing', preparing: 'ready', ready: 'completed' };
   function paintColumn(id, list, status){
@@ -621,16 +488,17 @@
     var card = document.createElement('div'); card.className = 'card card--' + status; card.dataset.id = order.id;
     var top = document.createElement('div'); top.className = 'card-top';
     top.appendChild(textElement('span', 'ord-num', '№ ' + order.order_number));
-    var age = textElement('span', 'ord-time', elapsedText(order.created_at)); age.dataset.created = order.created_at; top.appendChild(age); card.appendChild(top);
+    var age = textElement('span', 'ord-time', elapsedText(order.created_at)); age.dataset.created = order.created_at; age.dataset.level = ageLevel(order.created_at);
+    age.title = 'Времени прошло с момента заказа'; top.appendChild(age); card.appendChild(top);
     var details = document.createElement('div'); details.className = 'order-details';
-    details.appendChild(textElement('div', '', order.customer_name ? 'Клиент: ' + order.customer_name : 'Имя не сохранено (старый заказ)'));
+    details.appendChild(textElement('div', 'detail-name', order.customer_name ? 'Клиент: ' + order.customer_name : 'Имя не сохранено (старый заказ)'));
     if (order.customer_phone) {
       var phone = textElement('a', '', order.customer_phone); var dial = String(order.customer_phone).replace(/[^+\d]/g, '');
       if (/^\+?\d+$/.test(dial)) phone.href = 'tel:' + dial; details.appendChild(phone);
     } else details.appendChild(textElement('div', '', 'Телефон не сохранён'));
     var point = typeof order.pickup_point === 'object' && order.pickup_point ? (order.pickup_point.name || order.pickup_point.address) : order.pickup_point;
     details.appendChild(textElement('div', '', 'Самовывоз: ' + (point || 'точка не сохранена')));
-    details.appendChild(textElement('div', '', 'К ' + formatTomsk(order.pickup_at) + (order.pickup_at ? ' · Томск' : '')));
+    details.appendChild(textElement('div', 'detail-pickup', 'К ' + formatTomsk(order.pickup_at) + (order.pickup_at ? ' · Томск' : '')));
     details.appendChild(textElement('div', '', 'Оплата при получении'));
     if (order.comment) details.appendChild(textElement('div', 'order-comment', 'Комментарий: ' + order.comment));
     card.appendChild(details);
@@ -649,8 +517,9 @@
       if (item.preparation_note) block.appendChild(textElement('div', 'item-modifier order-comment', 'Пожелание: ' + item.preparation_note));
       items.appendChild(block);
     }); card.appendChild(items);
-    card.appendChild(textElement('div', 'card-total', (order.paid_at ? 'Оплачено: ' : 'К получению: ') + formatPrice(cashDue(order))));
-    if (order.bonus_redeemed) card.appendChild(textElement('div', 'order-details', 'Списано бонусами: ' + formatPrice(order.bonus_redeemed)));
+    var total = document.createElement('div'); total.className = 'card-total';
+    total.append(textElement('span', 'total-label', order.paid_at ? 'Оплачено' : 'К получению'), textElement('span', 'total-sum', formatPrice(cashDue(order)))); card.appendChild(total);
+    if (order.bonus_redeemed) card.appendChild(textElement('div', 'bonus-line', 'Списано бонусами: ' + formatPrice(order.bonus_redeemed)));
     if (status === 'ready') {
       var saved = completionChoices.get(order.id);
       if (!saved || saved.amount !== cashDue(order)) { saved = { paymentConfirmed: !!order.paid_at, manualSaleRecorded: !!order.manual_sale_recorded_at, amount: cashDue(order) }; completionChoices.set(order.id, saved); }
@@ -730,10 +599,18 @@
   function renderStopList(){
     var rows = document.getElementById('stopListRows'); rows.replaceChildren();
     var query = document.getElementById('stopListSearch').value.toLowerCase();
-    stopProducts.filter(function(product){ return (product.display_name || product.name).toLowerCase().includes(query); }).forEach(function(product){
-      var row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px;border-bottom:1px solid var(--line)';
-      var button = textElement('button', 'logout-btn', product.is_available ? 'В продаже — поставить в стоп' : 'В стоп-листе — вернуть в продажу');
-      button.dataset.stopAction = 'toggle'; button.dataset.productId = product.id;
+    var onlyStopped = document.getElementById('stopListOnly').checked;
+    var stopped = stopProducts.filter(function(product){ return !product.is_available; }).length;
+    document.getElementById('stopListCount').textContent = stopProducts.length ? (stopped ? 'В стопе: ' + stopped + ' из ' + stopProducts.length : 'Всё в продаже · ' + stopProducts.length + ' позиций') : '';
+    var visible = stopProducts.filter(function(product){ return (product.display_name || product.name).toLowerCase().includes(query) && (!onlyStopped || !product.is_available); });
+    if (!visible.length && stopProducts.length) rows.appendChild(textElement('p', 'panel-empty', onlyStopped && !query ? 'Сейчас ничего не в стопе.' : 'Ничего не найдено. Проверьте название.'));
+    visible.forEach(function(product){
+      var row = document.createElement('div'); row.className = 'stop-row' + (product.is_available ? '' : ' is-stopped');
+      var info = document.createElement('div'); info.className = 'stop-info';
+      var chip = textElement('span', 'state-chip', product.is_available ? 'В продаже' : 'В стопе'); chip.dataset.state = product.is_available ? 'active' : 'stopped';
+      info.append(textElement('span', 'stop-name', (product.is_modifier ? 'Добавка: ' : '') + (product.display_name || product.name)), chip);
+      var button = textElement('button', product.is_available ? 'btn-ghost btn-danger' : 'btn btn-ready', product.is_available ? 'Поставить в стоп' : 'Вернуть в продажу');
+      button.type = 'button'; button.dataset.stopAction = 'toggle'; button.dataset.productId = product.id;
       button.addEventListener('click', async function(){
         if (!boardActive || !online() || stopPending.has(product.id)) return;
         var session = boardSession; stopPending.add(product.id); stopError.textContent = ''; refreshControls();
@@ -744,12 +621,47 @@
         } catch (_) { if (currentSession(session)) stopError.textContent = 'Не удалось изменить доступность. Обновите список и проверьте права сотрудника.'; }
         finally { if (currentSession(session)) { stopPending.delete(product.id); refreshControls(); } }
       });
-      row.append(textElement('span', '', (product.is_modifier ? 'Добавка: ' : '') + (product.display_name || product.name)), button); rows.appendChild(row);
+      row.append(info, button); rows.appendChild(row);
     }); refreshControls();
   }
   document.getElementById('stopListBtn').addEventListener('click', function(){ stopPanel.classList.toggle('hidden'); if (!stopPanel.classList.contains('hidden')) loadStopList(); });
   document.getElementById('stopListRefresh').addEventListener('click', loadStopList);
   document.getElementById('stopListSearch').addEventListener('input', renderStopList);
+  document.getElementById('stopListOnly').addEventListener('change', renderStopList);
+
+  /* ---------- разделы кассы: открыт только один ---------- */
+  function panelOpen(def){ return !document.getElementById(def.panel).classList.contains('hidden'); }
+  function closeOtherPanels(exceptKey){
+    for (var i = 0; i < PANELS.length; i++) {
+      var def = PANELS[i]; if (def.key === exceptKey || !panelOpen(def)) continue;
+      var button = document.getElementById(def.btn); if (button.click) button.click();
+      if (panelOpen(def)) return false; /* закрытие отклонено (несохранённые изменения или идёт загрузка) */
+    }
+    return true;
+  }
+  function syncView(){
+    var openKey = '';
+    PANELS.forEach(function(def){ if (panelOpen(def)) openKey = def.key; });
+    boardView.classList.toggle('has-panel', !!openKey);
+    document.getElementById('ordersBtn').classList.toggle('is-active', !openKey);
+    PANELS.forEach(function(def){ document.getElementById(def.btn).classList.toggle('is-active', def.key === openKey); });
+  }
+  PANELS.forEach(function(def){
+    var button = document.getElementById(def.btn);
+    button.addEventListener('click', function(event){
+      if (!boardActive || panelOpen(def)) return;
+      if (!closeOtherPanels(def.key) && event.stopImmediatePropagation) event.stopImmediatePropagation();
+    }, true);
+    button.addEventListener('click', syncView);
+  });
+  document.getElementById('ordersBtn').addEventListener('click', function(){ closeOtherPanels(''); syncView(); });
+
+  /* ---------- пароль: показать / скрыть ---------- */
+  var passwordToggle = document.getElementById('passwordToggle');
+  passwordToggle.addEventListener('click', function(){
+    var input = document.getElementById('passwordInput'), show = input.type === 'password';
+    input.type = show ? 'text' : 'password'; passwordToggle.textContent = show ? 'Скрыть' : 'Показать';
+  });
 })();
 </script>
 </body>
