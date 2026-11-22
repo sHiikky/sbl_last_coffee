@@ -25,6 +25,7 @@ const notification = load('lib/notificationService.js', {
 const account = load('lib/accountService.js', {
   './supabaseClient': { supabase: EMPTY, ensureAnonymousSession: async () => {} },
   './notificationService': { unregisterCurrentPushToken: async () => {} },
+  './yandexAuthBrowser': { YANDEX_REDIRECT_URL: 'sbl://auth/yandex', openYandexAuthSession: async () => ({ type: 'cancel' }) },
 });
 const workerModule = load('supabase/functions/_shared/orderNotificationWorker.js');
 const USER_A = '11111111-1111-4111-8111-111111111111';

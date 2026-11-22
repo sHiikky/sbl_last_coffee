@@ -1,0 +1,45 @@
+SBL — коды входа по СМС через sms.ru (подготовлено 17 ноября 2026)
+
+КАК УСТРОЕНО
+Supabase Auth сам создаёт и проверяет 6-значный код. Вместо встроенного провайдера
+Auth вызывает хук Send SMS -> Edge Function send-sms-hook -> sms.ru (sms/send, json=1).
+Хук принимает только запросы, подписанные Supabase (Standard Webhooks, 5 минут),
+поэтому чужой не сможет тратить баланс sms.ru. api_id хранится ТОЛЬКО в секретах
+Supabase: его нет в git, в приложении и в EXPO_PUBLIC_*. Код в логи не пишется.
+Текст: «Код входа SBL: 123456. Никому его не сообщайте.»
+Анонимный гость, привязывающий номер (phone_change), получает код на new_phone.
+
+СОСТОЯНИЕ НА 17.11.2026
+- send-sms-hook развёрнута на vxefueynagwuavlyeiqc; секреты SMSRU_API_ID, SMSRU_TEST=1,
+  SEND_SMS_HOOK_SECRET заданы. Подписанный тестовый вызов дошёл до sms.ru (ключ верный,
+  баланс 10 ₽), но sms.ru ответил 221: нужен согласованный БУКВЕННЫЙ отправитель
+  (https://sms.ru/?panel=senders, по сайту/юрлицу/товарному знаку заказчика).
+  После одобрения: supabase secrets set SMSRU_FROM=<имя>, повторить тест.
+- Phone provider в Auth и EXPO_PUBLIC_PHONE_AUTH_ENABLED ещё НЕ включены.
+
+ВКЛЮЧЕНИЕ — ПО ШАГАМ (проект vxefueynagwuavlyeiqc)
+1. sms.ru: пополнить баланс; в настройках включить защиту (лимит СМС на номер в
+   сутки, только Россия), при желании согласовать имя отправителя.
+2. Секреты функций (Dashboard -> Edge Functions -> Secrets или CLI):
+     supabase secrets set SMSRU_API_ID=<api_id из sms.ru>
+     supabase secrets set SMSRU_TEST=1        (сначала тестовый режим: СМС не уходят, деньги не списываются)
+     supabase secrets set SMSRU_FROM=<имя>    (необязательно, только одобренное)
+3. Развернуть функцию:  supabase functions deploy send-sms-hook --no-verify-jwt
+4. Dashboard -> Authentication -> Hooks -> Send SMS: тип HTTPS,
+   URL https://vxefueynagwuavlyeiqc.supabase.co/functions/v1/send-sms-hook,
+   нажать Generate secret и сохранить. Этот секрет ("v1,whsec_...") задать:
+     supabase secrets set SEND_SMS_HOOK_SECRET='v1,whsec_...'
+5. Authentication -> Sign In / Providers -> Phone: включить (провайдер можно
+   оставить любым — при включённом хуке используется хук). Rate limits -> SMS:
+   разумный лимит в час (например 30). Минимальный интервал повтора — 60 с.
+6. Проверка в тестовом режиме: собрать приложение с EXPO_PUBLIC_PHONE_AUTH_ENABLED=true,
+   запросить код. В Edge Functions -> send-sms-hook -> Logs должен быть ответ 200,
+   в кабинете sms.ru — тестовая отправка. Затем убрать тест: supabase secrets unset SMSRU_TEST
+   и проверить реальную СМС на свой номер — и для нового гостя, и для входа в существующий аккаунт.
+7. Только после этого включать EXPO_PUBLIC_PHONE_AUTH_ENABLED=true в боевой сборке.
+
+ОТКАТ
+Authentication -> Hooks -> Send SMS: выключить; EXPO_PUBLIC_PHONE_AUTH_ENABLED=false.
+
+ПРОВЕРКА БЕЗ СЕТИ
+  node work/sms-ru/check.cjs   (входит в npm run check:integration)

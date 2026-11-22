@@ -16,7 +16,7 @@ import { colors, radius, spacing, brand } from '../theme/tokens';
 import { getDaysUntilNextMilestone } from '../loyalty/loyaltySelectors';
 import { LOYALTY_CONFIG } from '../loyalty/loyaltyConfig';
 import useBonusAccount from '../hooks/useBonusAccount';
-import { signOutAccount, requestAccountDeletion, fetchDeletionRequest } from '../lib/accountService';
+import { signOutAccount, requestAccountDeletion, fetchDeletionRequest, startYandexSignIn, describeAuthError, YANDEX_AUTH_ENABLED, WAITCALL_ENABLED } from '../lib/accountService';
 
 function deletionError(error) {
   if (['PGRST202', '42883'].includes(error?.code)) return 'Приём запросов ещё не настроен. Обратитесь к сотруднику кофейни; запрос сейчас не был отправлен.';
@@ -30,6 +30,8 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   const fade = useRef(new Animated.Value(0)).current;
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [yandexBusy, setYandexBusy] = useState(false);
+  const [yandexError, setYandexError] = useState('');
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [deletion, setDeletion] = useState(null);
   const [deletionBusy, setDeletionBusy] = useState(false);
@@ -44,6 +46,15 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   const cycleLength = LOYALTY_CONFIG.cycleLength;
   const current = loyaltyState?.ready ? loyaltyState.cycleProgress.progress : 0;
   const remaining = loyaltyState?.ready ? getDaysUntilNextMilestone(loyaltyState, LOYALTY_CONFIG) : cycleLength;
+
+  // Phone account attaches Yandex to itself; the Auth listener in App.js refreshes the account afterwards.
+  const attachYandex = async () => {
+    if (yandexBusy) return;
+    setYandexBusy(true); setYandexError('');
+    try { await startYandexSignIn(); }
+    catch (cause) { if (cause?.code !== 'YANDEX_CANCELLED') setYandexError(describeAuthError(cause)); }
+    finally { setYandexBusy(false); }
+  };
 
   const logout = async () => {
     if (loggingOut) return;
@@ -74,7 +85,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   const menuItems = [
     { icon: 'cube-outline', title: 'Мои заказы', subtitle: 'История и статусы', onPress: () => navigation.navigate('OrderHistory') },
     { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые товары', badge: favoriteIds.length || undefined, onPress: () => navigation.navigate('Favorites') },
-    { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Готовность и отмена заказа', onPress: () => setNotificationsOpen(true) },
+    { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Заказы, акции, серия', onPress: () => setNotificationsOpen(true) },
     { icon: 'document-text-outline', title: 'Условия и связь', subtitle: hasApprovedDocuments() ? 'Предзаказ, данные и контакты кофейни' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
   ];
   const requestPending = ['pending', 'processing'].includes(deletion?.status);
@@ -85,10 +96,21 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: tabBarHeight + insets.bottom + spacing.xxl }} showsVerticalScrollIndicator={false}>
       <ScreenHeader title="Профиль" />
       <Animated.View style={[styles.body, { opacity: fade }]}>
-        {account ? <DarkProfileCard name="Клиент SBL" email={formatPhone(account.phone)} status="STANDARD" avatarSource={null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
+        {account ? <DarkProfileCard name={account.name || 'Клиент SBL'} email={account.phone ? formatPhone(account.phone) : 'Вход через Яндекс'} status="STANDARD" avatarSource={null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
           <Text style={styles.guestTitle}>Вы зашли как гость</Text>
           <Text style={styles.copy}>Заказы и бонусы связаны с текущей сессией устройства. Подтверждённый номер позволит входить в свой аккаунт на других телефонах.</Text>
-          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Войти по телефону" onPress={() => navigation.navigate('Login')} fullWidth /></View>
+          <View style={{ marginTop: spacing.lg }}><PrimaryButton label={YANDEX_AUTH_ENABLED ? 'Войти' : 'Войти по телефону'} onPress={() => navigation.navigate('Login')} fullWidth /></View>
+        </View>}
+        {account?.provider === 'yandex' && !account.phone && WAITCALL_ENABLED && <View style={[styles.card, { marginTop: spacing.lg }]}>
+          <Text style={styles.guestTitle}>Подтвердите номер телефона</Text>
+          <Text style={styles.copy}>Один звонок свяжет номер с аккаунтом Яндекса: так заказы и бонусы не потеряются при смене телефона.</Text>
+          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Подтвердить номер" onPress={() => navigation.navigate('Login', { linkPhone: true })} fullWidth /></View>
+        </View>}
+        {account?.phone && !account.provider && YANDEX_AUTH_ENABLED && <View style={[styles.card, { marginTop: spacing.lg }]}>
+          <Text style={styles.guestTitle}>Привязать Яндекс</Text>
+          <Text style={styles.copy}>Войдите в Яндекс один раз, и в этот аккаунт можно будет заходить и по номеру, и через Яндекс.</Text>
+          {!!yandexError && <Text style={styles.error} accessibilityRole="alert">{yandexError}</Text>}
+          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Привязать Яндекс" loading={yandexBusy} onPress={attachYandex} fullWidth /></View>
         </View>}
         <View style={{ marginTop: spacing.lg }}><LoyaltyTeaser currentStreak={loyaltyState?.currentStreak || 0} remaining={remaining} onPress={() => navigation.navigate('Loyalty')} /></View>
         <View style={{ marginTop: spacing.lg }}><ProfileMenuGroup items={menuItems} /></View>

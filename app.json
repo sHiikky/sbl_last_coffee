@@ -34,7 +34,8 @@
           "barStyle": "light",
           "backgroundColor": "#050505"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "splash": {
       "image": "./assets/brand/splash-full.png",

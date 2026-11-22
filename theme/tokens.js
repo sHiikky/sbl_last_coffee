@@ -40,6 +40,8 @@ export const colors = {
   surfaceElevated:        '#FDFEFC',
   darkSurface:            '#202320',
   darkSurfaceSecondary:   '#171717',
+  // Затемнение под нижними шторками/модальными окнами
+  scrim:                  'rgba(32,35,32,0.45)',
 };
 
 export const spacing = {

@@ -17,7 +17,8 @@ export default function useOrderNotifications({ userId = null, onOpenOrder } = {
     if (Platform.OS === 'web' || !getOrderNotificationSupport().supported) return undefined;
     Notifications.setNotificationHandler({ handleNotification: async notification => {
       const data = notification?.request?.content?.data;
-      const own = !!currentUser.current && data?.customerId === currentUser.current && data?.type === 'order_status';
+      const own = !!currentUser.current && ((data?.type === 'order_status' && data?.customerId === currentUser.current)
+        || (['publication', 'series_reminder'].includes(data?.type) && data?.userId === currentUser.current));
       return { shouldShowBanner: own, shouldShowList: own, shouldPlaySound: own, shouldSetBadge: false };
     } });
     return () => Notifications.setNotificationHandler(null);

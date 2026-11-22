@@ -7,6 +7,9 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_YANDEX_AUTH_ENABLED": "true"
       }
     },
     "production": {

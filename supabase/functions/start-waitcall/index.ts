@@ -1,4 +1,4 @@
-import { admin, anonymousUser, cors, json } from '../_shared/waitcall.ts';
+import { admin, callerUser, cors, json } from '../_shared/waitcall.ts';
 const apiKey = Deno.env.get('SMSC_API_KEY')?.trim();
 const login = Deno.env.get('SMSC_LOGIN')?.trim();
 const password = Deno.env.get('SMSC_PASSWORD')?.trim();
@@ -12,8 +12,8 @@ Deno.serve(async request => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (request.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, 405);
   if (!credentials) return json({ error: 'Звонок пока не настроен' }, 503);
-  const user = await anonymousUser(request);
-  if (!user) return json({ error: 'Необходима гостевая сессия' }, 401);
+  const user = await callerUser(request);
+  if (!user) return json({ error: 'Необходима гостевая сессия или вход через Яндекс' }, 401);
   let phone: string;
   try { phone = (await request.json()).phone; } catch { return json({ error: 'INVALID_JSON' }, 400); }
   if (typeof phone !== 'string' || !/^\+7\d{10}$/.test(phone)) return json({ error: 'Проверьте номер телефона' }, 400);

@@ -59,6 +59,7 @@
     function confirmDiscard(){ return !dirty || options.confirm('Есть несохранённые изменения. Открыть другой материал и потерять их?'); }
     function message(text,isError){ status.textContent=text || ''; status.classList.toggle('content-error',!!isError); }
     function values(){ return { kind:el('publicationKind').value,title:el('publicationTitle').value,body:el('publicationBody').value,image:el('publicationImage').value,product:el('publicationProduct').value,starts:el('publicationStarts').value,ends:el('publicationEnds').value }; }
+    function updatePush(){ el('publicationPush').disabled=busy || dirty || !current || current.version===0 || (current.visibility || current.status)!=='active'; }
     function setBusy(value){
       busy=value;
       fieldNames.concat(['publicationNew','publicationSaveDraft','publicationPublish','publicationArchive','publicationUseProductPhoto','contentRefresh']).forEach(function(id){ el(id).disabled=value; });
@@ -75,6 +76,7 @@
       if (!url) { image.removeAttribute('src'); image.classList.add('hidden'); }
       el('publicationDirty').textContent=dirty?'Есть несохранённые изменения':current && current.version===0?'Новая публикация ещё не сохранена':'Изменения сохранены';
       el('publicationDirty').classList.toggle('is-dirty',!!dirty || !!current && current.version===0);
+      updatePush();
       el('publicationTitleCount').textContent=Array.from(v.title).length+' / 100';
       el('publicationBodyCount').textContent=Array.from(v.body).length+' / 3000';
     }
@@ -185,6 +187,29 @@
     el('publicationSaveDraft').addEventListener('click',function(){ save('draft'); });
     el('publicationPublish').addEventListener('click',function(){ save('published'); });
     el('publicationArchive').addEventListener('click',function(){ save('archived'); });
+    el('publicationPush').addEventListener('click',async function(){
+      if (busy || !current || current.version===0 || dirty) return;
+      if (!options.confirm('Отправить пуш «'+current.title+'» всем гостям, которые разрешили акции и новости? Повторно по этой публикации отправить нельзя.')) return;
+      var session=options.getSession(), stamp=generation, id=current.id;
+      setBusy(true); message('Ставим рассылку в очередь…');
+      try {
+        var result=await options.getDb().rpc('staff_send_publication_push',{p_publication_id:id});
+        if (!valid(stamp,session)) return;
+        if (result.error) throw result.error;
+        var queued=Number(result.data && result.data.queued) || 0;
+        var n10=queued%10, n100=queued%100, word=n10===1&&n100!==11?'устройство':n10>=2&&n10<=4&&(n100<12||n100>14)?'устройства':'устройств';
+        message(queued?'Рассылка поставлена в очередь: '+queued+' '+word+'. Доставка — в часы работы кофейни (11:00–20:00 по Томску).':'Нет гостей, согласившихся на акции и новости: отправлять некому.');
+      } catch (error) {
+        if (!valid(stamp,session)) return;
+        var text=String(error && (error.message || error.code) || '');
+        message(/ALREADY_SENT/.test(text)?'Пуш по этой публикации уже отправлялся.'
+          :/NOT_ACTIVE/.test(text)?'Пуш можно отправить только для активной опубликованной записи.'
+          :/PUSH_RATE_LIMIT/.test(text)?'Слишком часто: не больше одного пуша в час и двух в сутки. Попробуйте позже.'
+          :/ENDS_BEFORE_OPENING/.test(text)?'Публикация закончится до открытия кофейни — пуш уже не успеет дойти.'
+          :/STAFF_REQUIRED/.test(text)?'Нет прав сотрудника для рассылки. Войдите заново.'
+          :'Не удалось поставить рассылку в очередь. Проверьте связь и повторите позже.',true);
+      } finally { if (valid(stamp,session)) setBusy(false); }
+    });
     el('publicationSearch').addEventListener('input',renderList);
     el('publicationShowArchive').addEventListener('change',renderList);
     form.addEventListener('submit',function(event){ event.preventDefault(); });

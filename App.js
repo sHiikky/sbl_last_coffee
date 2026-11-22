@@ -26,6 +26,7 @@ import OrderHistoryScreen from './screens/OrderHistoryScreen';
 import LoyaltyScreen from './screens/LoyaltyScreen';
 import LoyaltyRewardModal from './components/loyalty/LoyaltyRewardModal';
 import BrandLaunch from './components/BrandLaunch';
+import NotificationPrompt from './components/NotificationPrompt';
 import CafeLocationScreen from './screens/CafeLocationScreen';
 import useMotionPreference from './hooks/useMotionPreference';
 import { parseProductLink } from './lib/productLinks';
@@ -44,7 +45,7 @@ import useLoyaltyState from './loyalty/useLoyaltyState';
 import useCustomerOrders from './hooks/useCustomerOrders';
 import useBonusAccount from './hooks/useBonusAccount';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
-import { getUserOrThrow, supabase } from './lib/supabaseClient';
+import { getUserOrThrow, supabase, authRedirectError } from './lib/supabaseClient';
 import {
   recoverPendingCheckoutOnce,
   scheduleBoundedCheckoutRecoveryRetries,
@@ -692,6 +693,17 @@ export default function App() {
   // отрисовки до ответа сервера — источник истины всегда Supabase.
   // Server reads start only after cache hydration in useCustomerOrders.
 
+  // Web only: a failed Яндекс sign-in/link returns here with the reason in the URL; show it once.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !authRedirectError) return;
+    const taken = authRedirectError.code === 'identity_already_exists';
+    const text = taken
+      ? 'Этот Яндекс уже привязан к другому аккаунту. Войдите через него или выберите другой Яндекс.'
+      : `Не удалось войти через Яндекс (${authRedirectError.code || authRedirectError.error}). ${authRedirectError.description}`.trim();
+    try { window.history.replaceState(null, '', window.location.pathname); } catch { /* keep the URL */ }
+    globalThis.alert(text);
+  }, []);
+
   // Тестовый вход по телефону (screens/LoginScreen.js): аккаунт только локальный.
   // Выход не трогает корзину, избранное и историю — они привязаны к устройству,
   // а не к аккаунту; Supabase-сессия покупателя анонимная и остаётся прежней.
@@ -1114,6 +1126,7 @@ export default function App() {
         <Pressable accessibilityRole="button" onPress={() => setLinkNotice(null)} style={{ minHeight: 44, justifyContent: 'center' }}><Text style={{ color: colors.accent, fontWeight: '700' }}>Понятно</Text></Pressable>
       </View>}
       </View> : <View style={{ flex: 1, backgroundColor: colors.launchBackground }} />}
+      {launchDone && account && authUserId && !orderComplete && <NotificationPrompt userId={authUserId} blocked={!!(loyalty.celebratingReward || pendingProductId || linkNotice || navigationRef.current?.getCurrentRoute?.()?.name === 'Product')} />}
       {!launchDone && <BrandLaunch ready={appReady} onDone={() => setLaunchDone(true)} />}
     </SafeAreaProvider>
     </FontReadyContext.Provider>

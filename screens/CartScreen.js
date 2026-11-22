@@ -86,7 +86,8 @@ export default function CartScreen({
   useEffect(() => () => { promoRequest.current++; }, []);
   const [ordering, setOrdering] = useState(false);
   const [pickupTime] = useState(PICKUP_TIMES[0]);
-  const [customerName, setCustomerName] = useState('');
+  // A Yandex account brings a display name; the guest can still change it for this order.
+  const [customerName, setCustomerName] = useState(account?.name || '');
   const [customerPhone, setCustomerPhone] = useState(formatPhoneInput(account?.phone));
   const [orderComment, setOrderComment] = useState('');
   const [orderingConfig, setOrderingConfig] = useState(null);

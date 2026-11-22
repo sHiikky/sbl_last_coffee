@@ -1,18 +1,20 @@
 // Only a signed SMSC callback unlocks the server-held Supabase OTP.
 import { createClient } from '@supabase/supabase-js';
-import { admin, anonKey, anonymousUser, cors, json, url } from '../_shared/waitcall.ts';
+import { admin, anonKey, callerUser, cors, json, url } from '../_shared/waitcall.ts';
 
 Deno.serve(async request => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (request.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, 405);
-  const user = await anonymousUser(request);
-  if (!user) return json({ error: 'Необходима гостевая сессия' }, 401);
+  const user = await callerUser(request);
+  if (!user) return json({ error: 'Необходима гостевая сессия или вход через Яндекс' }, 401);
   let attemptId: string;
   let mode: 'phone_change' | 'sms';
   try { ({ attemptId, mode } = await request.json()); } catch { return json({ error: 'INVALID_JSON' }, 400); }
   if (!/^[0-9a-f-]{36}$/i.test(attemptId || '') || !['phone_change', 'sms'].includes(mode)) {
     return json({ error: 'INVALID_REQUEST' }, 400);
   }
+  // A signed-in Yandex account can only ADD the phone to itself, never switch to another account.
+  if (user.is_anonymous !== true && mode !== 'phone_change') return json({ error: 'INVALID_REQUEST' }, 400);
   const db = admin();
   const { data: attempt, error } = await db.from('waitcall_auth_attempts')
     .select('id,requester_id,phone,otp,verified,consumed,expires_at')
