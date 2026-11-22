@@ -130,6 +130,32 @@ Realtime включается для `orders`/`order_items`. Перед смен
 
 ## Что ещё требуется перед релизом
 
+### Вход через SMSC WaitCall (подготовлен, выключен)
+
+В актуальном экране `Login` добавлен режим «один звонок без кода». Он не
+подменяет авторизацию локальным флагом: Supabase Auth по-прежнему выдаёт
+сессию. Серверный Send SMS hook временно хранит OTP, а функция
+`complete-waitcall` проверяет его в Supabase **только после подписанного
+callback от SMSC**. Без настройки всё остаётся в прежнем SMS-режиме.
+Новый номер создаёт новый подтверждённый аккаунт Supabase; гостевые данные
+автоматически к нему не переносятся. В Supabase Auth должна быть разрешена
+регистрация по телефону.
+
+Для включения: применить `20261121000000_waitcall_auth.sql`, развернуть функции
+`start-waitcall`, `send-waitcall-hook`, `smsc-waitcall-callback`,
+`complete-waitcall`; задать на сервере `SMSC_LOGIN`, `SMSC_PASSWORD`, `SMSC_CALLBACK_SECRET`
+(случайный секрет не короче 24 символов), `SEND_SMS_HOOK_SECRET` из Supabase Auth.
+В Auth → Hooks → Send SMS направить hook на `send-waitcall-hook` (не оставлять
+старый SMS hook); в кабинете SMSC задать callback URL
+`https://<project>.supabase.co/functions/v1/smsc-waitcall-callback?charset=utf-8&sha1=<SMSC_CALLBACK_SECRET>`.
+Только после тестового звонка и проверки входа в **существующий** и новый
+аккаунт включить `EXPO_PUBLIC_PHONE_AUTH_ENABLED=true` и
+`EXPO_PUBLIC_WAITCALL_ENABLED=true` в сборке. Ключ, ранее отправленный в чат,
+нужно перевыпустить; не помещать его в `EXPO_PUBLIC_*` или Git.
+
+Пока нет деплоя, реальный звонок/вход не проверен. Секреты в этой копии не
+настроены и никакие SMSC-запросы из неё автоматически не отправляются.
+
 - **SMS:** экран использует настоящий OTP-контракт Supabase, но отправка
   отключена (`EXPO_PUBLIC_PHONE_AUTH_ENABLED=false`) до выбора и настройки
   провайдера. Произвольные коды принимает только режим администратора

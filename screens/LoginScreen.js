@@ -1,17 +1,18 @@
 // screens/LoginScreen.js
 // Real Supabase OTP only. Sending remains disabled until its provider is configured.
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Linking, useWindowDimensions } from 'react-native';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import PrimaryButton from '../components/PrimaryButton';
 import BrandLogo from '../components/BrandLogo';
 import AccountDocumentsScreen from './AccountDocumentsScreen';
-import { PHONE_AUTH_ENABLED, ADMIN_LOGIN_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, adminSignIn, describeAuthError } from '../lib/accountService';
-import { colors, spacing, radius, getHorizontalPadding } from '../theme/tokens';
+import { PHONE_AUTH_ENABLED, WAITCALL_ENABLED, ADMIN_LOGIN_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, startWaitCallSignIn, checkWaitCallSignIn, adminSignIn, describeAuthError } from '../lib/accountService';
+import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/tokens';
 
 const CODE_LENGTH = OTP_LENGTH;
 // Режим администратора (без СМС): любой номер, любой код. Только если СМС-вход выключен.
@@ -51,17 +52,19 @@ export default function LoginScreen({ navigation, onLogin }) {
   const { width } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
 
-  const [step, setStep] = useState('phone'); // 'phone' (ввод номера или почты) | 'code'
+  const [step, setStep] = useState('phone'); // phone | call | code
   const [digits, setDigits] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [callLeft, setCallLeft] = useState(0);
   const [retryAt, setRetryAt] = useState(0);
   const [challenge, setChallenge] = useState(null);
   const [documentsOpen, setDocumentsOpen] = useState(false);
   const codeInputRef = useRef(null);
   const busyRef = useRef(false);
+  const callFinishedRef = useRef(false);
   const mountedRef = useRef(true);
 
   const phoneValid = digits.length === 10;
@@ -77,6 +80,35 @@ export default function LoginScreen({ navigation, onLogin }) {
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   useEffect(() => {
+    if (step !== 'call' || !challenge?.attemptId) return undefined;
+    const refresh = () => setCallLeft(Math.max(0, Math.ceil((challenge.expiresAt - Date.now()) / 1000)));
+    refresh();
+    const timer = setInterval(refresh, 1000);
+    return () => clearInterval(timer);
+  }, [step, challenge?.attemptId]);
+
+  useEffect(() => {
+    if (step !== 'call' || !challenge?.attemptId) return undefined;
+    let active = true;
+    let inFlight = false;
+    const timer = setInterval(async () => {
+      if (!active || inFlight || callFinishedRef.current || Date.now() >= challenge.expiresAt) return;
+      inFlight = true;
+      try {
+        const account = await checkWaitCallSignIn(challenge);
+        if (active && account && mountedRef.current) {
+          callFinishedRef.current = true;
+          await onLogin?.(account);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          navigation.goBack();
+        }
+      } catch (cause) { if (active && mountedRef.current) setError(describeAuthError(cause)); }
+      finally { inFlight = false; }
+    }, 3000);
+    return () => { active = false; clearInterval(timer); };
+  }, [step, challenge?.attemptId]);
+
+  useEffect(() => {
     if (step !== 'code') return undefined;
     const timer = setTimeout(() => codeInputRef.current?.focus(), 150);
     return () => clearTimeout(timer);
@@ -89,12 +121,14 @@ export default function LoginScreen({ navigation, onLogin }) {
     setError('');
     setLoading(true);
     try {
-      const next = await startPhoneSignIn(digits);
+      const next = WAITCALL_ENABLED ? await startWaitCallSignIn(digits) : await startPhoneSignIn(digits);
       if (!mountedRef.current) return;
       setChallenge(next);
       setCode('');
-      setStep('code');
-      setRetryAt(next.retryAt);
+      callFinishedRef.current = false;
+      setStep(WAITCALL_ENABLED ? 'call' : 'code');
+      if (next.expiresAt) setCallLeft(Math.max(0, Math.ceil((next.expiresAt - Date.now()) / 1000)));
+      if (next.retryAt) setRetryAt(next.retryAt);
     } catch (cause) {
       if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
     } finally {
@@ -158,14 +192,14 @@ export default function LoginScreen({ navigation, onLogin }) {
     >
       <View style={{ paddingTop: insets.top, paddingHorizontal: hPad }}>
         <TouchableOpacity
-          onPress={step === 'code' ? backFromCode : () => navigation.goBack()}
+          onPress={step !== 'phone' ? backFromCode : () => navigation.goBack()}
           disabled={loading}
           hitSlop={8}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Назад"
         >
-          <Ionicons name={step === 'code' ? 'arrow-back' : 'close'} size={22} color={colors.textPrimary} />
+          <Ionicons name={step !== 'phone' ? 'arrow-back' : 'close'} size={22} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
@@ -180,7 +214,7 @@ export default function LoginScreen({ navigation, onLogin }) {
           <>
             <Text style={styles.title}>Вход или регистрация</Text>
             <Text style={styles.subtitle}>
-              Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.
+              {WAITCALL_ENABLED ? 'Войдите одним звонком, чтобы сохранять бонусы и историю заказов между устройствами.' : 'Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.'}
             </Text>
 
             {ADMIN_MODE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Режим администратора: подойдёт любой номер и любой код, СМС не отправляется.</Text></View>}
@@ -207,7 +241,7 @@ export default function LoginScreen({ navigation, onLogin }) {
 
             <View style={{ marginTop: spacing.xl }}>
               <PrimaryButton
-                label="Получить код"
+                label={WAITCALL_ENABLED ? 'Получить номер для звонка' : 'Получить код'}
                 onPress={submitPhone}
                 disabled={!phoneValid || !AUTH_AVAILABLE || secondsLeft > 0}
                 loading={loading}
@@ -216,10 +250,31 @@ export default function LoginScreen({ navigation, onLogin }) {
             </View>
 
             {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
-            {secondsLeft > 0 && <Text style={styles.legal}>Повторный запрос кода через {secondsLeft} с</Text>}
+            {secondsLeft > 0 && <Text style={styles.legal}>Повторный запрос через {secondsLeft} с</Text>}
             <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Условия предзаказа и сведения о данных" style={styles.resend}>
               <Text style={styles.resendText}>Условия предзаказа и сведения о данных</Text>
             </TouchableOpacity>
+          </>
+        ) : step === 'call' ? (
+          <>
+            <Text style={styles.callKicker}>SBL · ВАШ АККАУНТ</Text>
+            <Text style={styles.title}>Подтвердите номер</Text>
+            <Text style={styles.subtitle}>Позвоните с номера <Text style={styles.callPhoneInline}>{destination}</Text>. Мы подтвердим вход автоматически — код вводить не нужно.</Text>
+            <View style={styles.callCard}>
+              <View style={styles.callCardTop}>
+                <View style={styles.callIcon}><Ionicons name="call" size={20} color={colors.accent} /></View>
+                <View style={styles.callCardHeading}><Text style={styles.callEyebrow}>БЕСПЛАТНОЕ ПОДТВЕРЖДЕНИЕ</Text><Text style={styles.callLabel}>Наберите этот номер</Text></View>
+                <View style={styles.securePill}><Ionicons name="shield-checkmark" size={14} color={colors.success} /><Text style={styles.secureText}>Защищено</Text></View>
+              </View>
+              <View style={styles.numberPanel}><Text style={styles.numberCaption}>НОМЕР ДЛЯ ЗВОНКА</Text><Text style={styles.callNumber} selectable numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.68}>{formatPhone(challenge?.callNumber)}</Text></View>
+              <TouchableOpacity onPress={() => Linking.openURL(`tel:${challenge.callNumber}`).catch(() => setError('Не удалось открыть телефон. Наберите номер вручную.'))} accessibilityRole="button" style={styles.callButtonWrap} activeOpacity={0.88}>
+                <LinearGradient colors={['#D16A43', colors.accent, '#96391D']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.callButton}><Ionicons name="call" size={18} color="#fff" /><Text style={styles.callButtonText}>Позвонить сейчас</Text><Ionicons name="arrow-forward" size={17} color="#fff" /></LinearGradient>
+              </TouchableOpacity>
+              <View style={styles.callTimerRow}><Ionicons name="time-outline" size={15} color={colors.textMuted} /><Text style={styles.callTimer}>Номер действует ещё {Math.floor(callLeft / 60)}:{String(callLeft % 60).padStart(2, '0')}</Text></View>
+            </View>
+            <View style={styles.waitingNote}><View style={styles.waitingDot} /><Text style={styles.legal}>{callLeft ? 'Ожидаем подтверждающий звонок. После него вы автоматически войдёте в аккаунт.' : 'Время ожидания истекло. Вернитесь и запросите новый номер.'}</Text></View>
+            {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
+            <TouchableOpacity onPress={backFromCode} accessibilityRole="button" style={styles.resend}><Text style={styles.resendText}>Изменить номер или начать заново</Text></TouchableOpacity>
           </>
         ) : (
           <>
@@ -326,4 +381,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface0,
   },
   testHintText: { flex: 1, fontSize: 12.5, lineHeight: 17, color: colors.textSecondary },
+  callKicker: { color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: spacing.sm },
+  callPhoneInline: { color: colors.textPrimary, fontWeight: '700' },
+  callCard: { backgroundColor: colors.surface1, borderRadius: radius.xlarge, padding: spacing.xl, marginTop: -spacing.sm, borderWidth: 1, borderColor: 'rgba(32,35,32,0.07)', ...shadow.level2 },
+  callCardTop: { flexDirection: 'row', alignItems: 'center', columnGap: spacing.md, marginBottom: spacing.xl },
+  callIcon: { width: 46, height: 46, borderRadius: radius.medium, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
+  callCardHeading: { flex: 1 },
+  callEyebrow: { color: colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 1.1 },
+  callLabel: { color: colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 4 },
+  securePill: { flexDirection: 'row', alignItems: 'center', columnGap: 4, backgroundColor: 'rgba(38,138,88,0.09)', borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 9 },
+  secureText: { color: colors.success, fontSize: 11, fontWeight: '700' },
+  numberPanel: { backgroundColor: colors.surface0, borderRadius: radius.large, borderWidth: 1, borderColor: 'rgba(32,35,32,0.06)', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
+  numberCaption: { color: colors.textMuted, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
+  callNumber: { color: colors.textPrimary, fontSize: 30, fontWeight: '800', letterSpacing: 0.2, marginTop: spacing.sm, fontVariant: ['tabular-nums'] },
+  callButtonWrap: { overflow: 'hidden', borderRadius: radius.pill, marginTop: spacing.lg, ...shadow.button },
+  callButton: { minHeight: 58, flexDirection: 'row', columnGap: spacing.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
+  callButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  callTimerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', columnGap: 6, marginTop: spacing.md },
+  callTimer: { color: colors.textMuted, fontSize: 12, fontWeight: '600' },
+  waitingNote: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', columnGap: spacing.sm, marginTop: spacing.md, paddingHorizontal: spacing.md },
+  waitingDot: { width: 7, height: 7, borderRadius: radius.pill, backgroundColor: colors.success, marginTop: 5 },
 });

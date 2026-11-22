@@ -144,7 +144,7 @@ max_catalogs = 2
 
 # Store vector embeddings in S3 for large and durable datasets
 [storage.vector]
-enabled = true
+enabled = false
 max_buckets = 10
 max_indexes = 5
 
@@ -155,11 +155,11 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:3000"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = []
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -222,13 +222,13 @@ enable_signup = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
-max_frequency = "1s"
+max_frequency = "1m0s"
 # Number of characters used in the email OTP.
-otp_length = 6
+otp_length = 8
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
@@ -255,13 +255,21 @@ otp_expiry = 3600
 
 [auth.sms]
 # Allow/disallow new user signups via SMS to your project.
-enable_signup = false
+enable_signup = true
 # If enabled, users need to confirm their phone number before signing in.
-enable_confirmations = false
+enable_confirmations = true
 # Template for sending OTP to users
 template = "Your code is {{ .Code }}"
 # Controls the minimum amount of time that must pass before sending another sms otp.
 max_frequency = "5s"
+
+# Send the Supabase OTP to our WaitCall bridge instead of an SMS provider.
+# The bridge keeps the OTP server-side and releases the session only after SMSC
+# reports the confirmation call through smsc-waitcall-callback.
+[auth.hook.send_sms]
+enabled = true
+uri = "https://vxefueynagwuavlyeiqc.supabase.co/functions/v1/send-waitcall-hook"
+secrets = "env(SEND_SMS_HOOK_SECRET)"
 
 # Use pre-defined map of phone number to OTP for testing.
 # [auth.sms.test_otp]
@@ -299,8 +307,8 @@ max_enrolled_factors = 10
 
 # Control MFA via App Authenticator (TOTP)
 [auth.mfa.totp]
-enroll_enabled = false
-verify_enabled = false
+enroll_enabled = true
+verify_enabled = true
 
 # Configure MFA via Phone Messaging
 [auth.mfa.phone]
@@ -438,6 +446,31 @@ import_map = "./functions/verify-otp/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/verify-otp/index.ts"
+
+# SMSC WaitCall. Activate only after database migration, secrets and Auth hook are configured.
+[functions.start-waitcall]
+enabled = true
+verify_jwt = false
+import_map = "./functions/start-waitcall/deno.json"
+entrypoint = "./functions/start-waitcall/index.ts"
+
+[functions.complete-waitcall]
+enabled = true
+verify_jwt = false
+import_map = "./functions/complete-waitcall/deno.json"
+entrypoint = "./functions/complete-waitcall/index.ts"
+
+[functions.send-waitcall-hook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-waitcall-hook/deno.json"
+entrypoint = "./functions/send-waitcall-hook/index.ts"
+
+[functions.smsc-waitcall-callback]
+enabled = true
+verify_jwt = false
+import_map = "./functions/smsc-waitcall-callback/deno.json"
+entrypoint = "./functions/smsc-waitcall-callback/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/verify-otp/*.html" ]
