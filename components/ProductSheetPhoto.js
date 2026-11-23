@@ -4,6 +4,7 @@ import Svg, { Defs, ClipPath, Polygon, Image as SvgImage } from 'react-native-sv
 import ProductImage from './ProductImage';
 import SoftEdgeProductPhoto from './SoftEdgeProductPhoto';
 import { photoTranslation } from '../lib/photoComposition';
+import { productPhotoSource } from '../lib/productPhotoSource';
 
 // The existing URL/editor frame stays authoritative. Only this exact latte
 // source has a reviewed display mask for its opaque white floor.
@@ -22,5 +23,5 @@ export default function ProductSheetPhoto({ product, visual, frame, height = 184
       </View>
     </View>;
   }
-  return <SoftEdgeProductPhoto product={product} frame={frame} height={height} />;
+  return <SoftEdgeProductPhoto product={{ ...product, image: productPhotoSource(product.image) }} frame={frame} height={height} />;
 }

@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const load = require('./load-domain.cjs');
 const empty = require('../data/photo-compositions.json');
+const cleanedPhotos = load('lib/productPhotoSource.js', { '../assets/product-cutouts/breakfast.png': 101, '../assets/product-cutouts/orange-punch.png': 102 }, { URL });
 const { getPhotoComposition, validPhotoFrame, photoTranslation } = load('lib/photoComposition.js', { '../data/photo-compositions.json': empty });
 const product = { id: 'coffee-1', image: { uri: 'https://example.com/latte.png' } };
 const detail = { fit: 'contain', zoom: 0.8, offsetX: 10, offsetY: -20 };
@@ -35,6 +36,7 @@ const React = {
 const native = { View: 'View', Text: 'Text', ActivityIndicator: 'ActivityIndicator', StyleSheet: { create: x => x, absoluteFill: { position: 'absolute' }, absoluteFillObject: { position: 'absolute' } } };
 const mocks = { react: React, 'react-native': native, 'expo-image': { Image: 'ExpoImage' }, 'expo-linear-gradient': { LinearGradient: 'Gradient' }, '@expo/vector-icons': { Ionicons: 'Icon' }, '../theme/tokens': { colors: {} }, './HolographicSurface': { default: 'HolographicSurface' }, './BrandLogo': { default: 'BrandLogo' }, '../lib/photoComposition': { photoTranslation } };
 const imageModule = { exports: {} };
+mocks['../lib/productPhotoSource'] = cleanedPhotos;
 const imageCode = babel.transformSync(fs.readFileSync('components/ProductImage.js', 'utf8'), { babelrc: false, configFile: false, plugins: ['@babel/plugin-transform-react-jsx', '@babel/plugin-transform-modules-commonjs'] }).code;
 vm.runInNewContext(imageCode, { module: imageModule, exports: imageModule.exports, require: name => { if (/(?:^|\/)AppText(?:Input)?$/.test(name)) return name.endsWith('Input') ? 'TextInput' : 'Text'; if (!(name in mocks)) throw new Error(`Unexpected image dependency ${name}`); return mocks[name]; } });
 function render(source) {
@@ -54,3 +56,5 @@ newA.props.onError();
 assert.equal(findImage(render('https://example.com/a.png')), null, 'current request errors still show a fallback');
 console.log('PASS: product photo defaults, separate views, URL/UUID binding, invalid imports and frame translation');
 console.log('PASS: real image source recovery and late A/B/A error protection');
+assert.equal(cleanedPhotos.productPhotoSource({uri:'https://31.31.207.216/coffee/storage/v1/object/public/product-photos/breakfast-constructor-7736456714.webp'}),101);
+for(const uri of ['https://untrusted.example/storage/v1/object/public/product-photos/breakfast-constructor-7736456714.webp','https://31.31.207.216/coffee/storage/v1/object/public/product-photos/breakfast-new.webp'])assert.equal(cleanedPhotos.productPhotoSource(uri),uri);

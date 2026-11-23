@@ -21,6 +21,7 @@ export const colors = {
 
   accent:                 '#B74924',
   accentPressed:          '#973A1C',
+  yandexRed:              '#FC3F1D',
   accentSoft:             'rgba(183,73,36,0.12)',
 
   success:                '#268A58',

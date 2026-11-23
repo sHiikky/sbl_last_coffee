@@ -4,12 +4,13 @@ import Text from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, getHorizontalPadding } from '../theme/tokens';
+import { privacyPolicySections, privacyPolicyApproved, privacyPolicyContact } from '../data/privacyPolicy';
 
 const APPROVED = process.env.EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED === 'true';
 const TERMS_URL = process.env.EXPO_PUBLIC_TERMS_URL;
 const PRIVACY_URL = process.env.EXPO_PUBLIC_PRIVACY_URL;
-const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE || '';
-const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || '';
+const SUPPORT_PHONE = process.env.EXPO_PUBLIC_SUPPORT_PHONE || privacyPolicyContact.phone;
+const SUPPORT_EMAIL = process.env.EXPO_PUBLIC_SUPPORT_EMAIL || privacyPolicyContact.email;
 
 function validWebUrl(value) {
   try { const url = new URL(value); return url.protocol === 'https:' ? url.href : null; }
@@ -17,14 +18,19 @@ function validWebUrl(value) {
 }
 
 export function hasApprovedDocuments() {
-  return APPROVED && !!validWebUrl(TERMS_URL) && !!validWebUrl(PRIVACY_URL);
+  return APPROVED && !!validWebUrl(TERMS_URL) && hasApprovedPrivacyPolicy();
+}
+
+export function hasApprovedPrivacyPolicy() {
+  return privacyPolicyApproved || (APPROVED && !!validWebUrl(PRIVACY_URL));
 }
 
 function supportLinks() {
   const digits = SUPPORT_PHONE.replace(/\D/g, '');
   const phone = digits.length === 11 && /^[78]/.test(digits) ? `+7${digits.slice(1)}` : null;
   const email = /^[^\s@?&#]+@[^\s@?&#]+\.[^\s@?&#]+$/.test(SUPPORT_EMAIL) ? SUPPORT_EMAIL : null;
-  return { phone, email };
+  const phoneDisplay = phone ? `+7 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 9)} ${digits.slice(9, 11)}` : null;
+  return { phone, phoneDisplay, email };
 }
 
 const sections = {
@@ -35,13 +41,7 @@ const sections = {
     ['Изменение и отмена', 'Если нужно изменить или отменить уже отправленный заказ, свяжитесь с кофейней. Статус «Выдан» означает, что заказ завершён сотрудником.'],
     ['Бонусы и подарки', 'Доступный баланс, награды и окончательная сумма подтверждаются при оформлении. Начисление за покупку происходит после завершения заказа.'],
   ],
-  privacy: [
-    ['Какие сведения нужны', 'Для обработки заказа используются состав, количество, стоимость, статусы, введённые имя и контактный телефон. Номер для связи с заказом сам по себе не подтверждает владение номером.'],
-    ['Вход по телефону', 'Подтверждение номера выполняется кодом СМС после подключения сервиса отправки. Код проверяет сервер. В гостевом режиме данные относятся к текущей сессии устройства; вход в существующий аккаунт не переносит гостевые заказы автоматически.'],
-    ['Хранение и доступ', 'Данные заказов, бонусов и аккаунта обрабатываются в серверном сервисе приложения на Supabase. Заказы доступны соответствующему пользователю и сотрудникам кофейни в пределах назначенных прав. Корзина, избранное и часть кэша хранятся на устройстве.'],
-    ['Уведомления', 'При включении уведомлений сохраняется адрес доставки сообщений этого устройства. Уведомления о статусе заказа передаются через Expo Push Service и службы платформы телефона. Их можно отключить в профиле или настройках телефона.'],
-    ['Запрос на удаление', 'В профиле можно отправить запрос на удаление аккаунта и данных. Это запрос на обработку, а не мгновенное удаление. Он не отменяет активные заказы. Состав сохраняемых сведений и сроки должен подтвердить владелец кофейни.'],
-  ],
+
 };
 
 export default function AccountDocumentsScreen({ visible, onClose, initialTab = 'terms' }) {
@@ -52,7 +52,7 @@ export default function AccountDocumentsScreen({ visible, onClose, initialTab = 
   const [error, setError] = useState('');
   useEffect(() => { if (visible) { setTab(initialTab); setError(''); } }, [visible, initialTab]);
   const contacts = supportLinks();
-  const approved = hasApprovedDocuments();
+  const approved = tab === 'privacy' ? hasApprovedPrivacyPolicy() : APPROVED && !!validWebUrl(TERMS_URL);
   const approvedUrl = approved ? validWebUrl(tab === 'terms' ? TERMS_URL : PRIVACY_URL) : null;
   const open = async url => {
     try { setError(''); await Linking.openURL(url); }
@@ -60,37 +60,40 @@ export default function AccountDocumentsScreen({ visible, onClose, initialTab = 
   };
 
   return (
-    <Modal visible={visible} animationType="slide" onRequestClose={onClose} presentationStyle="fullScreen">
-      <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+      <View style={[styles.backdrop, { paddingTop: insets.top + spacing.lg, paddingBottom: insets.bottom }]}>
+      <View style={styles.screen}>
         <View style={[styles.header, { paddingHorizontal: hPad }]}>
-          <Text style={styles.title}>Условия и связь</Text>
+          <Text style={styles.title}>{tab === 'privacy' ? 'Конфиденциальность' : 'Условия и связь'}</Text>
           <TouchableOpacity onPress={onClose} accessibilityRole="button" accessibilityLabel="Закрыть документы" style={styles.close}><Ionicons name="close" size={24} color={colors.textPrimary} /></TouchableOpacity>
         </View>
-        <ScrollView contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: spacing.xxl }}>
+        <ScrollView key={tab} contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: spacing.xxl }} showsVerticalScrollIndicator>
           <View style={styles.tabs}>
-            {[['terms', 'Предзаказ'], ['privacy', 'Данные']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => setTab(id)} accessibilityRole="tab" accessibilityState={{ selected: tab === id }} style={[styles.tab, tab === id && styles.selected]}><Text style={[styles.tabText, tab === id && styles.selectedText]}>{label}</Text></TouchableOpacity>)}
+            {[['terms', 'Предзаказ'], ['privacy', 'Политика']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => setTab(id)} accessibilityRole="tab" accessibilityState={{ selected: tab === id }} style={[styles.tab, tab === id && styles.selected]}><Text style={[styles.tabText, tab === id && styles.selectedText]}>{label}</Text></TouchableOpacity>)}
           </View>
-          {!approved && <View style={styles.notice}><Text style={styles.noticeTitle}>Нужно заполнить перед запуском</Text><Text style={styles.copy}>Пока это проект сведений. Владелец кофейни должен утвердить документы, указать оператора данных, реквизиты, контакты и сроки хранения. Этот текст не заменяет утверждённую политику и условия.</Text></View>}
+          {!approved && <View style={styles.notice}><Text style={styles.noticeTitle}>{tab === 'terms' ? 'Черновик условий предзаказа' : 'Черновик политики'}</Text><Text style={styles.copy}>Этот раздел ещё требует утверждения владельцем кофейни.</Text></View>}
           {approvedUrl && <TouchableOpacity onPress={() => open(approvedUrl)} accessibilityRole="link" style={styles.card}><Text style={styles.link}>Открыть утверждённый документ</Text></TouchableOpacity>}
-          {sections[tab].map(([title, body]) => <View key={title} style={styles.card}><Text style={styles.sectionTitle}>{title}</Text><Text style={styles.copy}>{body}</Text></View>)}
+          {tab === 'privacy' ? privacyPolicySections.map(({ title, paragraphs }) => <View key={title} style={styles.card}><Text style={styles.sectionTitle}>{title}</Text>{paragraphs.map((body, index) => <Text key={index} selectable style={styles.copy}>{body}</Text>)}</View>) : sections.terms.map(([title, body]) => <View key={title} style={styles.card}><Text style={styles.sectionTitle}>{title}</Text><Text style={styles.copy}>{body}</Text></View>)}
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Связаться с кофейней</Text>
-            <Text style={styles.copy}>SBL · Томск, проспект Ленина, 72</Text>
-            {contacts.phone && <TouchableOpacity onPress={() => open(`tel:${contacts.phone}`)} accessibilityRole="link" style={styles.contact}><Text style={styles.link}>Позвонить: {contacts.phone}</Text></TouchableOpacity>}
+            <Text style={styles.copy}>{privacyPolicyContact.name} · Томск, проспект Ленина, 72</Text>
+            {contacts.phone && <TouchableOpacity onPress={() => open(`tel:${contacts.phone}`)} accessibilityRole="link" accessibilityLabel={`Позвонить в кофейню: ${contacts.phoneDisplay}`} style={styles.contact}><Text style={styles.link}>Позвонить: {contacts.phoneDisplay}</Text></TouchableOpacity>}
             {contacts.email && <TouchableOpacity onPress={() => open(`mailto:${contacts.email}`)} accessibilityRole="link" style={styles.contact}><Text style={styles.link}>Написать: {contacts.email}</Text></TouchableOpacity>}
             {!contacts.phone && !contacts.email && <Text style={styles.copy}>Контакты для связи ещё не опубликованы в приложении. Пока можно обратиться к сотруднику в кофейне.</Text>}
           </View>
           {!!error && <Text style={styles.error} accessibilityRole="alert">{error}</Text>}
         </ScrollView>
       </View>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.background },
+  backdrop: { flex: 1, backgroundColor: 'rgba(20,24,20,0.4)', alignItems: 'center', justifyContent: 'flex-end' },
+  screen: { width: '100%', maxWidth: 720, flex: 1, maxHeight: '94%', backgroundColor: colors.background, borderTopLeftRadius: radius.xlarge, borderTopRightRadius: radius.xlarge, overflow: 'hidden' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.md },
-  title: { fontSize: 23, fontWeight: '800', color: colors.textPrimary },
+  title: { fontSize: 20, flex: 1, fontWeight: '800', color: colors.textPrimary },
   close: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   tabs: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   tab: { flex: 1, minHeight: 44, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceElevated },

@@ -1,0 +1,40 @@
+build:
+  name: SBL iPhone archive without signing
+  steps:
+    - eas/checkout
+    - eas/use_npm_token
+    - eas/install_node_modules
+    - eas/resolve_build_config
+    - eas/prebuild
+    - run:
+        name: Install iOS Pods
+        working_directory: ios
+        command: pod install
+    - run:
+        name: Archive Release arm64 without Apple credentials
+        shell: /bin/bash
+        command: |
+          set -euo pipefail
+          mkdir -p artifacts
+          xcodebuild -workspace ios/SBL.xcworkspace -scheme SBL -configuration Release -destination 'generic/platform=iOS' -archivePath "$PWD/artifacts/SBL.xcarchive" archive CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" 2>&1 | tee artifacts/xcodebuild.log
+          APP="$PWD/artifacts/SBL.xcarchive/Products/Applications/SBL.app"
+          test -d "$APP"
+          test -f "$APP/main.jsbundle"
+          xcrun lipo -archs "$APP/SBL" | grep -q arm64
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist" | grep -qx com.shikky.sbl
+          echo 'Unsigned archive for physical iPhone; signing and export are required.' > artifacts/ARCHIVE-STATUS.txt
+          xcodebuild -version > artifacts/BUILD-TOOLS.txt
+          ditto -c -k --sequesterRsrc --keepParent artifacts/SBL.xcarchive artifacts/SBL-ios-unsigned.xcarchive.zip
+    - eas/upload_artifact:
+        name: Unsigned iPhone archive
+        inputs:
+          type: application-archive
+          path: artifacts/SBL-ios-unsigned.xcarchive.zip
+    - eas/upload_artifact:
+        name: Build evidence
+        inputs:
+          type: build-artifact
+          path: |
+            artifacts/ARCHIVE-STATUS.txt
+            artifacts/BUILD-TOOLS.txt
+            artifacts/xcodebuild.log

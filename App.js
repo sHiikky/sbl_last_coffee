@@ -39,6 +39,7 @@ import { selectMenuProducts, hasProductPhoto } from './lib/menuVisibility';
 import { makeCartItem, cartMatchesSnapshot } from './lib/cartOptions';
 import { additionTitle, presentAdditions } from './lib/additionsPresentation';
 import { getVerifiedAccount, signOutAccount, ADMIN_LOGIN_ENABLED } from './lib/accountService';
+import { finishRegistrationDraft } from './lib/accountProfile';
 import useOrderNotifications from './hooks/useOrderNotifications';
 import { refreshCartPrices } from './lib/checkoutQuote';
 import useLoyaltyState from './loyalty/useLoyaltyState';
@@ -441,6 +442,15 @@ export default function App() {
   const [cart, setCart] = useState({});
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [account, setAccount] = useState(null);
+  // Run outside the Auth callback: updating metadata inside it can deadlock the SDK.
+  useEffect(() => {
+    if (!account?.id || Platform.OS !== 'web') return;
+    let active = true;
+    finishRegistrationDraft(account).then(updated => {
+      if (active && updated !== account) setAccount(current => current?.id === updated.id ? updated : current);
+    }).catch(() => { console.warn('[profile] registration draft remains available for retry'); });
+    return () => { active = false; };
+  }, [account?.id]);
   const [orderHistory, setOrderHistory] = useState([]);
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);

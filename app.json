@@ -6,9 +6,16 @@
     "orientation": "portrait",
     "icon": "./assets/brand/app-icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "plugins": [
       "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Выберите фото для профиля SBL. Оно останется только на этом устройстве.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-location",
         {
@@ -30,18 +37,15 @@
       [
         "expo-navigation-bar",
         {
-          "visibility": "hidden",
-          "barStyle": "light",
-          "backgroundColor": "#050505"
+          "hidden": true,
+          "style": "light"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-font",
+      "expo-image",
+      ["expo-status-bar", { "style": "light" }]
     ],
-    "splash": {
-      "image": "./assets/brand/splash-full.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#050505"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shikky.sbl"
@@ -52,12 +56,12 @@
         "foregroundImage": "./assets/brand/app-icon.png",
         "backgroundColor": "#eceae5"
       },
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/brand/app-icon.png"
@@ -68,14 +72,6 @@
       }
     },
     "owner": "shikkyy",
-    "scheme": "sbl",
-    "androidNavigationBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#050505"
-    },
-    "androidStatusBar": {
-      "barStyle": "light-content",
-      "backgroundColor": "#050505"
-    }
+    "scheme": "sbl"
   }
 }

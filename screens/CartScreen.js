@@ -88,6 +88,16 @@ export default function CartScreen({
   const [pickupTime] = useState(PICKUP_TIMES[0]);
   // A Yandex account brings a display name; the guest can still change it for this order.
   const [customerName, setCustomerName] = useState(account?.name || '');
+  const nameOwner = useRef(account?.id);
+  const nameEdited = useRef(false);
+  useEffect(() => {
+    if (nameOwner.current !== account?.id) {
+      nameOwner.current = account?.id;
+      nameEdited.current = false;
+      setCustomerName(account?.name || '');
+    } else if (!nameEdited.current) setCustomerName(account?.name || '');
+  }, [account?.id, account?.name]);
+  const changeCustomerName = value => { nameEdited.current = true; setCustomerName(value); };
   const [customerPhone, setCustomerPhone] = useState(formatPhoneInput(account?.phone));
   const [orderComment, setOrderComment] = useState('');
   const [orderingConfig, setOrderingConfig] = useState(null);
@@ -616,7 +626,7 @@ export default function CartScreen({
           <View>
             <View style={[styles.infoBox, { marginTop: spacing.md, gap: spacing.sm }]}>
               <Text style={styles.infoTitle}>Контакт для получения заказа</Text>
-              <TextInput accessibilityLabel="Ваше имя" placeholder="Ваше имя" value={customerName} onChangeText={setCustomerName} maxLength={80} style={styles.contactInput} />
+              <TextInput accessibilityLabel="Ваше имя" placeholder="Ваше имя" value={customerName} onChangeText={changeCustomerName} maxLength={80} style={styles.contactInput} />
               <TextInput
                 accessibilityLabel="Телефон для связи"
                 placeholder={PHONE_INPUT_PLACEHOLDER}

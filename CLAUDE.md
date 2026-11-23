@@ -1,9 +1,9 @@
 # SBL — приложение кофейни
 
-React Native / Expo (SDK 54) приложение для сети кофеен «SBL» (Томск). Backend — Supabase. Подробности, схема и решения — в `README.md`; здесь только то, что нужно знать перед правками.
+React Native / Expo (SDK 58) приложение кофейни «SBL coffee» (Томск). Актуальный статус backend и запуска — в корневом `PROJECT_CONTEXT.md`; старые разделы ниже могут описывать Supabase до переноса.
 
 ## Стек и запуск
-- Expo 54, React 19, React Native 0.81, `@react-navigation` (bottom-tabs + native-stack)
+- Expo 58, React 19.3, React Native 0.88.1, `@react-navigation` (bottom-tabs + native-stack). Обновлено 23.11.2026 для Expo Go58; Doctor20/20 и integration34 PASS, первый запуск на iPhone ещё требует проверки владельцем. Артефакты `work/expo-sdk58-20261123/`.
 - Пакетный менеджер — npm (`package-lock.json`). Запуск: `npm install`, затем `npm start` / `npm run web`.
 - Если `npm start` не подходит: `node node_modules/expo/bin/cli start --web --port 8081`.
 - Dev-сервер иногда держит порт 8081 — найти процесс (`netstat -ano | grep 8081`) и завершить.
@@ -75,3 +75,6 @@ React Native / Expo (SDK 54) приложение для сети кофеен �
 
 ## Проверка APK на Samsung S20 FE — 04.11.2026
 По просьбе владельца внесены пункты 1–8; GPS (пункт9) НЕ менять. ProductScreen: Android KeyboardAvoidingView height + resize, прокрутка к пожеланию после появления клавиатуры, временно скрытый footer и кнопка Готово; КБЖУ/состав/аллергены всегда видны, Подробнее удалено. Menu: decelerationRate0.98 и без overscroll. Голографический цикл12с, unknown AppState больше не блокирует запуск; пауза в фоне и Reduced Motion сохранены. BrandLaunch: Android180мс, iOSHeavy, отмена при уходе в фон. expo-navigation-bar добавлен: начальная панель скрыта плагином, после заставки восстановлена; чёрный фон root/splash. SoftEdgeProductPhoto смягчает3% края исходного изображения SVG-маской при contain, сохраняет fallback/точную latte-маску и настройки редактора; вырезанные тени в исходных фото автоматически не восстанавливаются. БД и URL фото не менялись. Все28 suites PASS, дополнительно keyboard/nutrition Android regression PASS; web/Android/iOS export PASS. Новую облачную APK не запускали; ощущения и системные полосы проверить на реальном Samsung после пересборки.
+
+## Промокоды · 07.11.2026
+В этой папке сохранён новый дизайн kassa-terminal из eab9acf. Добавлены promo-admin.js/css и вкладка «Промокоды», lib/promoCodes.js и серверный расчёт в create_pickup_order через миграцию 20261106100000_app_promo_codes.sql. Миграция НЕ применялась в рабочую базу, не утверждать обратное. Установка/условия/проверка: work/promo-codes/README.md. Фото, СБИС и бонусный учёт этой задачей не менялись.

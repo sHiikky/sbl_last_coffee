@@ -1,11 +1,15 @@
 // screens/LoginScreen.js
 // Real Supabase OTP only. Sending remains disabled until its provider is configured.
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Linking, useWindowDimensions } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Keyboard, Platform, Linking, Animated, useWindowDimensions } from 'react-native';
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import YandexMark from '../components/YandexMark';
+import AccountProfileFields from '../components/AccountProfileFields';
+import useMotionPreference from '../hooks/useMotionPreference';
+import { normalizeProfileName, hasCompleteProfile, saveAccountProfile, saveRegistrationDraft } from '../lib/accountProfile';
+import { writeLocalAvatar } from '../lib/localAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import PrimaryButton from '../components/PrimaryButton';
@@ -51,6 +55,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const hPad = getHorizontalPadding(width);
+  const callNumberFontSize = Math.min(28, Math.max(17, (Math.min(width, 528) - 2 * hPad - 2 * spacing.xl - 2 * spacing.lg) / 11.5));
 
   const [step, setStep] = useState('phone'); // phone | call | code
   const [digits, setDigits] = useState('');
@@ -62,9 +67,31 @@ export default function LoginScreen({ navigation, route, onLogin }) {
   const [retryAt, setRetryAt] = useState(0);
   const [challenge, setChallenge] = useState(null);
   const [documentsOpen, setDocumentsOpen] = useState(false);
+  const [mode, setMode] = useState('login');
+  const [consent, setConsent] = useState(false);
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', avatarUri: null });
+  const [pendingAccount, setPendingAccount] = useState(null);
+  const profileValid = !!normalizeProfileName(profile.firstName) && !!normalizeProfileName(profile.lastName);
+  const { reduceMotion } = useMotionPreference();
+  const entrance = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    entrance.stopAnimation();
+    if (reduceMotion) { entrance.setValue(1); return; }
+    entrance.setValue(0);
+    Animated.timing(entrance, { toValue: 1, duration: 220, useNativeDriver: true }).start();
+  }, [step, mode, reduceMotion, entrance]);
+  const completeLogin = async account => {
+    let updated = account;
+    if (mode === 'register' && profileValid && !hasCompleteProfile(account)) updated = await saveAccountProfile(account.id, profile);
+    if (mode === 'register' && profile.avatarUri) await writeLocalAvatar(account.id, profile.avatarUri);
+    await onLogin?.(updated);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    if (mountedRef.current) navigation.goBack();
+  };
   // Yandex account adding its phone (after Yandex sign-in, or from the profile): call-confirm a number.
   const [linkMode, setLinkMode] = useState(!!route?.params?.linkPhone && WAITCALL_ENABLED);
   const codeInputRef = useRef(null);
+  const scrollRef = useRef(null);
   const busyRef = useRef(false);
   const callFinishedRef = useRef(false);
   const mountedRef = useRef(true);
@@ -100,9 +127,11 @@ export default function LoginScreen({ navigation, route, onLogin }) {
         const account = await checkWaitCallSignIn(challenge);
         if (active && account && mountedRef.current) {
           callFinishedRef.current = true;
-          await onLogin?.(account);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-          navigation.goBack();
+          try { await completeLogin(account); } catch {
+            await onLogin?.(account);
+            setPendingAccount(account); setStep('profile');
+            setError('Вход выполнен. Не удалось сохранить профиль — попробуйте ещё раз.');
+          }
         }
       } catch (cause) { if (active && mountedRef.current) setError(describeAuthError(cause)); }
       finally { inFlight = false; }
@@ -117,7 +146,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
   }, [step]);
 
   const submitPhone = async () => {
-    if (!phoneValid || busyRef.current || !AUTH_AVAILABLE) return;
+    if (!phoneValid || busyRef.current || !AUTH_AVAILABLE || secondsLeft > 0 || !consent || (mode === 'register' && !profileValid)) return;
     if (ADMIN_MODE) { setError(''); setChallenge({ admin: true, phone: digits }); setCode(''); setStep('code'); return; }
     busyRef.current = true;
     setError('');
@@ -126,6 +155,8 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       const next = linkMode ? await startPhoneLink(digits) : WAITCALL_ENABLED ? await startWaitCallSignIn(digits) : await startPhoneSignIn(digits);
       if (!mountedRef.current) return;
       setChallenge(next);
+      Keyboard.dismiss();
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
       setCode('');
       callFinishedRef.current = false;
       setStep(WAITCALL_ENABLED ? 'call' : 'code');
@@ -140,18 +171,21 @@ export default function LoginScreen({ navigation, route, onLogin }) {
   };
 
   const submitYandex = async () => {
-    if (busyRef.current || !YANDEX_AUTH_ENABLED) return;
+    if (busyRef.current || !YANDEX_AUTH_ENABLED || !consent || (mode === 'register' && !profileValid)) return;
     busyRef.current = true;
     setError('');
     setLoading(true);
     try {
-      const account = await startYandexSignIn();
+      if (mode === 'register' && Platform.OS === 'web') await saveRegistrationDraft(profile);
+      let account = await startYandexSignIn();
+      if (mode === 'register' && profileValid && !hasCompleteProfile(account)) account = await saveAccountProfile(account.id, profile);
+      if (mode === 'register' && profile.avatarUri) await writeLocalAvatar(account.id, profile.avatarUri);
       await onLogin?.(account);
       if (!mountedRef.current) return;
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       // Yandex gives no phone: ask the guest to confirm one by call so Yandex and phone are one account.
       if (!account.phone && WAITCALL_ENABLED) { setLinkMode(true); setStep('phone'); setChallenge(null); setCode(''); return; }
-      navigation.goBack();
+      await completeLogin(account);
     } catch (cause) {
       // A closed browser window is the guest's own choice, not an error to show.
       if (mountedRef.current && cause?.code !== 'YANDEX_CANCELLED') setError(describeAuthError(cause));
@@ -168,10 +202,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
     setLoading(true);
     try {
       const account = challenge.admin ? await adminSignIn(challenge.phone) : await verifyPhoneSignIn({ ...challenge, token: code });
-      await onLogin?.(account);
-      if (!mountedRef.current) return;
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      navigation.goBack();
+      await completeLogin(account);
     } catch (cause) {
       if (mountedRef.current) setError(describeAuthError(cause));
     } finally {
@@ -214,7 +245,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={{ paddingTop: insets.top, paddingHorizontal: hPad }}>
+      <View style={{ paddingTop: insets.top, paddingHorizontal: hPad, width: '100%', maxWidth: 528, alignSelf: 'center' }}>
         <TouchableOpacity
           onPress={step !== 'phone' ? backFromCode : () => navigation.goBack()}
           disabled={loading}
@@ -228,24 +259,31 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       </View>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: insets.bottom + spacing.xxl }}
+        ref={scrollRef}
+        removeClippedSubviews={false}
+        contentContainerStyle={{ paddingHorizontal: hPad, paddingBottom: insets.bottom + spacing.xxl, width: '100%', maxWidth: 528, alignSelf: 'center' }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <BrandLogo variant="full" width={216} style={styles.logo} accessibilityLabel="SBL · Украшения и кофе" />
+        <BrandLogo variant="full" width={180} style={styles.logo} accessibilityLabel="SBL · Украшения и кофе" />
 
+        <Animated.View key={step} style={{ opacity: entrance }}>
         {step === 'phone' ? (
           <>
-            <Text style={styles.title}>{linkMode ? 'Подтвердите номер' : 'Вход или регистрация'}</Text>
+            {!linkMode && <View style={styles.modeTabs}>
+              {[['login', 'Войти'], ['register', 'Создать аккаунт']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => { setMode(id); setError(''); }} disabled={loading} accessibilityRole="tab" accessibilityState={{ selected: mode === id }} style={[styles.modeTab, mode === id && styles.modeSelected]}><Text style={[styles.modeText, mode === id && styles.modeSelectedText]}>{label}</Text></TouchableOpacity>)}
+            </View>}
+            <Text style={styles.title}>{linkMode ? 'Подтвердите номер' : mode === 'register' ? 'Рады знакомству' : 'С возвращением'}</Text>
             <Text style={styles.subtitle}>
-              {linkMode ? 'Вы вошли через Яндекс. Подтвердите номер одним звонком: заказы, бонусы и серия будут в одном аккаунте.' : WAITCALL_ENABLED ? 'Войдите одним звонком, чтобы сохранять бонусы и историю заказов между устройствами.' : 'Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.'}
+              {linkMode ? 'Вы вошли через Яндекс. Подтвердите номер одним звонком: заказы, бонусы и серия будут в одном аккаунте.' : WAITCALL_ENABLED ? 'Один звонок — и вы в своём аккаунте. Пароль не нужен.' : 'Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.'}
             </Text>
 
             {ADMIN_MODE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Режим администратора: подойдёт любой номер и любой код, СМС не отправляется.</Text></View>}
             {!AUTH_AVAILABLE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>{YANDEX_AUTH_ENABLED ? 'Вход по СМС пока не подключён. Войдите через Яндекс: меню можно посмотреть и без входа.' : 'Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.'}</Text></View>}
 
+            {mode === 'register' && !linkMode && <View style={{ marginBottom: spacing.xl }}><AccountProfileFields value={profile} onChange={setProfile} disabled={loading} /></View>}
             <Text style={styles.label}>Номер телефона</Text>
-            <View style={[styles.field, error ? styles.fieldError : null]}>
+            <View style={styles.field}>
               <TextInput
                 value={formatPhone(digits)}
                 onChangeText={(t) => { setDigits(parsePhoneInput(t, digits)); setError(''); }}
@@ -263,30 +301,35 @@ export default function LoginScreen({ navigation, route, onLogin }) {
               />
             </View>
 
-            <View style={{ marginTop: spacing.xl }}>
+            <View style={styles.consentRow}>
+              <TouchableOpacity onPress={() => setConsent(!consent)} disabled={loading} accessibilityRole="checkbox" accessibilityLabel="Согласие на обработку персональных данных" accessibilityState={{ checked: consent }} style={styles.checkTouch}><View style={[styles.check, consent && styles.checkSelected]}>{consent && <Ionicons name="checkmark" size={16} color={colors.textOnDark} />}</View></TouchableOpacity>
+              <Text style={styles.consentCopy}>Согласен на <Text onPress={() => setDocumentsOpen(true)} accessibilityRole="link" style={styles.consentLink}>обработку персональных данных</Text> и ознакомлен с <Text onPress={() => setDocumentsOpen(true)} accessibilityRole="link" style={styles.consentLink}>политикой конфиденциальности</Text>.</Text>
+            </View>
+            <View style={{ marginTop: spacing.lg }}>
               <PrimaryButton
-                label={WAITCALL_ENABLED ? 'Получить номер для звонка' : 'Получить код'}
+                variant="holo"
+                label={secondsLeft > 0 ? `Повторить через ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}` : WAITCALL_ENABLED ? 'Получить номер для звонка' : 'Получить код'}
                 onPress={submitPhone}
-                disabled={!phoneValid || !AUTH_AVAILABLE || secondsLeft > 0}
+                disabled={!phoneValid || !AUTH_AVAILABLE || secondsLeft > 0 || !consent || (mode === 'register' && !profileValid)}
                 loading={loading}
                 fullWidth
               />
             </View>
 
             {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
-            {secondsLeft > 0 && <Text style={styles.legal}>Повторный запрос через {secondsLeft} с</Text>}
+            {secondsLeft > 0 && <Text style={styles.cooldown}>Новый запрос будет доступен после обратного отсчёта</Text>}
             {YANDEX_AUTH_ENABLED && !linkMode && <>
               <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>или</Text><View style={styles.dividerLine} /></View>
               <TouchableOpacity
                 onPress={submitYandex}
-                disabled={loading}
+                disabled={loading || !consent || (mode === 'register' && !profileValid)}
                 activeOpacity={0.85}
                 style={[styles.yandexButton, loading && { opacity: 0.6 }]}
                 accessibilityRole="button"
                 accessibilityLabel="Войти через Яндекс"
-                accessibilityState={{ disabled: loading, busy: loading }}
+                accessibilityState={{ disabled: loading || !consent || (mode === 'register' && !profileValid), busy: loading }}
               >
-                <View style={styles.yandexMark}><Text style={styles.yandexMarkText}>Я</Text></View>
+                <YandexMark size={28} />
                 <Text style={styles.yandexLabel}>Войти через Яндекс</Text>
               </TouchableOpacity>
             </>}
@@ -294,27 +337,33 @@ export default function LoginScreen({ navigation, route, onLogin }) {
               <Text style={styles.resendText}>Позже</Text>
             </TouchableOpacity>}
             <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Условия предзаказа и сведения о данных" style={styles.resend}>
-              <Text style={styles.resendText}>Условия предзаказа и сведения о данных</Text>
+              <Text style={styles.resendText}>Условия и политика конфиденциальности</Text>
             </TouchableOpacity>
+          </>
+        ) : step === 'profile' ? (
+          <>
+            <Text style={styles.title}>Ваш профиль</Text>
+            <Text style={styles.subtitle}>Номер подтверждён. Осталось сохранить имя и фото.</Text>
+            <AccountProfileFields value={profile} onChange={setProfile} disabled={loading} />
+            {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
+            <View style={{ marginTop: spacing.lg }}><PrimaryButton variant="holo" fullWidth label="Сохранить профиль" loading={loading} disabled={!profileValid} onPress={async () => {
+              if (busyRef.current) return;
+              busyRef.current = true; setLoading(true); setError('');
+              try { await completeLogin(pendingAccount); } catch { setError('Не удалось сохранить. Проверьте соединение и повторите.'); }
+              finally { busyRef.current = false; if (mountedRef.current) setLoading(false); }
+            }} /></View>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.resend} accessibilityRole="button"><Text style={styles.resendText}>Заполнить позже</Text></TouchableOpacity>
           </>
         ) : step === 'call' ? (
           <>
-            <Text style={styles.callKicker}>SBL · ВАШ АККАУНТ</Text>
             <Text style={styles.title}>Подтвердите номер</Text>
             <Text style={styles.subtitle}>Позвоните с номера <Text style={styles.callPhoneInline}>{destination}</Text>. Мы подтвердим вход автоматически — код вводить не нужно.</Text>
             <View style={styles.callCard}>
-              <View style={styles.callCardTop}>
-                <View style={styles.callIcon}><Ionicons name="call" size={20} color={colors.accent} /></View>
-                <View style={styles.callCardHeading}><Text style={styles.callEyebrow}>БЕСПЛАТНОЕ ПОДТВЕРЖДЕНИЕ</Text><Text style={styles.callLabel}>Наберите этот номер</Text></View>
-                <View style={styles.securePill}><Ionicons name="shield-checkmark" size={14} color={colors.success} /><Text style={styles.secureText}>Защищено</Text></View>
-              </View>
-              <View style={styles.numberPanel}><Text style={styles.numberCaption}>НОМЕР ДЛЯ ЗВОНКА</Text><Text style={styles.callNumber} selectable numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.68}>{formatPhone(challenge?.callNumber)}</Text></View>
-              <TouchableOpacity onPress={() => Linking.openURL(`tel:${challenge.callNumber}`).catch(() => setError('Не удалось открыть телефон. Наберите номер вручную.'))} accessibilityRole="button" style={styles.callButtonWrap} activeOpacity={0.88}>
-                <LinearGradient colors={['#D16A43', colors.accent, '#96391D']} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.callButton}><Ionicons name="call" size={18} color="#fff" /><Text style={styles.callButtonText}>Позвонить сейчас</Text><Ionicons name="arrow-forward" size={17} color="#fff" /></LinearGradient>
-              </TouchableOpacity>
+              <View style={styles.numberPanel}><Text style={styles.numberCaption}>НОМЕР ДЛЯ ЗВОНКА</Text><Text key={challenge?.attemptId} style={[styles.callNumber, { fontSize: callNumberFontSize, width: '100%' }]} selectable numberOfLines={1} adjustsFontSizeToFit={Platform.OS !== 'android'} minimumFontScale={0.68}>{formatPhone(challenge?.callNumber)}</Text></View>
+              <View style={{ marginTop: spacing.lg }}><PrimaryButton variant="holo" fullWidth label="Позвонить сейчас" disabled={callLeft <= 0} onPress={() => Linking.openURL(`tel:${challenge.callNumber}`).catch(() => setError('Не удалось открыть телефон. Наберите номер вручную.'))} /></View>
               <View style={styles.callTimerRow}><Ionicons name="time-outline" size={15} color={colors.textMuted} /><Text style={styles.callTimer}>Номер действует ещё {Math.floor(callLeft / 60)}:{String(callLeft % 60).padStart(2, '0')}</Text></View>
             </View>
-            <View style={styles.waitingNote}><View style={styles.waitingDot} /><Text style={styles.legal}>{callLeft ? 'Ожидаем подтверждающий звонок. После него вы автоматически войдёте в аккаунт.' : 'Время ожидания истекло. Вернитесь и запросите новый номер.'}</Text></View>
+            <View style={styles.waitingNote}><Text style={styles.legal}>{callLeft ? 'Ожидаем подтверждающий звонок. После него вы автоматически войдёте в аккаунт.' : 'Время ожидания истекло. Вернитесь и запросите новый номер.'}</Text></View>
             {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
             <TouchableOpacity onPress={backFromCode} accessibilityRole="button" style={styles.resend}><Text style={styles.resendText}>Изменить номер или начать заново</Text></TouchableOpacity>
           </>
@@ -372,15 +421,28 @@ export default function LoginScreen({ navigation, route, onLogin }) {
             {challenge?.mode === 'sms' && <Text style={styles.legal}>Этот номер уже зарегистрирован. После подтверждения откроется его аккаунт; гостевые заказы автоматически в него не переносятся.</Text>}
           </>
         )}
+        </Animated.View>
       </ScrollView>
-      <AccountDocumentsScreen visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
+      <AccountDocumentsScreen initialTab="privacy" visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   backButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginLeft: -10 },
-  logo: { marginTop: spacing.lg, marginBottom: spacing.xxl },
+  logo: { alignSelf: 'center', marginTop: spacing.sm, marginBottom: spacing.xl },
+  modeTabs: { flexDirection: 'row', backgroundColor: colors.surface0, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.pill, padding: 4, marginBottom: spacing.xl },
+  modeTab: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.pill },
+  modeSelected: { backgroundColor: colors.darkSurface },
+  modeText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
+  modeSelectedText: { color: colors.textOnDark },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: spacing.lg },
+  checkTouch: { width: 44, minHeight: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  check: { width: 22, height: 22, borderRadius: 6, borderWidth: 1, borderColor: colors.borderStrong, backgroundColor: colors.surface2, alignItems: 'center', justifyContent: 'center' },
+  checkSelected: { backgroundColor: colors.accent, borderColor: colors.accent },
+  consentCopy: { flex: 1, fontSize: 12, lineHeight: 19, color: colors.textSecondary, paddingTop: 3 },
+  consentLink: { color: colors.accent, textDecorationLine: 'underline' },
+  cooldown: { fontSize: 12, lineHeight: 18, textAlign: 'center', color: colors.textSecondary, marginTop: spacing.sm },
   title: { fontSize: 28, fontWeight: '800', color: colors.textPrimary, letterSpacing: -0.4 },
   subtitle: { fontSize: 15, lineHeight: 22, color: colors.textSecondary, marginTop: spacing.sm, marginBottom: spacing.xxl },
   label: { fontSize: 13, fontWeight: '600', color: colors.textSecondary, marginBottom: spacing.sm },
@@ -445,7 +507,7 @@ const styles = StyleSheet.create({
   secureText: { color: colors.success, fontSize: 11, fontWeight: '700' },
   numberPanel: { backgroundColor: colors.surface0, borderRadius: radius.large, borderWidth: 1, borderColor: 'rgba(32,35,32,0.06)', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
   numberCaption: { color: colors.textMuted, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
-  callNumber: { color: colors.textPrimary, fontSize: 30, fontWeight: '800', letterSpacing: 0.2, marginTop: spacing.sm, fontVariant: ['tabular-nums'] },
+  callNumber: { color: colors.textPrimary, fontSize: 28, lineHeight: 42, minHeight: 44, includeFontPadding: true, textAlignVertical: 'center', fontWeight: '800', marginTop: spacing.sm, fontVariant: ['tabular-nums'] },
   callButtonWrap: { overflow: 'hidden', borderRadius: radius.pill, marginTop: spacing.lg, ...shadow.button },
   callButton: { minHeight: 58, flexDirection: 'row', columnGap: spacing.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
   callButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },

@@ -7,6 +7,7 @@ const credentials = login && password
   : apiKey
     ? { apikey: apiKey }
     : null;
+let recoveryClaimed = false;
 
 Deno.serve(async request => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -18,23 +19,41 @@ Deno.serve(async request => {
   try { phone = (await request.json()).phone; } catch { return json({ error: 'INVALID_JSON' }, 400); }
   if (typeof phone !== 'string' || !/^\+7\d{10}$/.test(phone)) return json({ error: 'Проверьте номер телефона' }, 400);
   const db = admin();
-  const { data: recent, error: lookupError } = await db.from('waitcall_auth_attempts').select('id,requester_id,created_at,verified,last_error')
+  const { data: recent, error: lookupError } = await db.from('waitcall_auth_attempts').select('id,requester_id,created_at,verified,last_error,consumed,call_number,expires_at')
     .eq('phone', phone).gte('created_at', new Date(Date.now() - 3600_000).toISOString())
     .order('created_at', { ascending: false }).limit(5);
   if (lookupError) return json({ error: 'Сервис временно недоступен' }, 503);
   if (recent?.length && Date.now() - new Date(recent[0].created_at).getTime() < 60_000) return json({ error: 'Повторите через минуту' }, 429);
+  // Recover this caller's existing challenge after a client/Auth failure.
+  // This allocates no provider number and consumes no additional quota.
+  const pending = recent?.[0];
+  const remaining = pending ? Math.floor((Date.parse(pending.expires_at) - Date.now()) / 1000) : 0;
+  if (pending?.requester_id === user.id && !pending.consumed && !pending.verified && remaining >= 120 &&
+      typeof pending.call_number === 'string' && /^\+\d{10,15}$/.test(pending.call_number)) {
+    return json({ attemptId: pending.id, callNumber: pending.call_number, expiresIn: remaining });
+  }
   // One explicitly approved support retry, scoped to the phone's latest
   // verified attempt. A fresh guest after sign-out can use the same allowance.
   // Inserting a new attempt invalidates this exception; it also expires.
-  const supportRetry = recent?.[0]?.id === Deno.env.get('WAITCALL_RETRY_ATTEMPT_ID')
+  const supportRetry = !!recent?.[0] && recent[0].id === Deno.env.get('WAITCALL_RETRY_ATTEMPT_ID')
     && recent[0].verified
     && Date.now() < Date.parse(Deno.env.get('WAITCALL_RETRY_UNTIL') || '');
-  if ((recent?.length || 0) >= 5 && !supportRetry) return json({ error: 'Слишком много попыток. Повторите через час' }, 429);
+  // A server-configured, one-use recovery for one failed test challenge.
+  // The next inserted attempt invalidates the allowance; no OTP/call checks change.
+  const recoveryRetry = !recoveryClaimed && !!pending && !pending.verified && remaining <= 0 &&
+    pending.id === Deno.env.get('WAITCALL_RECOVERY_ATTEMPT_ID') &&
+    pending.requester_id === user.id && user.id === Deno.env.get('WAITCALL_RECOVERY_REQUESTER_ID') &&
+    Date.now() < Date.parse(Deno.env.get('WAITCALL_RECOVERY_UNTIL') || '');
+  if ((recent?.length || 0) >= 5 && !supportRetry && !recoveryRetry) return json({ error: 'Слишком много попыток. Повторите через час' }, 429);
   const { count: userCount, error: userLimitError } = await db.from('waitcall_auth_attempts')
     .select('id', { count: 'exact', head: true }).eq('requester_id', user.id)
     .gte('created_at', new Date(Date.now() - 3600_000).toISOString());
   if (userLimitError) return json({ error: 'Сервис временно недоступен' }, 503);
-  if ((userCount || 0) >= 5 && !supportRetry) return json({ error: 'Слишком много попыток. Повторите через час' }, 429);
+  if ((userCount || 0) >= 5 && !supportRetry && !recoveryRetry) return json({ error: 'Слишком много попыток. Повторите через час' }, 429);
+  if (recoveryRetry) {
+    if (recoveryClaimed) return json({ error: 'Повторите через минуту' }, 429);
+    recoveryClaimed = true;
+  }
   const { data: attempt, error: insertError } = await db.from('waitcall_auth_attempts')
     .insert({ requester_id: user.id, phone }).select('id').single();
   if (insertError?.code === '23505') return json({ error: 'Повторите через минуту' }, 429);

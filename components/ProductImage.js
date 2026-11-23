@@ -12,6 +12,7 @@ import { colors } from '../theme/tokens';
 import HolographicSurface from './HolographicSurface';
 import { photoTranslation } from '../lib/photoComposition';
 import BrandLogo from './BrandLogo';
+import { productPhotoSource } from '../lib/productPhotoSource';
 
 const CATEGORY_ICON = {
   coffee: 'cafe-outline',
@@ -48,6 +49,7 @@ export default function ProductImage({
   style,
   accessibilityLabel,
 }) {
+  source = productPhotoSource(source);
   const [loading, setLoading] = useState(!!source);
   const [failed, setFailed] = useState(false);
   const [layout, setLayout] = useState({ width: 0, height: 0 });

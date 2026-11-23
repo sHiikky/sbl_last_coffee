@@ -106,3 +106,20 @@ work/.release-local/
 /assets/logo-launch.png
 /assets/logo-mark.png
 /assets/splash-icon-dark.png
+
+# Private exports, local SDK diagnostics and generated release material
+private-backup/
+private-export/
+*.dump
+*.dump.partial
+*.apk
+*.aab
+*.ipa
+*.hbc
+*.log
+/work/expo-sdk58-*/
+/work/expo-go-vps-*/
+/work/admin-update-*/
+/work/privacy-comparison-*/
+/work/privacy-approval-*/
+/work/final-polish-*/result.json

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, ScrollView, Animated, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import Text from '../components/AppText';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +10,10 @@ import DarkProfileCard from '../components/profile/DarkProfileCard';
 import LoyaltyTeaser from '../components/profile/LoyaltyTeaser';
 import ProfileMenuGroup from '../components/profile/ProfileMenuGroup';
 import PrimaryButton from '../components/PrimaryButton';
-import AccountDocumentsScreen, { hasApprovedDocuments } from './AccountDocumentsScreen';
+import AccountProfileFields from '../components/AccountProfileFields';
+import { readLocalAvatar, writeLocalAvatar } from '../lib/localAvatar';
+import { saveAccountProfile } from '../lib/accountProfile';
+import AccountDocumentsScreen, { hasApprovedDocuments, hasApprovedPrivacyPolicy } from './AccountDocumentsScreen';
 import NotificationSettingsScreen from './NotificationSettingsScreen';
 import { formatPhone } from './LoginScreen';
 import { colors, radius, spacing, brand } from '../theme/tokens';
@@ -29,9 +33,49 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   const bonusAccount = useBonusAccount();
   const fade = useRef(new Animated.Value(0)).current;
   const [documentsOpen, setDocumentsOpen] = useState(false);
+  const [avatarUri, setAvatarUri] = useState(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorBusy, setEditorBusy] = useState(false);
+  const [editorError, setEditorError] = useState('');
+  const [profile, setProfile] = useState({ firstName: '', lastName: '', avatarUri: null });
+  const [savedName, setSavedName] = useState(null);
+  useEffect(() => {
+    let active = true;
+    setAvatarUri(null); setSavedName(null); setEditorOpen(false);
+    readLocalAvatar(account?.id).then(photo => { if (active) setAvatarUri(photo); }).catch(() => {});
+    return () => { active = false; };
+  }, [account?.id, isFocused]);
+  const openEditor = () => {
+    setProfile({ firstName: account?.firstName || '', lastName: account?.lastName || '', avatarUri });
+    setEditorError(''); setEditorOpen(true);
+  };
+  const saveProfile = async () => {
+    if (editorBusy || !account?.id) return;
+    setEditorBusy(true); setEditorError('');
+    try {
+      const updated = await saveAccountProfile(account.id, profile);
+      await writeLocalAvatar(account.id, profile.avatarUri);
+      setAvatarUri(profile.avatarUri); setSavedName(updated.name); setEditorOpen(false);
+    } catch { setEditorError('Не удалось сохранить профиль. Проверьте соединение и повторите.'); }
+    finally { setEditorBusy(false); }
+  };
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [yandexBusy, setYandexBusy] = useState(false);
   const [yandexError, setYandexError] = useState('');
+  const [yandexCardVisible, setYandexCardVisible] = useState(false);
+  const canAttachYandex = !!account?.phone && !account.provider && YANDEX_AUTH_ENABLED;
+  useEffect(() => {
+    let active = true;
+    setYandexCardVisible(false);
+    if (account?.id) AsyncStorage.getItem(`sbl.hide-yandex-card:${account.id}`).then(hidden => {
+      if (active) setYandexCardVisible(hidden !== 'true');
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [account?.id]);
+  const showYandexCard = visible => {
+    setYandexCardVisible(visible);
+    if (account?.id) void AsyncStorage.setItem(`sbl.hide-yandex-card:${account.id}`, String(!visible)).catch(() => {});
+  };
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [deletion, setDeletion] = useState(null);
   const [deletionBusy, setDeletionBusy] = useState(false);
@@ -83,10 +127,12 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   };
 
   const menuItems = [
+    ...(canAttachYandex && !yandexCardVisible ? [{ icon: 'link-outline', title: 'Привязать Яндекс', subtitle: 'Дополнительный способ входа', onPress: () => showYandexCard(true) }] : []),
+    ...(account ? [{ icon: 'person-outline', title: 'Редактировать профиль', subtitle: 'Имя и фото на этом устройстве', onPress: openEditor }] : []),
     { icon: 'cube-outline', title: 'Мои заказы', subtitle: 'История и статусы', onPress: () => navigation.navigate('OrderHistory') },
     { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые товары', badge: favoriteIds.length || undefined, onPress: () => navigation.navigate('Favorites') },
     { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Заказы, акции, серия', onPress: () => setNotificationsOpen(true) },
-    { icon: 'document-text-outline', title: 'Условия и связь', subtitle: hasApprovedDocuments() ? 'Предзаказ, данные и контакты кофейни' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
+    { icon: 'document-text-outline', title: 'Условия и связь', subtitle: hasApprovedDocuments() ? 'Предзаказ, данные и контакты кофейни' : hasApprovedPrivacyPolicy() ? 'Политика конфиденциальности и контакты' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
   ];
   const requestPending = ['pending', 'processing'].includes(deletion?.status);
   const statusText = { pending: 'Запрос принят и ожидает обработки', processing: 'Запрос обрабатывается', completed: 'Запрос обработан', rejected: 'Нужны уточнения по запросу' }[deletion?.status];
@@ -96,7 +142,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: tabBarHeight + insets.bottom + spacing.xxl }} showsVerticalScrollIndicator={false}>
       <ScreenHeader title="Профиль" />
       <Animated.View style={[styles.body, { opacity: fade }]}>
-        {account ? <DarkProfileCard name={account.name || 'Клиент SBL'} email={account.phone ? formatPhone(account.phone) : 'Вход через Яндекс'} status="STANDARD" avatarSource={null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
+        {account ? <DarkProfileCard name={savedName || account.name || 'Клиент SBL'} email={account.phone ? formatPhone(account.phone) : 'Вход через Яндекс'} status="STANDARD" avatarSource={avatarUri ? { uri: avatarUri } : null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
           <Text style={styles.guestTitle}>Вы зашли как гость</Text>
           <Text style={styles.copy}>Заказы и бонусы связаны с текущей сессией устройства. Подтверждённый номер позволит входить в свой аккаунт на других телефонах.</Text>
           <View style={{ marginTop: spacing.lg }}><PrimaryButton label={YANDEX_AUTH_ENABLED ? 'Войти' : 'Войти по телефону'} onPress={() => navigation.navigate('Login')} fullWidth /></View>
@@ -106,8 +152,11 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
           <Text style={styles.copy}>Один звонок свяжет номер с аккаунтом Яндекса: так заказы и бонусы не потеряются при смене телефона.</Text>
           <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Подтвердить номер" onPress={() => navigation.navigate('Login', { linkPhone: true })} fullWidth /></View>
         </View>}
-        {account?.phone && !account.provider && YANDEX_AUTH_ENABLED && <View style={[styles.card, { marginTop: spacing.lg }]}>
-          <Text style={styles.guestTitle}>Привязать Яндекс</Text>
+        {canAttachYandex && yandexCardVisible && <View style={[styles.card, { marginTop: spacing.lg }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
+            <Text style={[styles.guestTitle, { flex: 1 }]}>Привязать Яндекс</Text>
+            <TouchableOpacity onPress={() => showYandexCard(false)} accessibilityRole="button" accessibilityLabel="Скрыть карточку привязки Яндекса" style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.actionText}>Скрыть</Text></TouchableOpacity>
+          </View>
           <Text style={styles.copy}>Войдите в Яндекс один раз, и в этот аккаунт можно будет заходить и по номеру, и через Яндекс.</Text>
           {!!yandexError && <Text style={styles.error} accessibilityRole="alert">{yandexError}</Text>}
           <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Привязать Яндекс" loading={yandexBusy} onPress={attachYandex} fullWidth /></View>
@@ -124,7 +173,18 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
         <Text style={styles.footerSignature}>{brand.name} · {brand.tagline}</Text>
       </Animated.View>
     </ScrollView>
-    <AccountDocumentsScreen visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
+    <AccountDocumentsScreen initialTab="privacy" visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
+    <Modal visible={editorOpen} transparent animationType="slide" onRequestClose={() => { if (!editorBusy) setEditorOpen(false); }}>
+      <View style={styles.backdrop}><View style={[styles.dialog, { maxHeight: '92%' }]}>
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <Text style={styles.dialogTitle}>Ваш профиль</Text>
+          <View style={{ marginVertical: spacing.lg }}><AccountProfileFields value={profile} onChange={setProfile} disabled={editorBusy} /></View>
+          {!!editorError && <Text style={styles.error} accessibilityRole="alert">{editorError}</Text>}
+          <PrimaryButton variant="holo" fullWidth label="Сохранить" onPress={saveProfile} loading={editorBusy} disabled={!profile.firstName.trim() || !profile.lastName.trim()} />
+          <TouchableOpacity onPress={() => setEditorOpen(false)} disabled={editorBusy} accessibilityRole="button" style={styles.action}><Text style={styles.actionText}>Отмена</Text></TouchableOpacity>
+        </ScrollView>
+      </View></View>
+    </Modal>
     <NotificationSettingsScreen visible={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
     <Modal visible={deletionOpen} transparent animationType="fade" onRequestClose={() => { if (!deletionBusy) setDeletionOpen(false); }}>
       <View style={styles.backdrop}><View style={styles.dialog}>

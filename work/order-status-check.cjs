@@ -33,6 +33,13 @@ function harness(id){const h={slots:[],cursor:0,effects:[],id,finished:0};h.rend
  plan=Promise.resolve({error:new Error('channel offline')});channels.at(-1).status('CHANNEL_ERROR');await flush();
  assert.equal(c.render().error.message,'channel offline');assert.equal(c.render().status,'ready');
  c.stop();assert.equal(timers.size,0);assert(channels.every(ch=>ch.removed));
+ modules['../lib/supabaseClient'].pollingOnly=true;
+ const previousChannels=channels.length;
+ const vps=harness('polled');vps.render();await flush();
+ assert.equal(channels.length,previousChannels);
+ plan=Promise.resolve({data:{status:'preparing',order_number:42}});
+ [...timers][0]();await flush();assert.equal(vps.render().status,'preparing');
+ vps.stop();assert.equal(timers.size,0);
  console.log('PASS: unique channels for the same order, late GET cannot overwrite realtime, terminal status cannot reopen, new order resets state, channels/timers are cleaned');
  console.log('PASS: server order details, explicit retry, preserved offline status, recovered errors and channel failure');
 })().catch(error=>{console.error(error);process.exitCode=1;});

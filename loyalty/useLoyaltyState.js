@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, pollingOnly } from '../lib/supabaseClient';
 import { fetchLoyaltySnapshot } from './loyaltyApi';
 import { getCycleProgress } from './loyaltyService';
 
@@ -85,11 +85,14 @@ export default function useLoyaltyState(orderHistory) {
     setCelebrationQueue([]);
     if (!customerId) return;
     void refresh();
-    const channel = supabase.channel(`loyalty-orders-${customerId}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'orders', filter: `customer_id=eq.${customerId}`,
-      }, () => { void refresh(); })
-      .subscribe();
+    let channel;
+    if (!pollingOnly) {
+      channel = supabase.channel(`loyalty-orders-${customerId}`)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'orders', filter: `customer_id=eq.${customerId}`,
+        }, () => { void refresh(); })
+        .subscribe();
+    }
     const subscription = AppState.addEventListener('change', state => {
       if (state === 'active') void refresh();
     });
@@ -101,7 +104,7 @@ export default function useLoyaltyState(orderHistory) {
       generation.current += 1;
       clearInterval(timer);
       subscription.remove();
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [customerId, refresh]);
 

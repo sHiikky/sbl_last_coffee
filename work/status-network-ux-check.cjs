@@ -67,6 +67,7 @@ console.log('PASS: real menu component skeleton/empty/error distinctions, cached
 let statusValue;
 const statusView = loadView('screens/OrderSuccessScreen.js', {
   ...shared, '../components/HoloRing': 'HoloRing', '../components/PrimaryButton': 'PrimaryButton',
+  '../components/OrderPreparationProgress': 'OrderPreparationProgress',
   '../lib/orderPresentation': present, '../hooks/useOrderStatus': () => statusValue,
 });
 statusValue = { status: 'ready', orderNumber: 42, details: { total: 100, bonus_redeemed: 20, pickup_at: '2026-10-29T05:00:00Z', pickup_point: 'Ленина, 72', customer_name: 'Тест' }, error: new Error('offline'), refreshing: false, refresh: () => { retries++; } };

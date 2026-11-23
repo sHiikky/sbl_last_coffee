@@ -14,6 +14,52 @@
     },
     "production": {
       "autoIncrement": true
+    },
+    "ios-handoff": {
+      "extends": "production",
+      "autoIncrement": false,
+      "withoutCredentials": true,
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "false",
+        "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
+        "EXPO_PUBLIC_ADMIN_LOGIN": "false"
+      },
+      "ios": {
+        "config": "ios-unsigned.yml",
+        "buildConfiguration": "Release",
+        "simulator": false,
+        "applicationArchivePath": "artifacts/SBL-ios-unsigned.xcarchive.zip"
+      }
+    },
+    "ios-store": {
+      "extends": "production",
+      "distribution": "store",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "false",
+        "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
+        "EXPO_PUBLIC_ADMIN_LOGIN": "false"
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "simulator": false
+      }
+    },
+    "preview-vps": {
+      "extends": "preview",
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://31.31.207.216/coffee",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY",
+        "EXPO_PUBLIC_ADMIN_LOGIN": "false",
+        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "true",
+        "EXPO_PUBLIC_WAITCALL_ENABLED": "true",
+        "EXPO_PUBLIC_YANDEX_AUTH_ENABLED": "true",
+        "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
+        "EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED": "false",
+        "EXPO_NO_DOTENV": "1"
+      }
     }
   },
   "submit": {

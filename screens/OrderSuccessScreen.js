@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import HoloRing from '../components/HoloRing';
+import OrderPreparationProgress from '../components/OrderPreparationProgress';
 import PrimaryButton from '../components/PrimaryButton';
 import { colors, spacing, brand, radius, typography } from '../theme/tokens';
 import { formatPrice } from '../data/products';
@@ -64,10 +65,7 @@ export default function OrderSuccessScreen({ order, onDone, onFinished }) {
           {!!order?.itemCount && <Text style={styles.caption}>{order.itemCount} поз. в заказе</Text>}
         </View>
 
-        {!meta.isCancelled && !!status && <View style={styles.progressSection}>
-          <View style={styles.progressTrack}><View style={[styles.progressFill, { width: `${Math.max(0, Math.min(100, meta.step / 4 * 100))}%` }]} /></View>
-          <View style={styles.progressLabels}><Text style={styles.caption}>Отправлен</Text><Text style={styles.caption}>Готов</Text><Text style={styles.caption}>Выдан</Text></View>
-        </View>}
+        {!meta.isCancelled && !!status && <OrderPreparationProgress status={status} changedAt={details?.updated_at || order?.updatedAt} />}
 
         {!!error && <View style={styles.networkNotice} accessibilityLiveRegion="polite">
           <Ionicons name="cloud-offline-outline" size={22} color={colors.textPrimary} />
