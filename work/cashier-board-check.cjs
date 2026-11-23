@@ -42,7 +42,10 @@ class Element extends EventTarget {
   get textContent() { return this._text + this.children.map(child => child.textContent).join(' '); }
 }
 
-function createHarness(initial = []) {
+// The historical Realtime cases use an explicit cloud fixture. The actual
+// checked-in VPS configuration is exercised separately with polling below.
+const realtimeSource = source.replace(/var SUPABASE_URL = [^;]+;/, "var SUPABASE_URL = 'https://test.supabase.co';");
+function createHarness(initial = [], script = realtimeSource) {
   const roots = new Map([...html.matchAll(/id="([^"]+)"/g)].map(match => [match[1], new Element('div')]));
   const document = new EventTarget(); document.visibilityState = 'visible'; document.head = new Element('head');
   document.getElementById = id => { assert(roots.has(id), 'Unknown DOM ID: ' + id); return roots.get(id); };
@@ -117,7 +120,7 @@ function createHarness(initial = []) {
     createGain() { return { gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {} }; }
   };
   let confirmValue = true;
-  vm.runInNewContext(source, { window, document, navigator, console: { warn() {}, error() {} },
+  vm.runInNewContext(script, { window, document, navigator, console: { warn() {}, error() {} },
     confirm: () => confirmValue, setInterval(cb, ms) { timers.set(++nextTimer, { cb, ms }); return nextTimer; },
     clearInterval(id) { timers.delete(id); }, queueMicrotask, setTimeout, clearTimeout });
   const test = window.cashierTest;
@@ -140,6 +143,18 @@ function order(id, status = 'new', extra = {}) {
 }
 
 (async () => {
+  {
+    const vps = source;
+    assert.match(vps, /var SUPABASE_URL = ["']https:\/\/31\.31\.207\.216\/coffee\/?["']/);
+    const h = createHarness([], vps);
+    await h.login();
+    assert.equal(h.state.channels.length, 0);
+    h.state.orders.push(order('polled'));
+    [...h.timers.values()].find(timer => timer.ms === 25000).cb();
+    await flush();
+    assert(h.action('polled', 'new'));
+    assert.equal(h.soundCount(), 1);
+  }
   {
     const h = createHarness([order('new'), order('legacy', 'new', { customer_name: null, customer_phone: null, pickup_point: null, pickup_at: null, comment: null, order_items: [{ product_name: 'Старый кофе', quantity: 1 }] })]);
     await h.login();

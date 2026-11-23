@@ -251,8 +251,8 @@
 <script src="ui-controls.js"></script>
 <script>
 (function(){
-  var SUPABASE_URL = 'https://vxefueynagwuavlyeiqc.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_OD1Fh_a_qhnjKeMd30RQRA_WgpOXZwq';
+  var SUPABASE_URL = "https://31.31.207.216/coffee";
+  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY";
   var db = null, libReady = false, muted = false, audioCtx = null;
   var ordersCache = [], stopProducts = [], channel = null;
   var boardActive = false, boardSession = 0, loadRevision = 0;
@@ -396,7 +396,9 @@
     window.addEventListener('online', handleOnline); window.addEventListener('offline', handleOffline);
     window.addEventListener('focus', handleForeground); document.addEventListener('visibilitychange', handleForeground);
     tickClock(); boardTimers.push(setInterval(tickClock, 1000), setInterval(updateElapsedLabels, 20000), setInterval(handlePoll, 25000));
-    loadOrders(); subscribeRealtime(); renderConnection();
+    loadOrders();
+    if (!/^https?:\/\/[^/]+\/coffee\/*$/.test(SUPABASE_URL)) subscribeRealtime();
+    renderConnection();
   }
   function stopBoard(){
     boardActive = false; boardSession++; loadRevision++; stopRevision++;
