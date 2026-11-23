@@ -9,11 +9,17 @@
         "buildType": "apk"
       },
       "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://31.31.207.216/coffee",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY",
         "EXPO_PUBLIC_YANDEX_AUTH_ENABLED": "true"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://31.31.207.216/coffee",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY"
+      }
     },
     "ios-handoff": {
       "extends": "production",
@@ -21,9 +27,13 @@
       "withoutCredentials": true,
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "false",
+        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "true",
         "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
-        "EXPO_PUBLIC_ADMIN_LOGIN": "false"
+        "EXPO_PUBLIC_ADMIN_LOGIN": "false",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://31.31.207.216/coffee",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY",
+        "EXPO_PUBLIC_WAITCALL_ENABLED": "true",
+        "EXPO_PUBLIC_YANDEX_AUTH_ENABLED": "true"
       },
       "ios": {
         "config": "ios-unsigned.yml",
@@ -37,9 +47,13 @@
       "distribution": "store",
       "environment": "production",
       "env": {
-        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "false",
+        "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "true",
         "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
-        "EXPO_PUBLIC_ADMIN_LOGIN": "false"
+        "EXPO_PUBLIC_ADMIN_LOGIN": "false",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://31.31.207.216/coffee",
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY",
+        "EXPO_PUBLIC_WAITCALL_ENABLED": "true",
+        "EXPO_PUBLIC_YANDEX_AUTH_ENABLED": "true"
       },
       "ios": {
         "buildConfiguration": "Release",

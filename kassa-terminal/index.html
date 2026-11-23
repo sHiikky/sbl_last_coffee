@@ -257,6 +257,8 @@
 (function(){
   var SUPABASE_URL = "https://31.31.207.216/coffee";
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiAiaHR0cHM6Ly8zMS4zMS4yMDcuMjE2L2NvZmZlZS9hdXRoL3YxIiwgInJvbGUiOiAiYW5vbiIsICJhdWQiOiAiYXV0aGVudGljYXRlZCIsICJpYXQiOiAxNzk1MzU2NjY5LCAiZXhwIjogMTk1MzAzNjY2OX0.Q_wS908tSiNbtlU07GpeQq2VD2_mZPvCgTKZW_OFLfY";
+  // Our VPS has no Realtime: the board learns about orders only by polling.
+  var POLLING_ONLY = /^https?:\/\/[^/]+\/coffee\/*$/.test(SUPABASE_URL);
   var db = null, libReady = false, muted = false, audioCtx = null;
   var ordersCache = [], stopProducts = [], channel = null;
   var boardActive = false, boardSession = 0, loadRevision = 0;
@@ -401,7 +403,7 @@
     window.addEventListener('focus', handleForeground); document.addEventListener('visibilitychange', handleForeground);
     tickClock(); boardTimers.push(setInterval(tickClock, 1000), setInterval(updateElapsedLabels, 20000), setInterval(handlePoll, 25000));
     loadOrders();
-    if (!/^https?:\/\/[^/]+\/coffee\/*$/.test(SUPABASE_URL)) subscribeRealtime();
+    if (!POLLING_ONLY) subscribeRealtime();
     renderConnection();
   }
   function stopBoard(){
@@ -427,7 +429,8 @@
   function handleOnline(){ if (!boardActive) return; if(promoAdmin && promoAdmin.isOpen()) promoAdmin.refresh(); syncError = ''; loadOrders(); if (!stopPanel.classList.contains('hidden')) loadStopList(); if (contentAdmin && contentAdmin.isOpen()) contentAdmin.refresh(); }
   function handleOffline(){ if (!boardActive) return; loadRevision++; stopRevision++; syncError = 'Нет связи'; renderConnection(); }
   function handleForeground(){ if (boardActive && document.visibilityState !== 'hidden') loadOrders(); }
-  function handlePoll(){ if (boardActive && online() && document.visibilityState !== 'hidden') loadOrders(); }
+  // Without Realtime a hidden/minimized tab must keep polling, or new orders arrive silently.
+  function handlePoll(){ if (boardActive && online() && (POLLING_ONLY || document.visibilityState !== 'hidden')) loadOrders(); }
   document.getElementById('refreshOrdersBtn').addEventListener('click', function(){ actionError = ''; loadOrders(); });
 
   function loadOrders(){
