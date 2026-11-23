@@ -140,6 +140,8 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   return <View style={styles.screen}>
     {isFocused && <StatusBar style="dark" />}
     <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: tabBarHeight + insets.bottom + spacing.xxl }} showsVerticalScrollIndicator={false}>
+      {/* Заголовок «Профиль» с равным воздухом сверху и снизу (20 px), чтобы не «склеивался» с карточкой. */}
+      <View style={{ height: spacing.sm }} />
       <ScreenHeader title="Профиль" />
       <Animated.View style={[styles.body, { opacity: fade }]}>
         {account ? <DarkProfileCard name={savedName || account.name || 'Клиент SBL'} email={account.phone ? formatPhone(account.phone) : 'Вход через Яндекс'} status="STANDARD" avatarSource={avatarUri ? { uri: avatarUri } : null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
@@ -205,7 +207,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  body: { paddingHorizontal: spacing.xl },
+  body: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
   card: { padding: spacing.xl, backgroundColor: colors.surfaceElevated, borderRadius: radius.large },
   guestTitle: { fontSize: 22, fontWeight: '800', color: colors.textPrimary },
   copy: { fontSize: 14, lineHeight: 22, color: colors.textSecondary, marginTop: spacing.md },

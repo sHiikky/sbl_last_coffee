@@ -71,8 +71,9 @@ export default function Chip({ label, subLabel, active, onPress, flex, style, ac
           styles.chip,
           small && styles.chipSmall,
           flex && { flex: 1 },
-          !active && shadow.level1,
-          active && (isAccent ? shadow.button : isMain ? shadow.button : shadow.level2),
+          // Категории меню (main) — плоские «пилюли» без тени: ни у выбранной, ни у остальных.
+          !active && !isMain && shadow.level1,
+          active && !isMain && (isAccent ? shadow.button : shadow.level2),
           {
             backgroundColor: animatedBackgroundColor,
             borderColor: animatedBorderColor,

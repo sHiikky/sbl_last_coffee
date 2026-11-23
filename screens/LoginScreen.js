@@ -271,7 +271,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
         {step === 'phone' ? (
           <>
             {!linkMode && <View style={styles.modeTabs}>
-              {[['login', 'Войти'], ['register', 'Создать аккаунт']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => { setMode(id); setError(''); }} disabled={loading} accessibilityRole="tab" accessibilityState={{ selected: mode === id }} style={[styles.modeTab, mode === id && styles.modeSelected]}><Text style={[styles.modeText, mode === id && styles.modeSelectedText]}>{label}</Text></TouchableOpacity>)}
+              {[['register', 'Создать аккаунт'], ['login', 'Войти']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => { setMode(id); setError(''); }} disabled={loading} accessibilityRole="tab" accessibilityState={{ selected: mode === id }} style={[styles.modeTab, mode === id && styles.modeSelected]}><Text style={[styles.modeText, mode === id && styles.modeSelectedText]}>{label}</Text></TouchableOpacity>)}
             </View>}
             <Text style={styles.title}>{linkMode ? 'Подтвердите номер' : mode === 'register' ? 'Рады знакомству' : 'С возвращением'}</Text>
             <Text style={styles.subtitle}>
