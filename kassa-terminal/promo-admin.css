@@ -1,1 +1,55 @@
-.promo-layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:32px}.promo-layout aside>.search,.promo-layout aside>select{width:100%;margin-bottom:12px}.promo-editor{border:1px solid var(--line);background:var(--panel);padding:28px}.promo-editor fieldset{border:0;padding:0;margin:0;min-width:0}.promo-editor-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:24px}.promo-editor h3{font-size:23px;font-weight:500}.promo-editor h4{font-size:16px;margin:26px 0 14px}.promo-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.promo-editor label{display:flex;flex-direction:column;gap:8px;font-size:14px}.promo-editor input:not([type=checkbox]),.promo-editor select,.promo-layout aside>select{width:100%;min-height:48px;border:1px solid var(--line-strong);background:var(--bg);padding:12px;color:var(--cream);border-radius:0}.promo-editor small,.promo-hint{font-size:13px;color:var(--cream-dim);line-height:1.6}.promo-hint{margin:10px 0}.promo-list{display:grid;gap:10px}.promo-row{width:100%;text-align:left;padding:18px;background:var(--panel);border:1px solid var(--line);color:var(--cream);display:grid;gap:6px;min-height:100px}.promo-row[aria-current=true]{border-color:var(--amber);background:var(--card)}.promo-row strong{font-family:var(--font-mono);font-size:19px;overflow-wrap:anywhere}.promo-row span{font-size:13px;color:var(--cream-dim)}.promo-row em{font-size:12px;color:var(--amber);font-style:normal}.promo-editor label.check-row{flex-direction:row;align-items:center}.promo-enable{padding:24px 0}.promo-enable input,.promo-choices input{accent-color:var(--amber);width:20px;height:20px;flex-shrink:0}.promo-summary{padding:18px 20px;border-left:3px solid var(--amber);background:var(--card)}.promo-summary h4{margin:0 0 10px}.promo-summary>p{line-height:1.65;overflow-wrap:anywhere}.promo-save{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:24px}.promo-choices{max-height:300px;overflow:auto;border:1px solid var(--line)}.promo-choices label{display:flex;flex-direction:row;align-items:center;gap:12px;min-height:48px;padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer}.promo-choices label span{overflow-wrap:anywhere}.promo-choices small{display:block}.promo-editor input:disabled,.promo-editor select:disabled{opacity:.5}#promosTargets{margin-top:14px}#promosCode{text-transform:uppercase}@media(max-width:950px){.promo-layout{grid-template-columns:240px minmax(0,1fr);gap:16px}.promo-editor{padding:20px}.promo-grid{grid-template-columns:1fr}}@media(max-width:650px){.promo-layout{grid-template-columns:1fr}.promo-list{max-height:300px;overflow:auto}.promo-editor{padding:16px}}
+/* Раздел «Промокоды». Токены, кнопки и поля — в cashier.css (голографическое стекло). */
+.promo-layout{ display:grid; grid-template-columns:320px minmax(0,1fr); gap:var(--s5); align-items:start; }
+.promo-layout > aside{ position:sticky; top:calc(var(--topbar-h) + var(--s4)); }
+.promo-layout aside > .search, .promo-layout aside > select, .promo-layout aside > .dd, .promo-layout aside > .seg{ width:100%; margin-bottom:var(--s3); }
+.promo-editor fieldset{ border:0; padding:0; margin:0; min-width:0; }
+.promo-editor-head{ display:flex; justify-content:space-between; gap:var(--s3); align-items:center; margin-bottom:var(--s5); }
+.promo-editor h3{ font-size:22px; font-weight:700; letter-spacing:-.015em; }
+.promo-editor h4{ margin:var(--s6) 0 var(--s3); padding-top:var(--s5); border-top:1px solid var(--line);
+  font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--cream-dim2); }
+.promo-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--s4); }
+.promo-editor label{ display:flex; flex-direction:column; gap:var(--s2); font-size:13px; font-weight:500; color:var(--cream-dim); }
+.promo-editor input:not([type=checkbox]), .promo-editor select, .promo-layout aside > select{
+  width:100%; min-height:48px; padding:var(--s3) var(--s4); color:var(--cream);
+  background:var(--field); border:1px solid var(--line-strong); border-radius:var(--r-md);
+}
+.promo-editor small, .promo-hint{ font-size:13px; color:var(--cream-dim); line-height:1.6; }
+.promo-hint{ margin:var(--s2) 0; }
+.promo-list{ display:grid; gap:var(--s2); }
+.promo-row{
+  width:100%; text-align:left; padding:var(--s4); display:grid; gap:6px; min-height:96px; color:var(--cream);
+  background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:var(--r-md);
+  transition:background-color .16s var(--ease), border-color .16s var(--ease);
+}
+@media (hover:hover){ .promo-row:hover{ background:rgba(255,255,255,.07); } }
+.promo-row[aria-current=true]{ border-color:rgba(201,184,255,.55); background:var(--holo-soft); box-shadow:var(--glass-edge); }
+.promo-row strong{ font-family:var(--font-mono); font-size:18px; font-weight:700; letter-spacing:.04em; overflow-wrap:anywhere; }
+.promo-row span{ font-size:13px; color:var(--cream-dim); }
+.promo-row em{ font-size:12px; font-weight:600; color:var(--amber); font-style:normal; }
+.promo-editor label.check-row{ flex-direction:row; align-items:center; }
+.promo-enable{ padding:var(--s5) 0 var(--s2); }
+.promo-choices input{ accent-color:#9A5CF0; width:20px; height:20px; flex-shrink:0; }
+.promo-summary{
+  margin-top:var(--s4); padding:var(--s4) var(--s5); border-radius:var(--r-md);
+  background:var(--holo-soft); border:1px solid rgba(201,184,255,.3);
+}
+.promo-summary h4{ margin:0 0 var(--s2); padding:0; border:0; }
+.promo-summary > p{ line-height:1.65; overflow-wrap:anywhere; color:var(--cream); }
+.promo-save{ display:flex; align-items:center; gap:var(--s4); flex-wrap:wrap; margin-top:var(--s5); }
+.promo-choices{ max-height:300px; overflow:auto; border:1px solid var(--line); border-radius:var(--r-md); background:rgba(255,255,255,.02); }
+.promo-choices label{ display:flex; flex-direction:row; align-items:center; gap:var(--s3); min-height:48px; padding:10px 14px; border-bottom:1px solid var(--line); cursor:pointer; color:var(--cream); }
+.promo-choices label:last-child{ border-bottom:0; }
+.promo-choices label span{ overflow-wrap:anywhere; }
+.promo-choices small{ display:block; }
+.promo-editor input:disabled, .promo-editor select:disabled{ opacity:.5; }
+#promosTargets{ margin-top:var(--s3); }
+#promosCode{ text-transform:uppercase; font-family:var(--font-mono); letter-spacing:.04em; }
+@media (max-width:950px){
+  .promo-layout{ grid-template-columns:260px minmax(0,1fr); gap:var(--s4); }
+  .promo-grid{ grid-template-columns:1fr; }
+}
+@media (max-width:650px){
+  .promo-layout{ grid-template-columns:1fr; }
+  .promo-layout > aside{ position:static; }
+  .promo-list{ max-height:300px; overflow:auto; }
+}
