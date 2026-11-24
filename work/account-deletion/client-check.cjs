@@ -7,16 +7,15 @@ const babel = require('@babel/core');
 const root = path.resolve(__dirname, '../..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 
-function load(platformSupported = true) {
+function load() {
   const code = babel.transformSync(read('lib/accountService.js'), { babelrc: false, configFile: false, plugins: ['@babel/plugin-transform-modules-commonjs'] }).code;
   const module = { exports: {} };
   vm.runInNewContext(code, {
     module, exports: module.exports, console, Error, Object, String, Array, Number, Map, Promise, JSON, Date, Math, decodeURIComponent,
-    process: { env: { EXPO_PUBLIC_YANDEX_AUTH_ENABLED: 'true' } },
+    process: { env: {} },
     require: name => ({
       './supabaseClient': { supabase: {}, ensureAnonymousSession: async () => {} },
       './notificationService': { unregisterCurrentPushToken: async () => {} },
-      './yandexAuthBrowser': { YANDEX_REDIRECT_URL: 'sbl://auth/yandex', YANDEX_PLATFORM_SUPPORTED: platformSupported, openYandexAuthSession: async () => ({ type: 'cancel' }) },
     })[name] || (() => { throw Error(`Missing mock ${name}`); })(),
   });
   return module.exports;
@@ -52,11 +51,9 @@ function client({ invokeResult = { data: { ok: true }, error: null } } = {}) {
   assert.ok(!c.log.some(entry => entry[0] === 'signOut'), 'a refused deletion keeps the user signed in');
   console.log('PASS: account deletion calls delete-account with no user data, revokes push, signs out; refusals show the server reason');
 
-  assert.equal(load(true).YANDEX_AUTH_ENABLED, true);
-  assert.equal(load(false).YANDEX_AUTH_ENABLED, false, 'Яндекс is hidden on iOS (Guideline 4.8)');
+  assert.ok(!('startYandexSignIn' in account) && !('YANDEX_AUTH_ENABLED' in account), 'no third-party sign-in at all');
   const eas = JSON.parse(read('eas.json'));
   for (const name of ['ios-store', 'ios-handoff']) {
-    assert.equal(eas.build[name].env.EXPO_PUBLIC_YANDEX_AUTH_ENABLED, 'false', `${name}: no Яндекс on iOS`);
     assert.equal(eas.build[name].env.EXPO_PUBLIC_WAITCALL_ENABLED, 'true', `${name}: sign-in by call stays`);
   }
   const app = JSON.parse(read('app.json')).expo;
@@ -66,5 +63,5 @@ function client({ invokeResult = { data: { ok: true }, error: null } } = {}) {
   const startWaitcall = read('supabase/functions/start-waitcall/index.ts');
   assert.match(startWaitcall, /REVIEW_DEMO_PHONE/);
   assert.match(startWaitcall, /verified: true/);
-  console.log('PASS: iOS — no Яндекс, iPhone only, privacy manifest, export compliance; review demo phone gated by a secret');
+  console.log('PASS: iOS — sign-in by call only, iPhone only, privacy manifest, export compliance; review demo phone gated by a secret');
 })().catch(error => { console.error(error); process.exit(1); });

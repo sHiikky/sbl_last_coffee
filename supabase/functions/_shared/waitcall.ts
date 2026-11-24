@@ -15,19 +15,8 @@ export async function anonymousUser(request: Request) {
   const { data: { user }, error } = await client.auth.getUser();
   return !error && user?.is_anonymous === true ? user : null;
 }
-// Who may confirm a phone by call: a guest (becomes the phone account) or a Yandex ID account
-// that has no confirmed phone yet (the phone is added to that same account).
-export async function callerUser(request: Request) {
-  const authorization = request.headers.get('Authorization');
-  if (!authorization) return null;
-  const client = createClient(url, anonKey, { global: { headers: { Authorization: authorization } } });
-  const { data: { user }, error } = await client.auth.getUser();
-  if (error || !user) return null;
-  if (user.is_anonymous === true) return user;
-  const meta = (user.app_metadata || {}) as { provider?: string; providers?: string[] };
-  const yandex = meta.provider === 'custom:yandex-id' || (meta.providers || []).includes('custom:yandex-id');
-  return yandex && !user.phone_confirmed_at ? user : null;
-}
+// Only a guest may confirm a phone by call: it becomes the phone account or signs in to it.
+export const callerUser = anonymousUser;
 export function sameText(a: string, b: string) {
   if (a.length !== b.length) return false;
   let delta = 0;

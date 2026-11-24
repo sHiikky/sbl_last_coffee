@@ -23,8 +23,6 @@ const checks = [
   'work/promo-codes/client-check.cjs',
   'work/promo-codes/cart-check.cjs',
   'work/push-campaigns/check.cjs',
-  'work/yandex-login/check.cjs',
-  'work/yandex-login/client-check.cjs',
   'work/account-deletion/client-check.cjs',
   'work/final-polish-20261123/check.cjs',
 ];

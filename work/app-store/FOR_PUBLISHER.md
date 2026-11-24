@@ -18,7 +18,7 @@ npx eas submit -p ios --profile production     # отправка в App Store C
 
 **Переменные (.env):** отдельный файл не нужен — все production-значения уже прописаны в `eas.json`, профиль `ios-store`:
 `EXPO_PUBLIC_SUPABASE_URL=https://31.31.207.216/coffee`, публичный ключ `anon`, вход по звонку включён,
-Яндекс на iOS выключен, push выключен, режим администратора выключен. Секретов в приложении нет.
+Вход только по номеру телефона (звонок), push выключен, режим администратора выключен. Секретов в приложении нет.
 Для запуска локально: `cp .env.example .env`, `npm start` (Expo Go для SDK 58) или `npm run web`.
 
 **Иконка и заставка:** в проекте — `assets/brand/app-icon.png` (1024×1024, без прозрачности), `assets/brand/splash-full.png`.

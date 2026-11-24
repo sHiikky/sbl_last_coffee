@@ -41,7 +41,6 @@
           "style": "light"
         }
       ],
-      "expo-web-browser",
       "expo-font",
       "expo-image",
       [

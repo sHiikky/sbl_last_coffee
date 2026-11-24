@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, ScrollView, Animated, StyleSheet, Modal, ActivityIndicator } from 'react-native';
 import Text from '../components/AppText';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,14 +19,14 @@ import { colors, radius, spacing, brand } from '../theme/tokens';
 import { getDaysUntilNextMilestone } from '../loyalty/loyaltySelectors';
 import { LOYALTY_CONFIG } from '../loyalty/loyaltyConfig';
 import useBonusAccount from '../hooks/useBonusAccount';
-import { signOutAccount, deleteAccount, startYandexSignIn, describeAuthError, YANDEX_AUTH_ENABLED, WAITCALL_ENABLED } from '../lib/accountService';
+import { signOutAccount, deleteAccount, describeAuthError } from '../lib/accountService';
 
 function deletionError(error) {
   if (['PGRST202', '42883'].includes(error?.code)) return 'Приём запросов ещё не настроен. Обратитесь к сотруднику кофейни; запрос сейчас не был отправлен.';
   return 'Не удалось подтвердить запрос. Проверьте интернет и повторите попытку.';
 }
 
-export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteIds = [], orderHistory = [], loyaltyState, account, onLogout }) {
+export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteIds = [], orderHistory = [], loyaltyState, account, onLogout, onAccountDeleted }) {
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();
   const bonusAccount = useBonusAccount();
@@ -60,22 +59,6 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     finally { setEditorBusy(false); }
   };
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [yandexBusy, setYandexBusy] = useState(false);
-  const [yandexError, setYandexError] = useState('');
-  const [yandexCardVisible, setYandexCardVisible] = useState(false);
-  const canAttachYandex = !!account?.phone && !account.provider && YANDEX_AUTH_ENABLED;
-  useEffect(() => {
-    let active = true;
-    setYandexCardVisible(false);
-    if (account?.id) AsyncStorage.getItem(`sbl.hide-yandex-card:${account.id}`).then(hidden => {
-      if (active) setYandexCardVisible(hidden !== 'true');
-    }).catch(() => {});
-    return () => { active = false; };
-  }, [account?.id]);
-  const showYandexCard = visible => {
-    setYandexCardVisible(visible);
-    if (account?.id) void AsyncStorage.setItem(`sbl.hide-yandex-card:${account.id}`, String(!visible)).catch(() => {});
-  };
   const [deletionOpen, setDeletionOpen] = useState(false);
   const [deletion, setDeletion] = useState(null);
   const [deletionBusy, setDeletionBusy] = useState(false);
@@ -91,14 +74,6 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
   const current = loyaltyState?.ready ? loyaltyState.cycleProgress.progress : 0;
   const remaining = loyaltyState?.ready ? getDaysUntilNextMilestone(loyaltyState, LOYALTY_CONFIG) : cycleLength;
 
-  // Phone account attaches Yandex to itself; the Auth listener in App.js refreshes the account afterwards.
-  const attachYandex = async () => {
-    if (yandexBusy) return;
-    setYandexBusy(true); setYandexError('');
-    try { await startYandexSignIn(); }
-    catch (cause) { if (cause?.code !== 'YANDEX_CANCELLED') setYandexError(describeAuthError(cause)); }
-    finally { setYandexBusy(false); }
-  };
 
   const logout = async () => {
     if (loggingOut) return;
@@ -120,13 +95,14 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
       const deletedId = account?.id;
       await deleteAccount();
       if (deletedId) await writeLocalAvatar(deletedId, null).catch(() => {});
+      // Nothing of the deleted account stays on this device either.
+      onAccountDeleted?.();
       setDeletion({ status: 'completed' });
     } catch (cause) { setDeletionMessage(describeAuthError(cause)); }
     finally { requestInFlight.current = false; setDeletionBusy(false); }
   };
 
   const menuItems = [
-    ...(canAttachYandex && !yandexCardVisible ? [{ icon: 'link-outline', title: 'Привязать Яндекс', subtitle: 'Дополнительный способ входа', onPress: () => showYandexCard(true) }] : []),
     ...(account ? [{ icon: 'person-outline', title: 'Редактировать профиль', subtitle: 'Имя и фото на этом устройстве', onPress: openEditor }] : []),
     { icon: 'cube-outline', title: 'Мои заказы', subtitle: 'История и статусы', onPress: () => navigation.navigate('OrderHistory') },
     { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые товары', badge: favoriteIds.length || undefined, onPress: () => navigation.navigate('Favorites') },
@@ -142,24 +118,10 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
       <View style={{ height: spacing.sm }} />
       <ScreenHeader title="Профиль" />
       <Animated.View style={[styles.body, { opacity: fade }]}>
-        {account ? <DarkProfileCard name={savedName || account.name || 'Клиент SBL'} email={account.phone ? formatPhone(account.phone) : 'Вход через Яндекс'} status="STANDARD" avatarSource={avatarUri ? { uri: avatarUri } : null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
+        {account ? <DarkProfileCard name={savedName || account.name || 'Клиент SBL'} email={formatPhone(account.phone)} status="STANDARD" avatarSource={avatarUri ? { uri: avatarUri } : null} bonuses={bonusAccount.balance} loyaltyCurrent={current} loyaltyTarget={cycleLength} ordersCount={orderHistory.length} /> : <View style={styles.card}>
           <Text style={styles.guestTitle}>Вы зашли как гость</Text>
           <Text style={styles.copy}>Заказы и бонусы связаны с текущей сессией устройства. Подтверждённый номер позволит входить в свой аккаунт на других телефонах.</Text>
-          <View style={{ marginTop: spacing.lg }}><PrimaryButton label={YANDEX_AUTH_ENABLED ? 'Войти' : 'Войти по телефону'} onPress={() => navigation.navigate('Login')} fullWidth /></View>
-        </View>}
-        {account?.provider === 'yandex' && !account.phone && WAITCALL_ENABLED && <View style={[styles.card, { marginTop: spacing.lg }]}>
-          <Text style={styles.guestTitle}>Подтвердите номер телефона</Text>
-          <Text style={styles.copy}>Один звонок свяжет номер с аккаунтом Яндекса: так заказы и бонусы не потеряются при смене телефона.</Text>
-          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Подтвердить номер" onPress={() => navigation.navigate('Login', { linkPhone: true })} fullWidth /></View>
-        </View>}
-        {canAttachYandex && yandexCardVisible && <View style={[styles.card, { marginTop: spacing.lg }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm }}>
-            <Text style={[styles.guestTitle, { flex: 1 }]}>Привязать Яндекс</Text>
-            <TouchableOpacity onPress={() => showYandexCard(false)} accessibilityRole="button" accessibilityLabel="Скрыть карточку привязки Яндекса" style={{ minHeight: 44, justifyContent: 'center' }}><Text style={styles.actionText}>Скрыть</Text></TouchableOpacity>
-          </View>
-          <Text style={styles.copy}>Войдите в Яндекс один раз, и в этот аккаунт можно будет заходить и по номеру, и через Яндекс.</Text>
-          {!!yandexError && <Text style={styles.error} accessibilityRole="alert">{yandexError}</Text>}
-          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Привязать Яндекс" loading={yandexBusy} onPress={attachYandex} fullWidth /></View>
+          <View style={{ marginTop: spacing.lg }}><PrimaryButton label="Войти" onPress={() => navigation.navigate('Login')} fullWidth /></View>
         </View>}
         <View style={{ marginTop: spacing.lg }}><LoyaltyTeaser currentStreak={loyaltyState?.currentStreak || 0} remaining={remaining} onPress={() => navigation.navigate('Loyalty')} /></View>
         <View style={{ marginTop: spacing.lg }}><ProfileMenuGroup items={menuItems} /></View>
@@ -168,7 +130,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
             {loggingOut ? <ActivityIndicator color={colors.accent} /> : <Text style={styles.actionText}>Выйти из аккаунта</Text>}
           </TouchableOpacity>}
           {!!logoutError && <Text style={styles.error} accessibilityRole="alert">{logoutError}</Text>}
-          <TouchableOpacity onPress={openDeletion} disabled={deletionBusy} accessibilityRole="button" accessibilityLabel="Удалить аккаунт и данные" style={styles.action}><Text style={styles.dangerText}>Удалить {account ? 'аккаунт и данные' : 'данные гостя'}</Text></TouchableOpacity>
+          {account && <TouchableOpacity onPress={openDeletion} disabled={deletionBusy} accessibilityRole="button" accessibilityLabel="Удалить аккаунт и данные" style={styles.action}><Text style={styles.dangerText}>Удалить аккаунт и данные</Text></TouchableOpacity>}
         </View>
         <Text style={styles.footerSignature}>{brand.name} · {brand.tagline}</Text>
       </Animated.View>

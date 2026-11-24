@@ -39,14 +39,13 @@ import { selectMenuProducts, hasProductPhoto } from './lib/menuVisibility';
 import { makeCartItem, cartMatchesSnapshot } from './lib/cartOptions';
 import { additionTitle, presentAdditions } from './lib/additionsPresentation';
 import { getVerifiedAccount, signOutAccount, ADMIN_LOGIN_ENABLED } from './lib/accountService';
-import { finishRegistrationDraft } from './lib/accountProfile';
 import useOrderNotifications from './hooks/useOrderNotifications';
 import { refreshCartPrices } from './lib/checkoutQuote';
 import useLoyaltyState from './loyalty/useLoyaltyState';
 import useCustomerOrders from './hooks/useCustomerOrders';
 import useBonusAccount from './hooks/useBonusAccount';
 import { buildTodaySyntheticOrder, buildSyntheticStreakOrders } from './loyalty/loyaltyDev';
-import { getUserOrThrow, supabase, authRedirectError } from './lib/supabaseClient';
+import { getUserOrThrow, supabase } from './lib/supabaseClient';
 import {
   recoverPendingCheckoutOnce,
   scheduleBoundedCheckoutRecoveryRetries,
@@ -99,6 +98,7 @@ function Tabs({
   account,
   getCurrentCustomerId,
   onLogout,
+  onAccountDeleted,
   cart,
   favorites,
   orderHistory,
@@ -260,6 +260,7 @@ function Tabs({
             loyaltyState={loyaltyState}
             account={account}
             onLogout={onLogout}
+            onAccountDeleted={onAccountDeleted}
           />
         )}
       </Tab.Screen>
@@ -272,6 +273,7 @@ function RootStack({
   getCurrentCustomerId,
   onLogin,
   onLogout,
+  onAccountDeleted,
   cart,
   favorites,
   orderHistory,
@@ -313,6 +315,7 @@ function RootStack({
             account={account}
             getCurrentCustomerId={getCurrentCustomerId}
             onLogout={onLogout}
+            onAccountDeleted={onAccountDeleted}
             cart={cart}
             favorites={favorites}
             orderHistory={orderHistory}
@@ -443,15 +446,6 @@ export default function App() {
   const [cart, setCart] = useState({});
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [account, setAccount] = useState(null);
-  // Run outside the Auth callback: updating metadata inside it can deadlock the SDK.
-  useEffect(() => {
-    if (!account?.id || Platform.OS !== 'web') return;
-    let active = true;
-    finishRegistrationDraft(account).then(updated => {
-      if (active && updated !== account) setAccount(current => current?.id === updated.id ? updated : current);
-    }).catch(() => { console.warn('[profile] registration draft remains available for retry'); });
-    return () => { active = false; };
-  }, [account?.id]);
   const [orderHistory, setOrderHistory] = useState([]);
   const [orderComplete, setOrderComplete] = useState(null);
   const [activeOrder, setActiveOrder] = useState(null);
@@ -702,17 +696,6 @@ export default function App() {
   // в памяти. Кэш в AsyncStorage (ниже) используется только для мгновенной
   // отрисовки до ответа сервера — источник истины всегда Supabase.
   // Server reads start only after cache hydration in useCustomerOrders.
-
-  // Web only: a failed Яндекс sign-in/link returns here with the reason in the URL; show it once.
-  useEffect(() => {
-    if (Platform.OS !== 'web' || !authRedirectError) return;
-    const taken = authRedirectError.code === 'identity_already_exists';
-    const text = taken
-      ? 'Этот Яндекс уже привязан к другому аккаунту. Войдите через него или выберите другой Яндекс.'
-      : `Не удалось войти через Яндекс (${authRedirectError.code || authRedirectError.error}). ${authRedirectError.description}`.trim();
-    try { window.history.replaceState(null, '', window.location.pathname); } catch { /* keep the URL */ }
-    globalThis.alert(text);
-  }, []);
 
   // Тестовый вход по телефону (screens/LoginScreen.js): аккаунт только локальный.
   // Выход не трогает корзину, избранное и историю — они привязаны к устройству,
@@ -1089,6 +1072,7 @@ export default function App() {
             getCurrentCustomerId={() => authUserRef.current}
             onLogin={handleLogin}
             onLogout={handleLogout}
+            onAccountDeleted={() => { setCart({}); setFavoriteIds([]); }}
             cart={cart}
             favorites={favoriteIds}
             orderHistory={orderHistory}

@@ -5,17 +5,16 @@ import { View, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, K
 import Text from '../components/AppText';
 import TextInput from '../components/AppTextInput';
 import { Ionicons } from '@expo/vector-icons';
-import YandexMark from '../components/YandexMark';
 import AccountProfileFields from '../components/AccountProfileFields';
 import useMotionPreference from '../hooks/useMotionPreference';
-import { normalizeProfileName, hasCompleteProfile, saveAccountProfile, saveRegistrationDraft } from '../lib/accountProfile';
+import { normalizeProfileName, hasCompleteProfile, saveAccountProfile } from '../lib/accountProfile';
 import { writeLocalAvatar } from '../lib/localAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import PrimaryButton from '../components/PrimaryButton';
 import BrandLogo from '../components/BrandLogo';
 import AccountDocumentsScreen from './AccountDocumentsScreen';
-import { PHONE_AUTH_ENABLED, WAITCALL_ENABLED, ADMIN_LOGIN_ENABLED, YANDEX_AUTH_ENABLED, OTP_LENGTH, startPhoneSignIn, startYandexSignIn, startPhoneLink, resendPhoneSignIn, verifyPhoneSignIn, startWaitCallSignIn, checkWaitCallSignIn, adminSignIn, describeAuthError } from '../lib/accountService';
+import { PHONE_AUTH_ENABLED, WAITCALL_ENABLED, ADMIN_LOGIN_ENABLED, OTP_LENGTH, startPhoneSignIn, resendPhoneSignIn, verifyPhoneSignIn, startWaitCallSignIn, checkWaitCallSignIn, adminSignIn, describeAuthError } from '../lib/accountService';
 import { colors, spacing, radius, shadow, getHorizontalPadding } from '../theme/tokens';
 
 const CODE_LENGTH = OTP_LENGTH;
@@ -88,8 +87,6 @@ export default function LoginScreen({ navigation, route, onLogin }) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     if (mountedRef.current) navigation.goBack();
   };
-  // Yandex account adding its phone (after Yandex sign-in, or from the profile): call-confirm a number.
-  const [linkMode, setLinkMode] = useState(!!route?.params?.linkPhone && WAITCALL_ENABLED);
   const codeInputRef = useRef(null);
   const scrollRef = useRef(null);
   const busyRef = useRef(false);
@@ -157,7 +154,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
     setError('');
     setLoading(true);
     try {
-      const next = linkMode ? await startPhoneLink(digits) : WAITCALL_ENABLED ? await startWaitCallSignIn(digits) : await startPhoneSignIn(digits);
+      const next = WAITCALL_ENABLED ? await startWaitCallSignIn(digits) : await startPhoneSignIn(digits);
       if (!mountedRef.current) return;
       setChallenge(next);
       Keyboard.dismiss();
@@ -169,31 +166,6 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       if (next.retryAt) setRetryAt(next.retryAt);
     } catch (cause) {
       if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
-    } finally {
-      busyRef.current = false;
-      if (mountedRef.current) setLoading(false);
-    }
-  };
-
-  const submitYandex = async () => {
-    if (busyRef.current || !YANDEX_AUTH_ENABLED || !consent || (mode === 'register' && !profileValid)) return;
-    busyRef.current = true;
-    setError('');
-    setLoading(true);
-    try {
-      if (mode === 'register' && Platform.OS === 'web') await saveRegistrationDraft(profile);
-      let account = await startYandexSignIn();
-      if (mode === 'register' && profileValid && !hasCompleteProfile(account)) account = await saveAccountProfile(account.id, profile);
-      if (mode === 'register' && profile.avatarUri) await writeLocalAvatar(account.id, profile.avatarUri);
-      await onLogin?.(account);
-      if (!mountedRef.current) return;
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      // Yandex gives no phone: ask the guest to confirm one by call so Yandex and phone are one account.
-      if (!account.phone && WAITCALL_ENABLED) { setLinkMode(true); setStep('phone'); setChallenge(null); setCode(''); return; }
-      await completeLogin(account);
-    } catch (cause) {
-      // A closed browser window is the guest's own choice, not an error to show.
-      if (mountedRef.current && cause?.code !== 'YANDEX_CANCELLED') setError(describeAuthError(cause));
     } finally {
       busyRef.current = false;
       if (mountedRef.current) setLoading(false);
@@ -275,18 +247,18 @@ export default function LoginScreen({ navigation, route, onLogin }) {
         <Animated.View key={step} style={{ opacity: entrance }}>
         {step === 'phone' ? (
           <>
-            {!linkMode && <View style={styles.modeTabs}>
+            <View style={styles.modeTabs}>
               {[['register', 'Создать аккаунт'], ['login', 'Войти']].map(([id, label]) => <TouchableOpacity key={id} onPress={() => { setMode(id); setError(''); }} disabled={loading} accessibilityRole="tab" accessibilityState={{ selected: mode === id }} style={[styles.modeTab, mode === id && styles.modeSelected]}><Text style={[styles.modeText, mode === id && styles.modeSelectedText]}>{label}</Text></TouchableOpacity>)}
-            </View>}
-            <Text style={styles.title}>{linkMode ? 'Подтвердите номер' : mode === 'register' ? 'Рады знакомству' : 'С возвращением'}</Text>
+            </View>
+            <Text style={styles.title}>{mode === 'register' ? 'Рады знакомству' : 'С возвращением'}</Text>
             <Text style={styles.subtitle}>
-              {linkMode ? 'Вы вошли через Яндекс. Подтвердите номер одним звонком: заказы, бонусы и серия будут в одном аккаунте.' : WAITCALL_ENABLED ? 'Один звонок — и вы в своём аккаунте. Пароль не нужен.' : 'Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.'}
+              {WAITCALL_ENABLED ? 'Один звонок — и вы в своём аккаунте. Пароль не нужен.' : 'Войдите по подтверждённому номеру, чтобы сохранять бонусы и историю заказов между устройствами.'}
             </Text>
 
             {ADMIN_MODE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Режим администратора: подойдёт любой номер и любой код, СМС не отправляется.</Text></View>}
-            {!AUTH_AVAILABLE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>{YANDEX_AUTH_ENABLED ? 'Вход по СМС пока не подключён. Войдите через Яндекс: меню можно посмотреть и без входа.' : 'Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.'}</Text></View>}
+            {!AUTH_AVAILABLE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>{'Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.'}</Text></View>}
 
-            {mode === 'register' && !linkMode && <View style={{ marginBottom: spacing.xl }}><AccountProfileFields value={profile} onChange={setProfile} disabled={loading} /></View>}
+            {mode === 'register' && <View style={{ marginBottom: spacing.xl }}><AccountProfileFields value={profile} onChange={setProfile} disabled={loading} /></View>}
             <Text style={styles.label}>Номер телефона</Text>
             <View style={styles.field}>
               <TextInput
@@ -323,24 +295,6 @@ export default function LoginScreen({ navigation, route, onLogin }) {
 
             {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
             {secondsLeft > 0 && <Text style={styles.cooldown}>Новый запрос будет доступен после обратного отсчёта</Text>}
-            {YANDEX_AUTH_ENABLED && !linkMode && <>
-              <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>или</Text><View style={styles.dividerLine} /></View>
-              <TouchableOpacity
-                onPress={submitYandex}
-                disabled={loading || !consent || (mode === 'register' && !profileValid)}
-                activeOpacity={0.85}
-                style={[styles.yandexButton, loading && { opacity: 0.6 }]}
-                accessibilityRole="button"
-                accessibilityLabel="Войти через Яндекс"
-                accessibilityState={{ disabled: loading || !consent || (mode === 'register' && !profileValid), busy: loading }}
-              >
-                <YandexMark size={28} />
-                <Text style={styles.yandexLabel}>Войти через Яндекс</Text>
-              </TouchableOpacity>
-            </>}
-            {linkMode && <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading} accessibilityRole="button" accessibilityLabel="Подтвердить номер позже" style={styles.resend}>
-              <Text style={styles.resendText}>Позже</Text>
-            </TouchableOpacity>}
             <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Условия предзаказа и сведения о данных" style={styles.resend}>
               <Text style={styles.resendText}>Условия и политика конфиденциальности</Text>
             </TouchableOpacity>
@@ -483,13 +437,6 @@ const styles = StyleSheet.create({
   divider: { flexDirection: 'row', alignItems: 'center', columnGap: spacing.md, marginTop: spacing.xl },
   dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.borderStrong },
   dividerText: { fontSize: 13, color: colors.textMuted },
-  yandexButton: {
-    minHeight: 56, marginTop: spacing.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', columnGap: spacing.md,
-    borderRadius: radius.medium, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderStrong,
-  },
-  yandexMark: { width: 28, height: 28, borderRadius: radius.pill, borderWidth: 1.5, borderColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  yandexMarkText: { fontSize: 15, fontWeight: '800', color: colors.accent },
-  yandexLabel: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
   testHint: {
     flexDirection: 'row',
     alignItems: 'center',

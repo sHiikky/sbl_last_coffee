@@ -14,7 +14,7 @@ Deno.serve(async request => {
   if (request.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, 405);
   if (!credentials) return json({ error: 'Звонок пока не настроен' }, 503);
   const user = await callerUser(request);
-  if (!user) return json({ error: 'Необходима гостевая сессия или вход через Яндекс' }, 401);
+  if (!user) return json({ error: 'Необходима гостевая сессия' }, 401);
   let phone: string;
   try { phone = (await request.json()).phone; } catch { return json({ error: 'INVALID_JSON' }, 400); }
   if (typeof phone !== 'string' || !/^\+7\d{10}$/.test(phone)) return json({ error: 'Проверьте номер телефона' }, 400);
