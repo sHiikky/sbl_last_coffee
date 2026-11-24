@@ -75,7 +75,6 @@
         "EXPO_PUBLIC_PHONE_AUTH_ENABLED": "true",
         "EXPO_PUBLIC_WAITCALL_ENABLED": "true",
         "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
-        "EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED": "false",
         "EXPO_NO_DOTENV": "1"
       }
     }

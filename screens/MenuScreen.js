@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, TouchableOpacity, FlatList, ScrollView, Pressable, ActivityIndicator, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, FlatList, ScrollView, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
 import Text from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -489,14 +489,7 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ paddingTop: insets.top }}>
-        <ScreenHeader title="Меню" action={onRetryCatalog ? <Pressable
-          style={styles.headerRefresh}
-          onPress={onRetryCatalog}
-          disabled={catalogLoading}
-          accessibilityRole="button"
-          accessibilityLabel="Обновить меню"
-          accessibilityState={{ disabled: catalogLoading }}
-        >{catalogLoading ? <ActivityIndicator color={colors.accent} /> : <Ionicons name="refresh-outline" size={22} color={colors.textPrimary} />}</Pressable> : null} />
+        <ScreenHeader title="Меню" />
       </View>
 
       {!!catalogError && products.length > 0 && <View style={[styles.staleNotice, { marginHorizontal: hPad }]} accessibilityLiveRegion="polite">
@@ -534,7 +527,6 @@ export default function MenuScreen({ route, navigation, cart = {}, products = []
 }
 
 const styles = StyleSheet.create({
-  headerRefresh: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   loadingText: { fontSize: 13, color: colors.textSecondary, marginBottom: spacing.md },
   skeletonCard: { borderRadius: radius.large, backgroundColor: colors.surfaceElevated, padding: spacing.md },
   skeletonPhoto: { aspectRatio: 1, backgroundColor: colors.skeleton, borderRadius: radius.medium, marginBottom: spacing.md },

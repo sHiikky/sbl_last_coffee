@@ -12,7 +12,7 @@ import PrimaryButton from '../components/PrimaryButton';
 import AccountProfileFields from '../components/AccountProfileFields';
 import { readLocalAvatar, writeLocalAvatar } from '../lib/localAvatar';
 import { saveAccountProfile } from '../lib/accountProfile';
-import AccountDocumentsScreen, { hasApprovedDocuments, hasApprovedPrivacyPolicy } from './AccountDocumentsScreen';
+import AccountDocumentsScreen, { hasApprovedPrivacyPolicy } from './AccountDocumentsScreen';
 import NotificationSettingsScreen from './NotificationSettingsScreen';
 import { formatPhone } from './LoginScreen';
 import { colors, radius, spacing, brand } from '../theme/tokens';
@@ -107,7 +107,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     { icon: 'cube-outline', title: 'Мои заказы', subtitle: 'История и статусы', onPress: () => navigation.navigate('OrderHistory') },
     { icon: 'heart-outline', title: 'Избранное', subtitle: 'Сохранённые товары', badge: favoriteIds.length || undefined, onPress: () => navigation.navigate('Favorites') },
     { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Заказы, акции, серия', onPress: () => setNotificationsOpen(true) },
-    { icon: 'document-text-outline', title: 'Условия и связь', subtitle: hasApprovedDocuments() ? 'Предзаказ, данные и контакты кофейни' : hasApprovedPrivacyPolicy() ? 'Политика конфиденциальности и контакты' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
+    { icon: 'document-text-outline', title: 'Политика и контакты', subtitle: hasApprovedPrivacyPolicy() ? 'Конфиденциальность и связь с кофейней' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
   ];
   const deletionDone = deletion?.status === 'completed';
 
@@ -135,7 +135,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
         <Text style={styles.footerSignature}>{brand.name} · {brand.tagline}</Text>
       </Animated.View>
     </ScrollView>
-    <AccountDocumentsScreen initialTab="privacy" visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
+    <AccountDocumentsScreen visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
     <Modal visible={editorOpen} transparent animationType="slide" onRequestClose={() => { if (!editorBusy) setEditorOpen(false); }}>
       <View style={styles.backdrop}><View style={[styles.dialog, { maxHeight: '92%' }]}>
         <ScrollView keyboardShouldPersistTaps="handled">

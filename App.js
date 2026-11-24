@@ -34,7 +34,7 @@ import { HomeIcon, MenuIcon, CartIcon, ProfileIcon } from './navigation/TabIcons
 import { colors } from './theme/tokens';
 import { cartKey, getProductById } from './data/products';
 import { getAvailableRewards } from './loyalty/loyaltyService';
-import { fetchOrderingCatalog } from './lib/catalogService';
+import { fetchOrderingCatalog, fetchOrderingCatalogVersion } from './lib/catalogService';
 import { selectMenuProducts, hasProductPhoto } from './lib/menuVisibility';
 import { makeCartItem, cartMatchesSnapshot } from './lib/cartOptions';
 import { additionTitle, presentAdditions } from './lib/additionsPresentation';
@@ -648,11 +648,14 @@ export default function App() {
   // сознательно (см. HomeScreen/MenuScreen), а не считается ошибкой.
   useEffect(() => {
     let active = true;
+    let knownVersion = null;
     const refreshCatalog = async () => {
       const request = ++catalogRevision.current;
       if (active) setCatalogLoading(true);
       try {
+        const version = await fetchOrderingCatalogVersion().catch(() => null);
         const rows = await fetchOrderingCatalog();
+        if (active && request === catalogRevision.current) knownVersion = version;
         if (active && request === catalogRevision.current) { setProducts(rows.filter(p => !p.isModifier)); setModifiers(rows.filter(p => p.isModifier)); setCatalogError(null); }
       } catch (error) {
         if (active && request === catalogRevision.current) setCatalogError(error);
@@ -660,11 +663,19 @@ export default function App() {
         if (active && request === catalogRevision.current) setCatalogLoading(false);
       }
     };
+    // The menu is downloaded again only when the admin panel changed it: a tiny version
+    // check runs in the background (no Realtime on the VPS), the full catalog only on a change.
+    const refreshIfChanged = async () => {
+      if (!active || AppState.currentState !== 'active') return;
+      let version;
+      try { version = await fetchOrderingCatalogVersion(); } catch { return; }
+      if (active && version && version !== knownVersion) await refreshCatalog();
+    };
     catalogRefresh.current = refreshCatalog;
     refreshCatalog();
-    const timer = setInterval(refreshCatalog, 30000);
+    const timer = setInterval(refreshIfChanged, 30000);
     const listener = AppState.addEventListener('change', state => {
-      if (state === 'active') refreshCatalog();
+      if (state === 'active') void refreshIfChanged();
     });
     return () => { active = false; clearInterval(timer); listener.remove(); };
   }, []);

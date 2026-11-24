@@ -295,8 +295,8 @@ export default function LoginScreen({ navigation, route, onLogin }) {
 
             {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
             {secondsLeft > 0 && <Text style={styles.cooldown}>Новый запрос будет доступен после обратного отсчёта</Text>}
-            <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Условия предзаказа и сведения о данных" style={styles.resend}>
-              <Text style={styles.resendText}>Условия и политика конфиденциальности</Text>
+            <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Политика конфиденциальности и контакты" style={styles.resend}>
+              <Text style={styles.resendText}>Политика конфиденциальности</Text>
             </TouchableOpacity>
           </>
         ) : step === 'profile' ? (
@@ -382,7 +382,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
         )}
         </Animated.View>
       </ScrollView>
-      <AccountDocumentsScreen initialTab="privacy" visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
+      <AccountDocumentsScreen visible={documentsOpen} onClose={() => setDocumentsOpen(false)} />
     </KeyboardAvoidingView>
   );
 }
