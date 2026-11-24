@@ -1,7 +1,7 @@
 -- Push expansion (CANDIDATE, NOT APPLIED): order status "accepted", guest consent
 -- preferences, staff publication pushes and series reminders.
 -- This migration sends nothing by itself: delivery needs the Edge Function,
--- Expo credentials and ORDER_PUSH_ENABLED (see work/push-campaigns/ACTIVATION.txt).
+-- Expo credentials and ORDER_PUSH_ENABLED.
 BEGIN;
 
 -- 0. Shop hours (Asia/Tomsk, 11:00-20:00). Marketing pushes are sent only inside this window.

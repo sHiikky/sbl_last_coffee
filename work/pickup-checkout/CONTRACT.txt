@@ -83,7 +83,6 @@ VALIDATION
 Installed native PostgreSQL 17, separate disposable local cluster 127.0.0.1:5543.
 No cloud credentials. Minimal local auth.users/auth.uid fixture, not an Auth server.
 All old migrations and the new migration applied successfully to an empty DB.
-behavior-rollback.sql: 48 PASS assertions; all data/clock changes ROLLBACK.
 concurrency-local.cjs: 21 PASS assertions with actual blocking-PID overlap for
 same-key checkout, competing bonus spend, and duplicate payment/handover.
 Cleanup restores all nine fixture table counts; private clock restored on exit.

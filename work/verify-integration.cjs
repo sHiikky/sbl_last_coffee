@@ -23,10 +23,10 @@ const checks = [
   'work/promo-codes/client-check.cjs',
   'work/promo-codes/cart-check.cjs',
   'work/push-campaigns/check.cjs',
-  'work/sms-ru/check.cjs',
   'work/yandex-login/check.cjs',
   'work/yandex-login/client-check.cjs',
   'work/account-deletion/client-check.cjs',
+  'work/final-polish-20261123/check.cjs',
 ];
 for (const file of checks) {
   const result = spawnSync(process.execPath, [file], { cwd: root, stdio: 'inherit' });

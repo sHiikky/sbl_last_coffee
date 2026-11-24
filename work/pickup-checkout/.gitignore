@@ -1,4 +1,0 @@
-.pgdata/
-postgres.log
-.reload-local.sql
-.notification-integration-local.sql

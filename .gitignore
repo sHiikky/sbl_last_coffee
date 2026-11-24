@@ -56,8 +56,6 @@ tmp/
 scripts/
 !scripts/
 scripts/*
-!scripts/configure-yandex-provider.ps1
-!scripts/configure-yandex-provider.cjs
 .agents/
 меню сблеском/
 

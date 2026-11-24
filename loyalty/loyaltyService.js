@@ -303,6 +303,6 @@ export function getEligibleCartItemsForReward(cart, reward, config = LOYALTY_CON
 // вместо системного времени телефона, серверный расчёт businessDay, уникальность
 // (userId, businessDay) на уровне БД, идемпотентная выдача наград и валидация
 // redemption. Чтобы подключить backend позже, достаточно заменить
-// loyalty/loyaltyStorage.js (сейчас — AsyncStorage) на репозиторий поверх API,
+// локальное хранилище (сейчас — AsyncStorage) на репозиторий поверх API,
 // сохранив тот же контракт полей (visitedDays/rewards/milestonesClaimed) —
 // остальной domain-код (этот файл) менять не придётся.
