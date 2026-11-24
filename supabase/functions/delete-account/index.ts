@@ -22,10 +22,6 @@ Deno.serve(async request => {
     console.error('[delete-account] prepare failed', prepareError.code || 'unknown');
     return json({ error: 'Не удалось удалить аккаунт. Повторите позже' }, 503);
   }
-  const { error: deleteError } = await db.auth.admin.deleteUser(user.id);
-  if (deleteError) {
-    console.error('[delete-account] auth delete failed', deleteError.status || 'unknown');
-    return json({ error: 'Не удалось удалить аккаунт. Повторите позже' }, 503);
-  }
+  // prepare_account_deletion also deletes the Auth user (the gateway does not expose the Auth admin API).
   return json({ ok: true });
 });

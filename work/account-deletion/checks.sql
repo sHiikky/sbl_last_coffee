@@ -38,8 +38,8 @@ DO $$ BEGIN
   IF (SELECT count(*) FROM public.orders WHERE customer_id IS NULL AND customer_name IS NULL AND customer_phone IS NULL AND comment IS NULL AND request_fingerprint IS NULL) <> 2 THEN RAISE EXCEPTION 'FAIL: personal data kept'; END IF;
   IF (SELECT customer_name FROM public.orders WHERE customer_id='44444444-4444-4444-4444-444444444444') <> 'Олег' THEN RAISE EXCEPTION 'FAIL: other customer changed'; END IF;
 END $$;
-DELETE FROM auth.users WHERE id='11111111-1111-1111-1111-111111111111';
-SELECT 'PASS 3: orders anonymized, user deleted, bonuses cascaded' WHERE NOT EXISTS (SELECT 1 FROM public.bonus_accounts WHERE customer_id='11111111-1111-1111-1111-111111111111');
+-- the function itself deletes the Auth user
+SELECT 'PASS 3: orders anonymized, user deleted, bonuses cascaded' WHERE NOT EXISTS (SELECT 1 FROM public.bonus_accounts WHERE customer_id='11111111-1111-1111-1111-111111111111') AND NOT EXISTS (SELECT 1 FROM auth.users WHERE id='11111111-1111-1111-1111-111111111111');
 
 -- 4. Triggers are back on after the function.
 DO $$ BEGIN
