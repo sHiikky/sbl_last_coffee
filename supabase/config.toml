@@ -509,3 +509,9 @@ entrypoint = "./functions/send-sms-hook/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/yandex-userinfo/index.ts"
+
+# Self-service account deletion; the function checks the caller's session itself.
+[functions.delete-account]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/delete-account/index.ts"

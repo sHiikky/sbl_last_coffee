@@ -20,7 +20,7 @@ import { colors, radius, spacing, brand } from '../theme/tokens';
 import { getDaysUntilNextMilestone } from '../loyalty/loyaltySelectors';
 import { LOYALTY_CONFIG } from '../loyalty/loyaltyConfig';
 import useBonusAccount from '../hooks/useBonusAccount';
-import { signOutAccount, requestAccountDeletion, fetchDeletionRequest, startYandexSignIn, describeAuthError, YANDEX_AUTH_ENABLED, WAITCALL_ENABLED } from '../lib/accountService';
+import { signOutAccount, deleteAccount, startYandexSignIn, describeAuthError, YANDEX_AUTH_ENABLED, WAITCALL_ENABLED } from '../lib/accountService';
 
 function deletionError(error) {
   if (['PGRST202', '42883'].includes(error?.code)) return 'Приём запросов ещё не настроен. Обратитесь к сотруднику кофейни; запрос сейчас не был отправлен.';
@@ -110,19 +110,18 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     finally { setLoggingOut(false); }
   };
 
-  const openDeletion = async () => {
-    setDeletionOpen(true); setDeletionMessage(''); setDeletionBusy(true);
-    try { setDeletion(await fetchDeletionRequest()); }
-    catch (cause) { setDeletionMessage(deletionError(cause)); }
-    finally { setDeletionBusy(false); }
-  };
+  const openDeletion = () => { setDeletionOpen(true); setDeletionMessage(''); setDeletion(null); };
 
   const confirmDeletion = async () => {
     if (requestInFlight.current || deletionBusy) return;
     requestInFlight.current = true;
     setDeletionBusy(true); setDeletionMessage('');
-    try { setDeletion(await requestAccountDeletion()); }
-    catch (cause) { setDeletionMessage(deletionError(cause)); }
+    try {
+      const deletedId = account?.id;
+      await deleteAccount();
+      if (deletedId) await writeLocalAvatar(deletedId, null).catch(() => {});
+      setDeletion({ status: 'completed' });
+    } catch (cause) { setDeletionMessage(describeAuthError(cause)); }
     finally { requestInFlight.current = false; setDeletionBusy(false); }
   };
 
@@ -134,8 +133,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     { icon: 'notifications-outline', title: 'Уведомления', subtitle: 'Заказы, акции, серия', onPress: () => setNotificationsOpen(true) },
     { icon: 'document-text-outline', title: 'Условия и связь', subtitle: hasApprovedDocuments() ? 'Предзаказ, данные и контакты кофейни' : hasApprovedPrivacyPolicy() ? 'Политика конфиденциальности и контакты' : 'Нужно заполнить перед запуском', onPress: () => setDocumentsOpen(true) },
   ];
-  const requestPending = ['pending', 'processing'].includes(deletion?.status);
-  const statusText = { pending: 'Запрос принят и ожидает обработки', processing: 'Запрос обрабатывается', completed: 'Запрос обработан', rejected: 'Нужны уточнения по запросу' }[deletion?.status];
+  const deletionDone = deletion?.status === 'completed';
 
   return <View style={styles.screen}>
     {isFocused && <StatusBar style="dark" />}
@@ -170,7 +168,7 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
             {loggingOut ? <ActivityIndicator color={colors.accent} /> : <Text style={styles.actionText}>Выйти из аккаунта</Text>}
           </TouchableOpacity>}
           {!!logoutError && <Text style={styles.error} accessibilityRole="alert">{logoutError}</Text>}
-          <TouchableOpacity onPress={openDeletion} disabled={deletionBusy} accessibilityRole="button" accessibilityLabel="Запросить удаление аккаунта и данных" style={styles.action}><Text style={styles.dangerText}>Запросить удаление {account ? 'аккаунта и данных' : 'данных гостя'}</Text></TouchableOpacity>
+          <TouchableOpacity onPress={openDeletion} disabled={deletionBusy} accessibilityRole="button" accessibilityLabel="Удалить аккаунт и данные" style={styles.action}><Text style={styles.dangerText}>Удалить {account ? 'аккаунт и данные' : 'данные гостя'}</Text></TouchableOpacity>
         </View>
         <Text style={styles.footerSignature}>{brand.name} · {brand.tagline}</Text>
       </Animated.View>
@@ -190,16 +188,15 @@ export default function ProfileScreen({ navigation, tabBarHeight = 0, favoriteId
     <NotificationSettingsScreen visible={notificationsOpen} onClose={() => setNotificationsOpen(false)} />
     <Modal visible={deletionOpen} transparent animationType="fade" onRequestClose={() => { if (!deletionBusy) setDeletionOpen(false); }}>
       <View style={styles.backdrop}><View style={styles.dialog}>
-        <Text style={styles.dialogTitle}>Запрос на удаление</Text>
-        <Text style={styles.copy}>Отправим сотрудникам запрос на удаление аккаунта и связанных данных. Это не мгновенное удаление: пока запрос не обработан, аккаунт и история остаются доступны.</Text>
-        <Text style={styles.copy}>Активные заказы этим действием не отменяются. Сотрудник должен проверить их и сведения, которые требуется сохранить в учёте.</Text>
+        <Text style={styles.dialogTitle}>{deletionDone ? 'Аккаунт удалён' : 'Удалить аккаунт?'}</Text>
+        {deletionDone ? <Text style={styles.copy}>Аккаунт и личные данные удалены. Вы вышли из аккаунта; меню можно смотреть как гость.</Text> : <>
+          <Text style={styles.copy}>Удалим сразу и навсегда: аккаунт, номер телефона, имя, бонусы, «Серию SBL», подарки и настройки уведомлений. Восстановить их будет нельзя.</Text>
+          <Text style={styles.copy}>Выданные заказы останутся в учёте кофейни без имени и телефона. Если есть незавершённый заказ, сначала дождитесь его выдачи или отмены.</Text>
+        </>}
         {deletionBusy && <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.md }} />}
-        {!!statusText && <Text style={styles.requestStatus}>{statusText}</Text>}
-        {!!deletion?.active_order_count && <Text style={styles.copy}>Незавершённых заказов: {deletion.active_order_count}</Text>}
-        {!!deletion?.public_message && <Text style={styles.copy}>{deletion.public_message}</Text>}
         {!!deletionMessage && <Text style={styles.error} accessibilityRole="alert">{deletionMessage}</Text>}
-        {!requestPending && deletion?.status !== 'completed' && <View style={{ marginTop: spacing.xl }}><PrimaryButton fullWidth label="Подтвердить и отправить запрос" onPress={confirmDeletion} loading={deletionBusy} /></View>}
-        <TouchableOpacity onPress={() => setDeletionOpen(false)} disabled={deletionBusy} accessibilityRole="button" style={styles.action}><Text style={styles.actionText}>{requestPending ? 'Закрыть' : 'Отмена'}</Text></TouchableOpacity>
+        {!deletionDone && <View style={{ marginTop: spacing.xl }}><PrimaryButton fullWidth label="Удалить навсегда" onPress={confirmDeletion} loading={deletionBusy} /></View>}
+        <TouchableOpacity onPress={() => setDeletionOpen(false)} disabled={deletionBusy} accessibilityRole="button" style={styles.action}><Text style={styles.actionText}>{deletionDone ? 'Закрыть' : 'Отмена'}</Text></TouchableOpacity>
       </View></View>
     </Modal>
   </View>;

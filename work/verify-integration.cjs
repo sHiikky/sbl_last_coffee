@@ -26,6 +26,7 @@ const checks = [
   'work/sms-ru/check.cjs',
   'work/yandex-login/check.cjs',
   'work/yandex-login/client-check.cjs',
+  'work/account-deletion/client-check.cjs',
 ];
 for (const file of checks) {
   const result = spawnSync(process.execPath, [file], { cwd: root, stdio: 'inherit' });
