@@ -90,7 +90,7 @@ export default function AccountDocumentsScreen({ visible, onClose, initialTab = 
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(20,24,20,0.4)', alignItems: 'center', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'flex-end' },
   screen: { width: '100%', maxWidth: 720, flex: 1, maxHeight: '94%', backgroundColor: colors.background, borderTopLeftRadius: radius.xlarge, borderTopRightRadius: radius.xlarge, overflow: 'hidden' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.md },
   title: { fontSize: 20, flex: 1, fontWeight: '800', color: colors.textPrimary },

@@ -57,10 +57,10 @@ const styles = StyleSheet.create({
   markerColumn: { alignSelf: 'stretch', width: 30, justifyContent: 'center', alignItems: 'center' },
   connector: { position: 'absolute', top: '50%', height: '100%', width: 2, backgroundColor: colors.border }, connectorDone: { backgroundColor: colors.textPrimary },
   dot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }, dotActive: { backgroundColor: colors.textPrimary },
-  label: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.textSecondary }, current: { fontWeight: '700', color: colors.textPrimary }, now: { fontSize: 11, color: colors.accent, fontWeight: '600' },
+  label: { flex: 1, fontSize: 14, lineHeight: 20, color: colors.textSecondary }, current: { fontWeight: '700', color: colors.textPrimary }, now: { fontSize: 12, color: colors.textSecondary, fontWeight: '600' },
   timerCard: { overflow: 'hidden', borderRadius: radius.large, marginTop: spacing.lg, padding: 2 },
-  timerBody: { borderRadius: radius.large - 2, backgroundColor: 'rgba(255,255,255,0.85)', padding: spacing.lg, alignItems: 'center' },
+  timerBody: { borderRadius: radius.large - 2, backgroundColor: colors.glassWhite, padding: spacing.lg, alignItems: 'center' },
   timerCaption: { color: colors.textPrimary, fontSize: 12, fontWeight: '600' }, timer: { fontSize: 36, lineHeight: 46, fontWeight: '800', color: colors.textPrimary, fontVariant: ['tabular-nums'], marginVertical: spacing.xs },
   hint: { color: colors.textSecondary, fontSize: 12, lineHeight: 18, textAlign: 'center' },
-  track: { height: 4, width: '100%', backgroundColor: colors.border, borderRadius: 2, marginTop: spacing.md, overflow: 'hidden' }, fill: { height: '100%', backgroundColor: colors.textPrimary, borderRadius: 2 },
+  track: { height: 4, width: '100%', backgroundColor: colors.border, borderRadius: radius.pill, marginTop: spacing.md, overflow: 'hidden' }, fill: { height: '100%', backgroundColor: colors.textPrimary, borderRadius: radius.pill },
 });

@@ -43,6 +43,8 @@ export const colors = {
   darkSurfaceSecondary:   '#171717',
   // Затемнение под нижними шторками/модальными окнами
   scrim:                  'rgba(32,35,32,0.45)',
+  // Полупрозрачная белая подложка поверх голографической рамки (таймер готовности заказа)
+  glassWhite:             'rgba(255,255,255,0.85)',
 };
 
 export const spacing = {
@@ -122,7 +124,7 @@ export const materials = {
 export const typography = {
   productTitle: { fontSize: 15, lineHeight: 20, fontWeight: '400', letterSpacing: 0 },
   price:        { fontSize: 16, fontWeight: '600', letterSpacing: 0, fontVariant: ['tabular-nums'] },
-  eyebrow:      { fontSize: 11, fontWeight: '600', letterSpacing: 2.5, textTransform: 'uppercase' },
+  eyebrow:      { fontSize: 12, fontWeight: '600', letterSpacing: 2.5, textTransform: 'uppercase' },
   caption:      { fontSize: 12, fontWeight: '400' },
   body:         { fontSize: 15, fontWeight: '400' },
   cardTitle:    { fontSize: 16, fontWeight: '600' },

@@ -60,6 +60,7 @@ export default function Chip({ label, subLabel, active, onPress, flex, style, ac
   return (
     <TouchableOpacity
       onPress={handlePress}
+      hitSlop={small ? { top: 6, bottom: 6 } : undefined}
       style={flex && { flex: 1 }}
       accessibilityRole="button"
       accessibilityState={{ selected: !!active }}
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
   labelAccent: { color: colors.accent },
   // Все варианты активного состояния (dark/accent/main) в этом приложении
   // заканчиваются тёмным или оранжевым фоном — в обоих случаях текст белый.
-  labelActiveOnDark: { color: '#fff' },
-  subLabel: { fontSize: 11, color: colors.textMuted },
+  labelActiveOnDark: { color: colors.textOnDark },
+  subLabel: { fontSize: 12, color: colors.textMuted },
   subLabelActive: { color: 'rgba(255,255,255,0.72)' },
 });

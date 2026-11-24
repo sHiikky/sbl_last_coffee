@@ -123,3 +123,13 @@ private-export/
 /work/privacy-comparison-*/
 /work/privacy-approval-*/
 /work/final-polish-*/result.json
+
+# Локальные материалы, не относящиеся к сборке приложения (хранятся только на компьютере владельца)
+/меню и тд/
+/меню сблеском/
+/CLAUDE.md
+/PROJECT_CONTEXT.md
+/start-tunnel.ps1
+/.claude/
+/sbl-latest/
+/sbl-github-current/

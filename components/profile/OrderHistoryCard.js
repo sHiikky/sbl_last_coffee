@@ -12,7 +12,7 @@ import { colors, spacing, radius, shadow } from '../../theme/tokens';
 
 function formatDate(dateString) {
   try {
-    return new Date(dateString).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+    return new Date(dateString).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', timeZone: 'Asia/Tomsk' });
   } catch {
     return 'Недавно';
   }

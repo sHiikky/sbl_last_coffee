@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E7EB',
   },
   label: {
-    color: '#fff',
+    color: colors.textOnDark,
     fontWeight: '700',
     textAlign: 'center',
   },

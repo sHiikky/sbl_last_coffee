@@ -223,7 +223,9 @@ export default function CartScreen({
   const discount = promoValid ? promoQuote.discount : 0;
 
   const serviceFee = subtotal > 0 ? 0 : 0;
-  const total = Math.max(0, subtotal - discount - rewardDiscount + serviceFee);
+  // Сумма в копейках без «хвостов» float, как numeric на сервере: иначе лимит списания бонусов может быть на 1 меньше.
+  const rawTotal = Math.max(0, subtotal - discount - rewardDiscount + serviceFee);
+  const total = Number.isFinite(rawTotal) ? Math.round((rawTotal + Number.EPSILON) * 100) / 100 : 0;
 
   // total остаётся полной стоимостью товаров (совпадает с суммой order_items,
   // как и раньше) — списание бонусов не скидка, а отдельный способ оплаты
@@ -314,7 +316,9 @@ export default function CartScreen({
       const stillUnresolved =
         !resolution ||
         resolution.outcome === CHECKOUT_RECOVERY_OUTCOME.NOT_FOUND_UNCERTAIN ||
-        resolution.outcome === CHECKOUT_RECOVERY_OUTCOME.LOOKUP_FAILED;
+        resolution.outcome === CHECKOUT_RECOVERY_OUTCOME.LOOKUP_FAILED ||
+        // THROTTLED = проверку пропустили (общий in-flight авто-вызов), попытка НЕ разрешена.
+        resolution.outcome === CHECKOUT_RECOVERY_OUTCOME.THROTTLED;
 
       if (stillUnresolved) {
         // Попытка младше uncertainty window (сервер теоретически ещё мог
@@ -352,6 +356,15 @@ export default function CartScreen({
     // в AsyncStorage будет перезаписана новой ниже).
     if (checkoutAttemptRef.current.key && checkoutAttemptRef.current.signature !== attemptSignature) {
       checkoutAttemptRef.current = { key: null, signature: null };
+    }
+    // Старый ключ переиспользуем только как повтор ЕЩЁ НЕ разрешённой попытки. Если её уже
+    // разрешило восстановление в App.js (заказ найден/не найден, хранилище очищено), тот же
+    // ключ вернул бы с сервера старый заказ вместо нового.
+    if (checkoutAttemptRef.current.key) {
+      const pendingAttempt = await getPendingCheckoutAttempt();
+      if (!pendingAttempt || pendingAttempt.idempotencyKey !== checkoutAttemptRef.current.key) {
+        checkoutAttemptRef.current = { key: null, signature: null };
+      }
     }
     const idempotencyKey = checkoutAttemptRef.current.key || generateIdempotencyKey();
     checkoutAttemptRef.current = { key: idempotencyKey, signature: attemptSignature };
@@ -721,14 +734,14 @@ export default function CartScreen({
                 style={{ flex: 1, fontSize: 13, color: colors.textPrimary }}
                 returnKeyType="done"
               />
-              <TouchableOpacity onPress={applyPromo} disabled={promoState === 'loading' || ordering} accessibilityRole="button" accessibilityLabel="Применить промокод">
+              <TouchableOpacity onPress={applyPromo} disabled={promoState === 'loading' || ordering} accessibilityRole="button" accessibilityLabel="Применить промокод" style={{ minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: spacing.sm }}>
                 <Text style={{ fontSize: 12, fontWeight: '700', color: promoValid ? colors.success : colors.accent }}>
                   {promoState === 'loading' ? 'Проверяем…' : promoValid ? '✓ −' + formatPrice(discount) : 'Применить'}
                 </Text>
               </TouchableOpacity>
             </View>
-            {promoState === 'ok' && !promoValid && <Text style={{fontSize:11,color:colors.textMuted,marginTop:6}}>Корзина изменилась. Примените промокод заново.</Text>}
-            {promoState === 'err' && <Text style={{ fontSize: 11, color: colors.danger, marginTop: 6 }}>{promoError}</Text>}
+            {promoState === 'ok' && !promoValid && <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 6 }}>Корзина изменилась. Примените промокод заново.</Text>}
+            {promoState === 'err' && <Text style={{ fontSize: 12, color: colors.danger, marginTop: 6 }}>{promoError}</Text>}
 
             <View style={[styles.summaryBox, shadow.card]}>
               <View style={styles.summaryRow}><Text style={styles.summaryLabel}>Сумма</Text><Text style={styles.summaryValue}>{formatPrice(subtotal)}</Text></View>
@@ -819,9 +832,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemName: { fontSize: 15, lineHeight: 20, fontWeight: '400', color: colors.textPrimary },
-  itemMeta: { fontSize: 11, color: colors.textMuted, marginTop: 2 },
+  itemMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
   itemPrice: { fontSize: 16, fontWeight: '600', fontVariant: ['tabular-nums'], color: colors.accent, marginTop: 4 },
-  sectionCaption: { fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md },
+  sectionCaption: { fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: colors.textMuted, marginBottom: spacing.md },
   promoBox: {
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,

@@ -1,7 +1,7 @@
 Manual Supabase application — 2026-10-29 Asia/Tomsk
 
 Intended project: vxefueynagwuavlyeiqc (coffee).
-User runs SQL in Supabase SQL Editor; Codex does not have an administrative connection.
+User runs SQL in Supabase SQL Editor; the development tools have no administrative connection.
 
 Preflight: user returned six PASS results before either migration.
 20261029100000_pickup_checkout: user supplied screenshot showing final COMMIT and

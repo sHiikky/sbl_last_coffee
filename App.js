@@ -428,7 +428,8 @@ export default function App() {
     const syncBars = async () => {
       try {
         await NavigationBar.setVisibilityAsync(launchDone ? 'visible' : 'hidden');
-        if (active) await NavigationBar.setButtonStyleAsync(launchDone ? 'dark' : 'light');
+        // expo-navigation-bar 58 удалил setButtonStyleAsync; setStyle задаёт цвет кнопок.
+        if (active && typeof NavigationBar.setStyle === 'function') NavigationBar.setStyle(launchDone ? 'dark' : 'light');
       } catch (_) {}
     };
     void syncBars();
@@ -649,8 +650,7 @@ export default function App() {
   }, [products]);
 
   // Меню грузим из Supabase (таблица products, синхронизируется из СБИС
-  // отдельной Edge Function — см. lib/catalogService.js и файлы в "Claude
-  // outputs"). Пока список не пришёл, экраны получают пустой массив — это
+  // отдельной Edge Function — см. lib/catalogService.js). Пока список не пришёл, экраны получают пустой массив — это
   // сознательно (см. HomeScreen/MenuScreen), а не считается ошибкой.
   useEffect(() => {
     let active = true;

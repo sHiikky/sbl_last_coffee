@@ -2,7 +2,7 @@
 // Мини-баннер временного промо на Главной (public.promo_banners) — виден,
 // пока текущее время попадает в [starts_at, ends_at] баннера (см.
 // lib/promoService.js). Управление баннерами — вручную через SQL, не из
-// приложения (см. CLAUDE.md).
+// приложения.
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import Text from '../AppText';

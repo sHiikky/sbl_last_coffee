@@ -28,7 +28,13 @@
       set: function(v){ valueDesc.set.call(select, v); sync(); }
     });
     new MutationObserver(sync).observe(select, { attributes:true, attributeFilter:['disabled'], childList:true, subtree:true });
+    // Скрытый select всё же может получить фокус (клик по подписи, клавиатура): любое его
+    // собственное изменение сразу отражаем в видимом контроле, иначе экран и форма расходятся.
+    select.addEventListener('change', sync); select.addEventListener('input', sync);
   }
+  /* клик внутри своего контрола не должен «активировать» подпись <label>: она перевела бы
+     фокус на скрытый select, и стрелки клавиатуры меняли бы невидимое значение */
+  function keepFocusInside(root){ root.addEventListener('click', function(event){ event.preventDefault(); }); }
 
   /* ---------- сегментная полоска ---------- */
   function segmented(select){
@@ -70,7 +76,7 @@
       if (valueDesc.get.call(select) === value) return;
       valueDesc.set.call(select, value); sync(); fire(select);
     }
-    hideSource(select); select.parentNode.insertBefore(group, select.nextSibling);
+    hideSource(select); keepFocusInside(group); select.parentNode.insertBefore(group, select.nextSibling);
     build(); watch(select, sync); sync();
   }
 
@@ -157,7 +163,7 @@
         for (var i = 0; i < items.length; i++) if (items[i].textContent.toLowerCase().indexOf(typed) === 0) { if (!isOpen) open(); setActive(i); break; }
       }
     });
-    hideSource(select); select.parentNode.insertBefore(root, select.nextSibling);
+    hideSource(select); keepFocusInside(root); select.parentNode.insertBefore(root, select.nextSibling);
     build(); watch(select, sync); sync();
   }
 

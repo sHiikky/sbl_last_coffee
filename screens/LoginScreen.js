@@ -133,7 +133,12 @@ export default function LoginScreen({ navigation, route, onLogin }) {
             setError('Вход выполнен. Не удалось сохранить профиль — попробуйте ещё раз.');
           }
         }
-      } catch (cause) { if (active && mountedRef.current) setError(describeAuthError(cause)); }
+      } catch (cause) {
+        if (!active || !mountedRef.current) return;
+        // Попытка истекла/заменена: прекращаем опрос и возвращаем к вводу номера с понятным текстом.
+        if (cause?.code === 'WAITCALL_EXPIRED') { active = false; clearInterval(timer); setChallenge(null); setStep('phone'); }
+        setError(describeAuthError(cause));
+      }
       finally { inFlight = false; }
     }, 3000);
     return () => { active = false; clearInterval(timer); };
@@ -497,7 +502,7 @@ const styles = StyleSheet.create({
   testHintText: { flex: 1, fontSize: 12.5, lineHeight: 17, color: colors.textSecondary },
   callKicker: { color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 1.5, marginBottom: spacing.sm },
   callPhoneInline: { color: colors.textPrimary, fontWeight: '700' },
-  callCard: { backgroundColor: colors.surface1, borderRadius: radius.xlarge, padding: spacing.xl, marginTop: -spacing.sm, borderWidth: 1, borderColor: 'rgba(32,35,32,0.07)', ...shadow.level2 },
+  callCard: { backgroundColor: colors.surface1, borderRadius: radius.large, padding: spacing.xl, marginTop: -spacing.sm, borderWidth: 1, borderColor: colors.border, ...shadow.level2 },
   callCardTop: { flexDirection: 'row', alignItems: 'center', columnGap: spacing.md, marginBottom: spacing.xl },
   callIcon: { width: 46, height: 46, borderRadius: radius.medium, backgroundColor: colors.accentSoft, alignItems: 'center', justifyContent: 'center' },
   callCardHeading: { flex: 1 },
@@ -505,8 +510,8 @@ const styles = StyleSheet.create({
   callLabel: { color: colors.textPrimary, fontSize: 14, fontWeight: '700', marginTop: 4 },
   securePill: { flexDirection: 'row', alignItems: 'center', columnGap: 4, backgroundColor: 'rgba(38,138,88,0.09)', borderRadius: radius.pill, paddingVertical: 7, paddingHorizontal: 9 },
   secureText: { color: colors.success, fontSize: 11, fontWeight: '700' },
-  numberPanel: { backgroundColor: colors.surface0, borderRadius: radius.large, borderWidth: 1, borderColor: 'rgba(32,35,32,0.06)', paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
-  numberCaption: { color: colors.textMuted, fontSize: 10, fontWeight: '800', letterSpacing: 1.2 },
+  numberPanel: { backgroundColor: colors.surface0, borderRadius: radius.large, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.lg, paddingVertical: spacing.lg },
+  numberCaption: { color: colors.textMuted, fontSize: 12, fontWeight: '800', letterSpacing: 1.2 },
   callNumber: { color: colors.textPrimary, fontSize: 28, lineHeight: 42, minHeight: 44, includeFontPadding: true, textAlignVertical: 'center', fontWeight: '800', marginTop: spacing.sm, fontVariant: ['tabular-nums'] },
   callButtonWrap: { overflow: 'hidden', borderRadius: radius.pill, marginTop: spacing.lg, ...shadow.button },
   callButton: { minHeight: 58, flexDirection: 'row', columnGap: spacing.sm, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spacing.lg },
