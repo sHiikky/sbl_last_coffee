@@ -32,8 +32,9 @@ npx eas submit -p ios --profile production     # отправка в App Store C
 
 ### 4. Иконка и сплэш-скрин
 Уже в проекте:
-- `assets/brand/app-icon.png` — иконка 1024×1024, без прозрачности;
-- `assets/brand/splash-full.png` — сплэш-скрин.
+Лежат в этой же папке `work/app-store/` (и в проекте, уже подключены в `app.json`):
+- `app-icon-1024.png` — иконка 1024×1024, PNG, без прозрачности (она же в проекте: `assets/brand/app-icon.png`);
+- `splash-logo.jpg` — логотип для сплэш-скрина (в проекте: `assets/brand/splash-full.png`); показывается по центру на чёрном фоне `#050505`, шириной 250 pt.
 
 ### 5. Нативные функции
 Плагины уже подключены в `app.json`, ничего добавлять не нужно.
