@@ -23,7 +23,6 @@ export default function AccountProfileFields({ value, onChange, disabled = false
       </TouchableOpacity>
       <View style={styles.photoCopy}>
         <TouchableOpacity onPress={pick} disabled={disabled || photoBusy} accessibilityRole="button" style={styles.photoAction}><Text style={styles.photoTitle}>{value.avatarUri ? 'Изменить фото' : 'Добавить фото'}</Text></TouchableOpacity>
-        <Text style={styles.photoHint}>Только на этом устройстве</Text>
         {!!value.avatarUri && <TouchableOpacity onPress={() => onChange({ ...value, avatarUri: null })} disabled={disabled} accessibilityRole="button" style={styles.remove}><Text style={styles.removeText}>Удалить фото</Text></TouchableOpacity>}
       </View>
     </View>
@@ -43,7 +42,6 @@ const styles = StyleSheet.create({
   photoLoading: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   photoCopy: { flex: 1 }, photoAction: { minHeight: 44, justifyContent: 'center' },
   photoTitle: { color: colors.accent, fontSize: 15, fontWeight: '600' },
-  photoHint: { color: colors.textMuted, fontSize: 12, lineHeight: 18 },
   remove: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }, removeText: { color: colors.textSecondary, fontSize: 12 },
   label: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', marginTop: spacing.sm },
   input: { minHeight: 54, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.medium, paddingHorizontal: spacing.lg, color: colors.textPrimary, fontSize: 16 },

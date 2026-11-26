@@ -9,6 +9,7 @@ const checks = [
   'work/pickup-client-check.cjs', 'work/cashier-board-check.cjs', 'work/checkout-session-check.cjs',
   'work/account-notifications/client-worker-check.cjs',
   'work/photo-composition-check.cjs', 'work/photo-editor-check.cjs',
+  'work/photo-tools/upload-composer-check.cjs',
   'work/publications/client-admin-check.cjs',
   'work/cart-modifiers-ux-check.cjs', 'work/status-network-ux-check.cjs',
   'work/cafe-location-check.cjs', 'work/product-links-check.cjs',

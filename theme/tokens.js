@@ -5,7 +5,7 @@ export const colors = {
   surface2: '#FDFEFC',
   surface3: '#202320',
   surface3Alt: '#171717',
-  launchBackground: '#050505',
+  launchBackground: '#FFFFFF',
 
   textPrimary:            '#202320',
   textSecondary:          '#62675E',

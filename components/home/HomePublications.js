@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { AppState, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Text from '../AppText';
+import DrinkAnnouncement from './DrinkAnnouncement';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, shadow, spacing, typography } from '../../theme/tokens';
@@ -14,7 +15,7 @@ function PublicationImage({ uri, title, large = false }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => { setFailed(false); }, [uri]);
   if (!uri || failed) return null;
-  return <Image source={{ uri }} style={large ? styles.largeImage : styles.image} resizeMode="cover" accessibilityLabel={title} onError={() => setFailed(true)} />;
+  return <Image source={{ uri }} style={large ? styles.largeImage : styles.image} resizeMode="contain" accessibilityLabel={title} onError={() => setFailed(true)} />;
 }
 
 export default function HomePublications({ hPad, products = [], onOpenProduct }) {
@@ -51,9 +52,9 @@ export default function HomePublications({ hPad, products = [], onOpenProduct })
 
   return (
     <View style={{ marginHorizontal: hPad, marginTop: spacing.xl }}>
-      <Text style={[typography.sectionTitle, styles.heading]}>Жизнь SBL</Text>
+      {items.some(item => item.kind !== 'announcement') && <Text style={[typography.sectionTitle, styles.heading]}>Жизнь SBL</Text>}
       {items.map(item => (
-        <Pressable key={item.id} style={({ pressed }) => [styles.card, shadow.card, pressed && styles.pressed]} onPress={() => setSelectedId(item.id)} accessibilityRole="button" accessibilityLabel={`${item.kind === 'promotion' ? 'Акция' : 'Новость'}: ${item.title}. Подробнее`}>
+        item.kind === 'announcement' ? <DrinkAnnouncement key={item.id} item={item} products={products} onOpenProduct={onOpenProduct} /> : <Pressable key={item.id} style={({ pressed }) => [styles.card, shadow.card, pressed && styles.pressed]} onPress={() => setSelectedId(item.id)} accessibilityRole="button" accessibilityLabel={`${item.kind === 'promotion' ? 'Акция' : 'Новость'}: ${item.title}. Подробнее`}>
           <PublicationImage uri={item.imageUrl} title={item.title} />
           <View style={styles.body}>
             <View style={styles.meta}>
@@ -89,8 +90,8 @@ const styles = StyleSheet.create({
   heading: { color: colors.textPrimary, marginBottom: spacing.md },
   card: { backgroundColor: colors.surfaceElevated, borderRadius: radius.large, overflow: 'hidden', marginBottom: spacing.md },
   pressed: { opacity: 0.85 },
-  image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: colors.skeleton },
-  largeImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.large, backgroundColor: colors.skeleton, marginBottom: spacing.xl },
+  image: { width: '100%', aspectRatio: 16 / 9, backgroundColor: colors.surface0 },
+  largeImage: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.large, backgroundColor: colors.surface0, marginBottom: spacing.xl },
   body: { padding: spacing.lg },
   meta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md, marginBottom: spacing.sm },
   kind: { color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1 },

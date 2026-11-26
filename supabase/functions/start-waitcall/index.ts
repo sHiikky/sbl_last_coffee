@@ -15,21 +15,29 @@ Deno.serve(async request => {
   if (!credentials) return json({ error: 'Звонок пока не настроен' }, 503);
   const user = await callerUser(request);
   if (!user) return json({ error: 'Необходима гостевая сессия' }, 401);
-  let phone: string;
-  try { phone = (await request.json()).phone; } catch { return json({ error: 'INVALID_JSON' }, 400); }
+  let phone: string; let intent: string;
+  try { const input = await request.json(); phone = input.phone; intent = input.intent || 'register'; } catch { return json({ error: 'INVALID_JSON' }, 400); }
   if (typeof phone !== 'string' || !/^\+7\d{10}$/.test(phone)) return json({ error: 'Проверьте номер телефона' }, 400);
+  if (!['login', 'register'].includes(intent)) return json({ error: 'INVALID_REQUEST' }, 400);
   const db = admin();
   const { data: recent, error: lookupError } = await db.from('waitcall_auth_attempts').select('id,requester_id,created_at,verified,last_error,consumed,call_number,expires_at')
     .eq('phone', phone).gte('created_at', new Date(Date.now() - 3600_000).toISOString())
     .order('created_at', { ascending: false }).limit(5);
   if (lookupError) return json({ error: 'Сервис временно недоступен' }, 503);
-  if (recent?.length && Date.now() - new Date(recent[0].created_at).getTime() < 60_000) return json({ error: 'Повторите через минуту' }, 429);
+  if (recent?.length && recent[0].last_error !== 'LOGIN_NOT_REGISTERED' && Date.now() - new Date(recent[0].created_at).getTime() < 60_000) return json({ error: 'Повторите через минуту' }, 429);
   // App Review demo sign-in: Apple reviewers have no Russian number to call from. Only the phone
   // set in the REVIEW_DEMO_PHONE secret skips the call; the attempt is born verified, and the normal
   // Supabase OTP (send-waitcall-hook → complete-waitcall) still creates the session. Unset the
   // secret after review to switch this off.
   const demoPhone = (Deno.env.get('REVIEW_DEMO_PHONE') || '').trim();
   if (demoPhone && phone === demoPhone) {
+    let demoLoginAccountExists = false;
+    if (intent === 'login') {
+      const registered = await db.rpc('waitcall_registered_phone', { p_phone: phone });
+      if (registered.error) return json({ error: 'Сервис временно недоступен' }, 503);
+      if (registered.data !== true) return json({ code: 'PHONE_NOT_REGISTERED', error: 'Этот номер ещё не зарегистрирован. Создайте аккаунт.' }, 404);
+      demoLoginAccountExists = true;
+    }
     const demoCallNumber = (Deno.env.get('REVIEW_DEMO_CALL_NUMBER') || '+70000000000').trim();
     const { data: demo, error: demoError } = await db.from('waitcall_auth_attempts')
       .insert({ requester_id: user.id, phone, call_number: demoCallNumber, verified: true }).select('id').single();
@@ -37,13 +45,13 @@ Deno.serve(async request => {
     if (demoError || !demo) return json({ error: 'Сервис временно недоступен' }, 503);
     await db.from('waitcall_auth_attempts').update({ consumed: true, otp: null })
       .eq('phone', phone).eq('consumed', false).neq('id', demo.id);
-    return json({ attemptId: demo.id, callNumber: demoCallNumber, expiresIn: 900 });
+    return json({ loginAccountExists: demoLoginAccountExists, attemptId: demo.id, callNumber: demoCallNumber, expiresIn: 900 });
   }
   // Recover this caller's existing challenge after a client/Auth failure.
   // This allocates no provider number and consumes no additional quota.
   const pending = recent?.[0];
   const remaining = pending ? Math.floor((Date.parse(pending.expires_at) - Date.now()) / 1000) : 0;
-  if (pending?.requester_id === user.id && !pending.consumed && !pending.verified && remaining >= 120 &&
+  if (intent !== 'login' && pending?.requester_id === user.id && !pending.consumed && !pending.verified && remaining >= 120 &&
       typeof pending.call_number === 'string' && /^\+\d{10,15}$/.test(pending.call_number)) {
     return json({ attemptId: pending.id, callNumber: pending.call_number, expiresIn: remaining });
   }
@@ -73,6 +81,16 @@ Deno.serve(async request => {
     .insert({ requester_id: user.id, phone }).select('id').single();
   if (insertError?.code === '23505') return json({ error: 'Повторите через минуту' }, 429);
   if (insertError) return json({ error: 'Сервис временно недоступен' }, 503);
+  let loginAccountExists = false;
+  if (intent === 'login') {
+    const registered = await db.rpc('waitcall_registered_phone', { p_phone: phone });
+    if (registered.error || registered.data !== true) {
+      const cleanup = await db.from('waitcall_auth_attempts').update({ consumed: true, otp: null, last_error: registered.error ? 'LOGIN_LOOKUP_FAILED' : 'LOGIN_NOT_REGISTERED' }).eq('id', attempt.id);
+      if (registered.error || cleanup.error) return json({ error: 'Сервис временно недоступен' }, 503);
+      return json({ code: 'PHONE_NOT_REGISTERED', error: 'Этот номер ещё не зарегистрирован. Создайте аккаунт.' }, 404);
+    }
+    loginAccountExists = true;
+  }
   try {
     const provider = await fetch('https://smsc.ru/sys/wait_call.php', {
       method: 'POST',
@@ -91,7 +109,7 @@ Deno.serve(async request => {
     const { error: invalidateError } = await db.from('waitcall_auth_attempts').update({ consumed: true, otp: null })
       .eq('phone', phone).eq('consumed', false).neq('id', attempt.id);
     if (invalidateError) throw invalidateError;
-    return json({ attemptId: attempt.id, callNumber, expiresIn: 900 });
+    return json({ loginAccountExists, attemptId: attempt.id, callNumber, expiresIn: 900 });
   } catch (error) {
     console.error('[start-waitcall]', error instanceof Error ? error.message : 'unknown');
     await db.from('waitcall_auth_attempts').update({ consumed: true }).eq('id', attempt.id);

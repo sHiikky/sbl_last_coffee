@@ -1,57 +1,24 @@
-// components/Badge.js
-// Метка «Хит» / «Новинка». placement:
-// - 'card' (по умолчанию) — левый верхний угол карточки товара;
-// - 'hero' — крупная метка в левом нижнем углу фото на экране товара.
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Text from './AppText';
+import HolographicSurface from './HolographicSurface';
 import { colors } from '../theme/tokens';
+import badgeModel from '../kassa-terminal/product-badge';
 
-const MAP = {
-  hit: { label: 'Хит', bg: colors.accent },
-  new: { label: 'Новинка', bg: colors.textPrimary },
-};
-
-export default function Badge({ type, placement = 'card' }) {
-  const cfg = MAP[type];
-  if (!cfg) return null;
-  const hero = placement === 'hero';
-  return (
-    <View style={[styles.badge, hero ? styles.badgeHero : styles.badgeCard, { backgroundColor: cfg.bg }]}>
-      <Text style={[styles.text, hero && styles.textHero]}>{cfg.label}</Text>
-    </View>
-  );
+export default function Badge({ type }) {
+  const badge = badgeModel.parse(type);
+  if (!badge.text) return null;
+  return <View pointerEvents="none" style={[styles.badge, { backgroundColor: badge.style === 'black' ? '#151515' : colors.accent }]}>
+    {badge.style === 'holo' && <HolographicSurface style={StyleSheet.absoluteFill} />}
+    {badge.style === 'silver' && <LinearGradient colors={['#f5f6f7', '#c0c5ca', '#eef0f2']} start={{x:0,y:0}} end={{x:1,y:1}} style={StyleSheet.absoluteFill} />}
+    <Text style={[styles.text, ['silver','holo'].includes(badge.style) && styles.dark]} numberOfLines={2}>{badge.text}</Text>
+  </View>;
 }
-
 const styles = StyleSheet.create({
-  badge: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeCard: {
-    top: 8,
-    left: 8,
-    height: 22,
-    paddingHorizontal: 8,
-    borderRadius: 7,
-  },
-  badgeHero: {
-    left: 16,
-    bottom: 16,
-    height: 24,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-  },
-  text: {
-    color: colors.textOnDark,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  textHero: {
-    fontSize: 11,
-    letterSpacing: 0.6,
-  },
+  badge: { position:'absolute', top:8, right:8, maxWidth:'75%', minHeight:24,
+    paddingHorizontal:7, paddingVertical:4, borderRadius:5, overflow:'hidden',
+    alignItems:'center', justifyContent:'center' },
+  text: { color:'#fff', fontSize:11, lineHeight:14, fontWeight:'800', letterSpacing:0.4, textTransform:'uppercase' },
+  dark: { color:'#151515' },
 });

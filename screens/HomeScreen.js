@@ -96,6 +96,8 @@ export default function HomeScreen({ navigation, cart = {}, products = [], catal
       <View style={{ height: spacing.md }} />
       <HoloLine marginHorizontal={hPad} height={5} />
 
+      <HomePublications hPad={hPad} products={products} onOpenProduct={goProduct} />
+
       <View style={{ marginHorizontal: hPad, marginTop: spacing.xl }}>
         <HomeLoyaltyCard
           bonuses={bonusAccount.balance}
@@ -125,7 +127,7 @@ export default function HomeScreen({ navigation, cart = {}, products = [], catal
         onToggleFavorite={onToggleFavorite}
       />
 
-      <HomePublications hPad={hPad} products={products} onOpenProduct={goProduct} />
+
 
       <View style={{ marginTop: spacing.xxl }}>
         <View style={styles.sectionHeader}>

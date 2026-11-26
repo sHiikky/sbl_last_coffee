@@ -20,13 +20,14 @@ let dimensions = { width: 420, height: 900 };
 let preferences = { reduceMotion: true, ready: false }, pulses = 0, hides = 0, done = 0;
 let vibrationDuration = 0, vibrationCancelled = 0;
 const native = { Vibration: { vibrate: duration => { vibrationDuration = duration; }, cancel: () => { vibrationCancelled++; } }, Animated, AppState, Platform, View: 'View', Text: 'Text', useWindowDimensions: () => dimensions, Easing: { out: x => x, inOut: x => x, cubic: x => x }, StyleSheet: { create: x => x, absoluteFillObject: {}, absoluteFill: {} } };
-const mocks = { react: React, 'react-native': native, 'expo-linear-gradient': { LinearGradient: 'Gradient' }, 'expo-haptics': { impactAsync: async () => { pulses++; }, ImpactFeedbackStyle: { Light: 'light', Heavy: 'heavy' } }, 'expo-splash-screen': { hideAsync: async () => { hides++; } }, '../hooks/useMotionPreference': () => preferences, '../theme/tokens': { colors: {}, spacing: { xxl: 24, section: 32, xl: 20 } }, './BrandLogo': 'BrandLogo' };
+const mocks = { react: React, 'react-native': native, 'expo-linear-gradient': { LinearGradient: 'Gradient' }, 'expo-haptics': { impactAsync: async () => { pulses++; }, ImpactFeedbackStyle: { Light: 'light', Heavy: 'heavy' } }, 'expo-splash-screen': { hideAsync: async () => { hides++; } }, '../hooks/useMotionPreference': () => preferences, '../theme/tokens': { colors: {}, spacing: { xxl: 24, section: 32, xl: 20 } }, './BrandLogo': 'BrandLogo', '../theme/holographic': require('./load-domain.cjs')('theme/holographic.js') };
 function compile(file, injected) {
   const code = babel.transformSync(fs.readFileSync(file, 'utf8'), { babelrc: false, configFile: false, plugins: ['@babel/plugin-transform-react-jsx', '@babel/plugin-transform-modules-commonjs'] }).code;
   const module = { exports: {} };
   vm.runInNewContext(code, { module, exports: module.exports, require: name => { if (/(?:^|\/)AppText(?:Input)?$/.test(name)) return name.endsWith('Input') ? 'TextInput' : 'Text'; if (!(name in injected)) throw new Error(`Unexpected ${name}`); return injected[name]; }, setTimeout(fn, delay) { const key = { delay }; timers.set(key, fn); return key; }, clearTimeout: key => timers.delete(key), Promise });
   return module.exports.default;
 }
+mocks['react-native-svg'] = {default:'Svg', Defs:'Defs', Ellipse:'Ellipse', RadialGradient:'RadialGradient', Stop:'Stop', __esModule:true};
 const Launch = compile('components/BrandLaunch.js', mocks);
 function harness(Component = Launch) {
   const h = { cursor: 0, slots: [], effects: [], ready: false };
@@ -43,6 +44,7 @@ function reset() { timers.clear(); started.length = 0; lifecycle.clear(); pulses
   const h = harness(); const initial = h.render(); initial.props.onLayout(); initial.props.onLayout(); assert.equal(hides, 1); assert.equal(timers.size, 0);
   assert.equal(initial.props.children[1].props.children[0].type, 'BrandLogo');
   assert.equal(initial.props.children[1].props.children[0].props.variant, 'full', 'The full restored lockup remains readable before animation starts');
+  assert.equal(initial.props.children[1].props.children[0].props.tone,'dark');
   preferences = { reduceMotion: false, ready: true }; h.render(); assert.equal(timers.size, 1);
   assert.equal([...timers.keys()][0].delay, 1700, 'The sole haptic is at the centre of the 400ms hold + 2600ms sweep');
   const sequence = started.find(item => item.kind === 'sequence');
@@ -69,16 +71,11 @@ function reset() { timers.clear(); started.length = 0; lifecycle.clear(); pulses
   for (const frame of [{ width: 320, height: 640 }, { width: 420, height: 900 }, { width: 900, height: 420 }, { width: 1200, height: 800 }]) {
     dimensions = frame; const geometry = harness(); const tree = geometry.render();
     const band = tree.props.children[0], brand = tree.props.children[1];
+    assert.equal(band.props.children[0].type, 'Svg');
     const bounds = band.props.style[1], logo = brand.props.children[0];
-    const angle = parseFloat(bounds.transform[1].rotate) * Math.PI / 180;
-    const halfWidth = (bounds.width * Math.cos(angle) + bounds.height * Math.sin(angle)) / 2;
-    const halfHeight = (bounds.height * Math.cos(angle) + bounds.width * Math.sin(angle)) / 2;
-    const centre = bounds.left + bounds.width / 2;
-    const [start, end] = bounds.transform[0].translateX.outputRange;
-    assert.ok(centre + start + halfWidth < 0, `Start must be beyond left edge at ${frame.width}x${frame.height}`);
-    assert.ok(centre + end - halfWidth > frame.width, `End must be beyond right edge at ${frame.width}x${frame.height}`);
-    assert.ok(halfHeight * 2 >= frame.height, 'The glow spans the complete screen height');
-    assert.ok(bounds.width >= frame.width * 0.72, 'A broad screen glow, not a 96px logo highlight');
+    assert.equal(bounds.left + bounds.width / 2, frame.width / 2);
+    assert.equal(bounds.top + bounds.height / 2, frame.height / 2);
+    assert.ok(bounds.transform[0].scale);
     assert.equal(logo.type, 'BrandLogo'); assert.equal(logo.props.variant, 'full'); assert.ok(logo.props.width <= frame.width - 64);
     assert.notEqual(band, brand.props.children[0], 'The beam is a fullscreen sibling, never clipped inside the logo');
     geometry.stop();

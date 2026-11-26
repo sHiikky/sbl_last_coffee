@@ -71,6 +71,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
   const [profile, setProfile] = useState({ firstName: '', lastName: '', avatarUri: null });
   const [pendingAccount, setPendingAccount] = useState(null);
   const profileValid = !!normalizeProfileName(profile.firstName) && !!normalizeProfileName(profile.lastName);
+  const registrationNotice = mode === 'register' && error === describeAuthError({ code: 'PHONE_NOT_REGISTERED' });
   const { reduceMotion } = useMotionPreference();
   const entrance = useRef(new Animated.Value(1)).current;
   useEffect(() => {
@@ -154,7 +155,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
     setError('');
     setLoading(true);
     try {
-      const next = WAITCALL_ENABLED ? await startWaitCallSignIn(digits) : await startPhoneSignIn(digits);
+      const next = WAITCALL_ENABLED ? await startWaitCallSignIn(digits, { intent: mode }) : await startPhoneSignIn(digits);
       if (!mountedRef.current) return;
       setChallenge(next);
       Keyboard.dismiss();
@@ -165,7 +166,10 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       if (next.expiresAt) setCallLeft(Math.max(0, Math.ceil((next.expiresAt - Date.now()) / 1000)));
       if (next.retryAt) setRetryAt(next.retryAt);
     } catch (cause) {
-      if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
+      if (mountedRef.current) {
+        if (cause.code === 'PHONE_NOT_REGISTERED') { setMode('register'); Keyboard.dismiss(); scrollRef.current?.scrollTo({ y: 0, animated: true }); }
+        setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt);
+      }
     } finally {
       busyRef.current = false;
       if (mountedRef.current) setLoading(false);
@@ -206,7 +210,10 @@ export default function LoginScreen({ navigation, route, onLogin }) {
       setRetryAt(next.retryAt);
       setCode('');
     } catch (cause) {
-      if (mountedRef.current) { setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt); }
+      if (mountedRef.current) {
+        if (cause.code === 'PHONE_NOT_REGISTERED') { setMode('register'); Keyboard.dismiss(); scrollRef.current?.scrollTo({ y: 0, animated: true }); }
+        setError(describeAuthError(cause)); if (cause.retryAt) setRetryAt(cause.retryAt);
+      }
     } finally { busyRef.current = false; if (mountedRef.current) setLoading(false); }
   };
 
@@ -258,6 +265,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
             {ADMIN_MODE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>Режим администратора: подойдёт любой номер и любой код, СМС не отправляется.</Text></View>}
             {!AUTH_AVAILABLE && <View style={styles.testHint}><Ionicons name="information-circle-outline" size={20} color={colors.textSecondary} /><Text style={styles.testHintText}>{'Отправка СМС пока не подключена. Вход станет доступен после настройки сервиса. Меню можно посмотреть без входа.'}</Text></View>}
 
+            {registrationNotice && <View accessibilityRole="alert" style={{ backgroundColor: colors.surface2, borderRadius: 16, padding: spacing.lg, marginBottom: spacing.xl }}><Text style={{ color: colors.textPrimary, fontSize: 14, lineHeight: 21 }}>{error}</Text></View>}
             {mode === 'register' && <View style={{ marginBottom: spacing.xl }}><AccountProfileFields value={profile} onChange={setProfile} disabled={loading} /></View>}
             <Text style={styles.label}>Номер телефона</Text>
             <View style={styles.field}>
@@ -293,7 +301,7 @@ export default function LoginScreen({ navigation, route, onLogin }) {
               />
             </View>
 
-            {!!error && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
+            {!!error && !registrationNotice && <Text style={styles.errorText} accessibilityRole="alert">{error}</Text>}
             {secondsLeft > 0 && <Text style={styles.cooldown}>Новый запрос будет доступен после обратного отсчёта</Text>}
             <TouchableOpacity onPress={() => setDocumentsOpen(true)} accessibilityRole="button" accessibilityLabel="Политика конфиденциальности и контакты" style={styles.resend}>
               <Text style={styles.resendText}>Политика конфиденциальности</Text>

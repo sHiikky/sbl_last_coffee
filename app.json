@@ -28,9 +28,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#050505",
-          "image": "./assets/brand/splash-full.png",
-          "imageWidth": 250,
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/brand/sbl-restored-full.png",
+          "imageWidth": 365,
           "resizeMode": "contain"
         }
       ],
@@ -38,7 +38,7 @@
         "expo-navigation-bar",
         {
           "hidden": true,
-          "style": "light"
+          "style": "dark"
         }
       ],
       "expo-font",
@@ -46,7 +46,7 @@
       [
         "expo-status-bar",
         {
-          "style": "light"
+          "style": "dark"
         }
       ]
     ],

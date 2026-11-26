@@ -40,7 +40,9 @@ function harness(){
       state.rows=[row,...state.rows.filter(x=>x.id!==row.id)]; return {data:row};
     }
   };
-  const controller=admin.create({document,getDb:()=>db,isActive:()=>active,getSession:()=>session,confirm:()=>state.confirm,crypto:{randomUUID:()=>`00000000-0000-4000-8000-${String(++uuid).padStart(12,'0')}`}});
+  let photoReady=false;
+  const photoEditor={hasImage:()=>photoReady,reset:()=>{photoReady=false;},load:async()=>{photoReady=true;return true;},set(){},blob:async()=>({type:'image/webp',size:1})};
+  const controller=admin.create({document,getDb:()=>db,isActive:()=>active,getSession:()=>session,confirm:()=>state.confirm,photoEditor,fetchPhoto:async()=>({type:'image/webp',size:1}),crypto:{randomUUID:()=>`00000000-0000-4000-8000-${String(++uuid).padStart(12,'0')}`}});
   return {el:id=>roots.get(id),controller,state,session:()=>{session++;active=false;controller.reset();},activate:()=>{active=true;},descendants};
 }
 

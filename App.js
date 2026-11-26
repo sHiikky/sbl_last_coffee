@@ -432,7 +432,7 @@ export default function App() {
       try {
         await NavigationBar.setVisibilityAsync(launchDone ? 'visible' : 'hidden');
         // expo-navigation-bar 58 удалил setButtonStyleAsync; setStyle задаёт цвет кнопок.
-        if (active && typeof NavigationBar.setStyle === 'function') NavigationBar.setStyle(launchDone ? 'dark' : 'light');
+        if (active && typeof NavigationBar.setStyle === 'function') NavigationBar.setStyle('dark');
       } catch (_) {}
     };
     void syncBars();
@@ -1068,7 +1068,7 @@ export default function App() {
   return (
     <FontReadyContext.Provider value={fontsLoaded}>
     <SafeAreaProvider style={{flex:1,backgroundColor:launchDone?colors.background:colors.launchBackground}}>
-      <StatusBar style={launchDone ? 'dark' : 'light'} />
+      <StatusBar style="dark" />
       {appReady ? <View style={{ flex: 1 }} accessibilityElementsHidden={!launchDone} importantForAccessibility={launchDone ? 'auto' : 'no-hide-descendants'}>
       <NavigationContainer ref={navigationRef} onReady={() => setNavigationVersion(value => value + 1)} onStateChange={() => setNavigationVersion(value => value + 1)} documentTitle={{ formatter: () => 'SBL' }}>
         {orderComplete ? (

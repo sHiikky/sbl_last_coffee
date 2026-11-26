@@ -68,3 +68,15 @@
   .catalog-list{ max-height:260px; }
 }
 @media (max-width:640px){ .catalog-fields,.catalog-modifiers{ grid-template-columns:1fr; } }
+
+/* Compact product labels, matching the application's brand typeface. */
+.product-badge-preview{display:inline-block;max-width:100%;padding:4px 7px;border-radius:5px;background:#b74924;color:white;font:800 12px/16px Onest,sans-serif;letter-spacing:.4px;text-transform:uppercase;overflow-wrap:anywhere}
+.product-badge-preview[hidden]{display:none}
+.product-badge-preview[data-style="black"]{background:#151515}
+.product-badge-preview[data-style="silver"]{background:linear-gradient(120deg,#f5f6f7,#c0c5ca,#eef0f2);color:#151515}
+.product-badge-preview[data-style="holo"]{background:linear-gradient(100deg,#d5e5ff,#fff2b7,#ffc67d,#ff779c,#cf91ff,#a5bbff);background-size:200% 100%;color:#151515;animation:product-badge-holo 6s ease-in-out infinite alternate}
+@keyframes product-badge-holo{from{background-position:0% 50%}to{background-position:100% 50%}}
+@media(prefers-reduced-motion:reduce){.product-badge-preview[data-style="holo"]{animation:none}}
+.content-layout > *, .content-form, .content-form .form-section, .content-form label{min-width:0}
+.content-form select{max-width:100%}
+.content-actions button{min-width:0;max-width:100%;white-space:normal}
