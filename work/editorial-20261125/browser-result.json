@@ -1,0 +1,16 @@
+{
+  "ok": true,
+  "syntheticOnly": true,
+  "realBackendRequests": 0,
+  "unknownPhoneRedirect": true,
+  "phonePreserved": true,
+  "avatarLocalHintRemoved": true,
+  "errors": [],
+  "screens": [
+    "announcement-390.png",
+    "badges-390.png",
+    "registration-redirect-390.png",
+    "admin-badge-390.png",
+    "admin-announcement-390.png"
+  ]
+}

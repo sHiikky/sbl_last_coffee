@@ -59,6 +59,7 @@ function makeWorld(rows, { enabled = true, expo } = {}) {
   const admin = { rpc: async (name, args) => {
     calls.push(name);
     if (name === 'enqueue_series_reminders') return { data: 3, error: null }.data;
+    if (name === 'enqueue_return_reminders') return 1;
     if (name === 'claim_marketing_pushes') return rows;
     if (name === 'record_marketing_push_result') { recorded.push(args); return true; }
     throw Error('UNEXPECTED_RPC ' + name);
@@ -88,6 +89,7 @@ const row = (id, kind, extra = {}) => ({ id, lease_id: 'L' + id, kind, user_id: 
   // staff cannot create reminders, only the scheduled secret can
   w = makeWorld([]);
   assert.equal((await w.handle(post({ enqueueSeries: true }, { authorization: 'Bearer staff-jwt' }))).status, 403);
+  assert.equal((await w.handle(post({ enqueueReturn: true }, { authorization: 'Bearer staff-jwt' }))).status, 403);
   assert.equal((await w.handle(post({ other: 1 }, { 'x-order-push-secret': SECRET }))).status, 400);
   // scheduled run: queue series, send publication + reminder with the right Android channels
   w = makeWorld([row('1', 'publication'), row('2', 'series_reminder')]);
@@ -96,6 +98,14 @@ const row = (id, kind, extra = {}) => ({ id, lease_id: 'L' + id, kind, user_id: 
   assert.equal(res.status, 200); assert.equal(out.seriesQueued, 3); assert.equal(out.ticketed, 2);
   assert.deepEqual(w.sent[0].body.map(m => m.channelId), ['promotions', 'series']);
   assert.deepEqual(w.recorded.map(r => r.p_state), ['ticketed', 'ticketed']);
+  w = makeWorld([row('3', 'return_reminder', { data: { type: 'return_reminder', userId: 'u3' } })]);
+  res = await w.handle(post({ enqueueReturn: true }, { 'x-order-push-secret': SECRET }));
+  out = await res.json();
+  assert.equal(out.returnQueued, 1);
+  assert.equal(out.ticketed, 1);
+  assert.deepEqual(w.calls, ['enqueue_return_reminders', 'claim_marketing_pushes', 'record_marketing_push_result']);
+  assert.equal(w.sent[0].body[0].channelId, 'promotions');
+  assert.equal(w.sent[0].body[0].data.type, 'return_reminder');
   // receipts: delivered / expired; tickets are never re-sent
   w = makeWorld([row('3', 'publication', { state: 'ticketed', ticket_id: 'R1', ticket_created_at: '2026-11-10T11:00:00Z' }), row('4', 'publication', { state: 'ticketed', ticket_id: 'R2', ticket_created_at: '2026-11-09T11:00:00Z' })]);
   res = await w.handle(post({}, { authorization: 'Bearer staff-jwt' })); out = await res.json();

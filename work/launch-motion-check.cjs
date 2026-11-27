@@ -19,7 +19,7 @@ const AppState = { currentState: 'active', addEventListener(event, callback) { a
 let dimensions = { width: 420, height: 900 };
 let preferences = { reduceMotion: true, ready: false }, pulses = 0, hides = 0, done = 0;
 let vibrationDuration = 0, vibrationCancelled = 0;
-const native = { Vibration: { vibrate: duration => { vibrationDuration = duration; }, cancel: () => { vibrationCancelled++; } }, Animated, AppState, Platform, View: 'View', Text: 'Text', useWindowDimensions: () => dimensions, Easing: { out: x => x, inOut: x => x, cubic: x => x }, StyleSheet: { create: x => x, absoluteFillObject: {}, absoluteFill: {} } };
+const native = { Vibration: { vibrate: duration => { vibrationDuration = duration; }, cancel: () => { vibrationCancelled++; } }, Animated, AppState, Platform, View: 'View', Text: 'Text', useWindowDimensions: () => dimensions, Easing: { out: x => x, inOut: x => x, cubic: x => x }, StyleSheet: require('./load-installed-stylesheet.cjs')() };
 const mocks = { react: React, 'react-native': native, 'expo-linear-gradient': { LinearGradient: 'Gradient' }, 'expo-haptics': { impactAsync: async () => { pulses++; }, ImpactFeedbackStyle: { Light: 'light', Heavy: 'heavy' } }, 'expo-splash-screen': { hideAsync: async () => { hides++; } }, '../hooks/useMotionPreference': () => preferences, '../theme/tokens': { colors: {}, spacing: { xxl: 24, section: 32, xl: 20 } }, './BrandLogo': 'BrandLogo', '../theme/holographic': require('./load-domain.cjs')('theme/holographic.js') };
 function compile(file, injected) {
   const code = babel.transformSync(fs.readFileSync(file, 'utf8'), { babelrc: false, configFile: false, plugins: ['@babel/plugin-transform-react-jsx', '@babel/plugin-transform-modules-commonjs'] }).code;
@@ -41,7 +41,9 @@ function appState(value) { AppState.currentState = value; [...lifecycle].forEach
 function reset() { timers.clear(); started.length = 0; lifecycle.clear(); pulses = hides = done = 0; AppState.currentState = 'active'; Platform.OS = 'ios'; dimensions = { width: 420, height: 900 }; }
 (async () => {
   reset(); preferences = { reduceMotion: true, ready: false };
-  const h = harness(); const initial = h.render(); initial.props.onLayout(); initial.props.onLayout(); assert.equal(hides, 1); assert.equal(timers.size, 0);
+  const h = harness(); const initial = h.render();
+  assert.equal(initial.props.style[0].position,'absolute','Launch must cover the app instead of taking flex layout height');
+  for (const edge of ['top','right','bottom','left']) assert.equal(initial.props.style[0][edge],0,'Launch must pin every viewport edge'); initial.props.onLayout(); initial.props.onLayout(); assert.equal(hides, 1); assert.equal(timers.size, 0);
   assert.equal(initial.props.children[1].props.children[0].type, 'BrandLogo');
   assert.equal(initial.props.children[1].props.children[0].props.variant, 'full', 'The full restored lockup remains readable before animation starts');
   assert.equal(initial.props.children[1].props.children[0].props.tone,'dark');

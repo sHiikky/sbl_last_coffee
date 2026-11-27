@@ -1,4 +1,4 @@
-// Sends queued publication pushes and series reminders. Pure handler: tests inject
+// Sends queued publication pushes and reminders. Pure handler: tests inject
 // Postgres/Expo adapters. Consent, devices and expiry are re-checked inside
 // claim_marketing_pushes, so this code only transports what the database released.
 export const marketingCors = {
@@ -43,19 +43,22 @@ export function createMarketingPushWorker({ admin, authenticateStaff, workerSecr
     if (!enabled) return json(503, { error: 'PUSH_NOT_CONFIGURED', message: 'Sending is disabled until Expo credentials and the worker are configured.' });
 
     let enqueueSeries = false;
+    let enqueueReturn = false;
     try {
       const raw = await request.text();
       if (raw.length > 512) return json(413, { error: 'BODY_TOO_LARGE' });
       const input = raw ? JSON.parse(raw) : {};
-      if (!input || Array.isArray(input) || typeof input !== 'object' || Object.keys(input).some(key => key !== 'enqueueSeries')) return json(400, { error: 'ONLY_ENQUEUE_SERIES_ALLOWED' });
+      if (!input || Array.isArray(input) || typeof input !== 'object' || Object.keys(input).some(key => !['enqueueSeries', 'enqueueReturn'].includes(key) || typeof input[key] !== 'boolean')) return json(400, { error: 'INVALID_QUEUE_OPTIONS' });
       enqueueSeries = input.enqueueSeries === true;
+      enqueueReturn = input.enqueueReturn === true;
     } catch { return json(400, { error: 'INVALID_JSON' }); }
     // Reminders are created by the scheduled worker only, never by a staff browser.
-    if (enqueueSeries && !viaSecret) return json(403, { error: 'WORKER_SECRET_REQUIRED' });
+    if ((enqueueSeries || enqueueReturn) && !viaSecret) return json(403, { error: 'WORKER_SECRET_REQUIRED' });
 
-    const counts = { seriesQueued: 0, claimed: 0, ticketed: 0, delivered: 0, invalidated: 0, retried: 0, failed: 0, errors: 0 };
+    const counts = { seriesQueued: 0, returnQueued: 0, claimed: 0, ticketed: 0, delivered: 0, invalidated: 0, retried: 0, failed: 0, errors: 0 };
     try {
       if (enqueueSeries) counts.seriesQueued = Number(await rpc('enqueue_series_reminders', {})) || 0;
+      if (enqueueReturn) counts.returnQueued = Number(await rpc('enqueue_return_reminders', {})) || 0;
     } catch { return json(503, { error: 'QUEUE_UNAVAILABLE' }); }
 
     let rows;
@@ -100,7 +103,7 @@ export function createMarketingPushWorker({ admin, authenticateStaff, workerSecr
 
     if (toSend.length) {
       const messages = toSend.map(row => ({
-        to: row.token, sound: 'default', channelId: row.kind === 'publication' ? 'promotions' : 'series',
+        to: row.token, sound: 'default', channelId: row.kind === 'series_reminder' ? 'series' : 'promotions',
         title: row.title, body: row.body, data: row.data,
       }));
       let response;

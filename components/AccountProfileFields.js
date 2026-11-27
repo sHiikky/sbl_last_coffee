@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   photoRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, marginBottom: spacing.md },
   avatar: { width: 76, height: 76, borderRadius: 38, backgroundColor: colors.surface2, borderWidth: 1, borderColor: colors.borderStrong, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { width: '100%', height: '100%' },
-  photoLoading: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
+  photoLoading: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim, alignItems: 'center', justifyContent: 'center' },
   photoCopy: { flex: 1 }, photoAction: { minHeight: 44, justifyContent: 'center' },
   photoTitle: { color: colors.accent, fontSize: 15, fontWeight: '600' },
   remove: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }, removeText: { color: colors.textSecondary, fontSize: 12 },

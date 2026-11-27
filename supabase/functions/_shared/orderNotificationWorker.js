@@ -115,7 +115,8 @@ export function createOrderNotificationWorker({ admin, authenticateStaff, worker
             if (!renewed) { leaseLost = true; continue; }
             const messages = eligible.map(item => ({
               to: item.token, sound: 'default', channelId: 'orders', title: 'SBL',
-              body: event.event_status === 'ready' ? `Заказ №${event.order_number} готов. Можно забирать!`
+              body: event.event_status === 'ready' ? `Заказ №${event.order_number} готов. Заберите его по адресу: Томск, проспект Ленина, 72.`
+                : event.event_status === 'new' ? `Заказ №${event.order_number} оформлен. Сообщим, когда начнём готовить.`
                 : event.event_status === 'accepted' ? `Заказ №${event.order_number} принят. Скоро начнём готовить.`
                 : event.event_status === 'preparing' ? `Заказ №${event.order_number} принят и уже готовится.`
                 : `Заказ №${event.order_number} отменён. Подробности уточните в кофейне.`,

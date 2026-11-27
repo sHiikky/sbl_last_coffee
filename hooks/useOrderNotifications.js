@@ -5,9 +5,11 @@ import { getOrderIdFromNotification, getOrderNotificationSupport, refreshPushReg
 
 // Permission is requested only by the user's Enable action in the profile.
 // This hook refreshes an already approved registration and routes safe order IDs.
-export default function useOrderNotifications({ userId = null, onOpenOrder } = {}) {
+export default function useOrderNotifications({ userId = null, onOpenOrder, onOpenMenu } = {}) {
   const callback = useRef(onOpenOrder);
   callback.current = onOpenOrder;
+  const menuCallback = useRef(onOpenMenu);
+  menuCallback.current = onOpenMenu;
   const currentUser = useRef(userId);
   currentUser.current = userId;
   const seen = useRef(new Set());
@@ -18,7 +20,7 @@ export default function useOrderNotifications({ userId = null, onOpenOrder } = {
     Notifications.setNotificationHandler({ handleNotification: async notification => {
       const data = notification?.request?.content?.data;
       const own = !!currentUser.current && ((data?.type === 'order_status' && data?.customerId === currentUser.current)
-        || (['publication', 'series_reminder'].includes(data?.type) && data?.userId === currentUser.current));
+        || (['publication', 'series_reminder', 'return_reminder'].includes(data?.type) && data?.userId === currentUser.current));
       return { shouldShowBanner: own, shouldShowList: own, shouldPlaySound: own, shouldSetBadge: false };
     } });
     return () => Notifications.setNotificationHandler(null);
@@ -44,12 +46,14 @@ export default function useOrderNotifications({ userId = null, onOpenOrder } = {
       if (!active) return;
       const id = response?.notification?.request?.identifier;
       const orderId = getOrderIdFromNotification(response);
-      const recipientId = response?.notification?.request?.content?.data?.customerId;
-      if (!orderId || !id || recipientId !== userId || seen.current.has(id)) return;
+      const data = response?.notification?.request?.content?.data;
+      const openMenu = data?.type === 'return_reminder' && data.userId === userId;
+      if (!id || seen.current.has(id) || (!openMenu && (!orderId || data?.customerId !== userId))) return;
       seen.current.add(id);
       if (seen.current.size > 100) seen.current.delete(seen.current.values().next().value);
       // Root must resolve this ID against the signed-in user's server orders.
-      callback.current?.(orderId);
+      if (openMenu) menuCallback.current?.(userId);
+      else callback.current?.(orderId);
     };
     const listener = Notifications.addNotificationResponseReceivedListener(respond);
     Notifications.getLastNotificationResponseAsync().then(respond).catch(() => {});

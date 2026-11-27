@@ -77,6 +77,20 @@
         "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "false",
         "EXPO_NO_DOTENV": "1"
       }
+    },
+    "preview-push-vps": {
+      "extends": "preview-vps",
+      "distribution": "internal",
+      "environment": "preview",
+      "developmentClient": false,
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_PUSH_NOTIFICATIONS_ENABLED": "true",
+        "EXPO_NO_DOTENV": "1"
+      }
     }
   },
   "submit": {

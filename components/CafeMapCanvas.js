@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   expandText: { fontSize: 12, fontWeight: '600', color: colors.textPrimary },
   loading: { position: 'absolute', top: spacing.sm, left: spacing.sm, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: colors.surfaceElevated, padding: spacing.sm, borderRadius: radius.small },
   loadingText: { color: colors.textSecondary, fontSize: 12 },
-  fallback: { ...StyleSheet.absoluteFillObject, padding: spacing.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  fallback: { ...StyleSheet.absoluteFill, padding: spacing.xl, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   fallbackTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
   fallbackText: { color: colors.textSecondary, fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 380 },
   retry: { minHeight: 44, paddingHorizontal: spacing.lg, alignItems: 'center', justifyContent: 'center' },

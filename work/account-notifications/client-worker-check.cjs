@@ -176,6 +176,13 @@ function worker({ entries = [event()], allowed = true, enabled = true, activeTok
   assert(w.calls.some(([name])=>name==='renew_order_notification_lease'));
   assert.equal(w.sent[0].body[0].data.orderId,ORDER);
   assert.equal(w.sent[0].body[0].to,TOKEN);
+  assert.match(w.sent[0].body[0].body, /готов\. Заберите его по адресу: Томск, проспект Ленина, 72/);
+  for (const [status, message] of [['new', /оформлен/], ['accepted', /принят/], ['preparing', /готовится/]]) {
+    const statusWorker = worker({ entries: [{ ...event(), event_status: status }], currentStatus: status });
+    await statusWorker.handle(statusWorker.request());
+    assert.match(statusWorker.sent[0].body[0].body, message);
+    assert.equal(statusWorker.sent[0].body[0].data.status, status);
+  }
   assert(!JSON.stringify(sentBody).includes(TOKEN));
   assert(w.calls.some(([n,a])=>n==='record_order_notification_result'&&a.p_state==='ticketed'));
   for (const config of [{activeToken:false},{owner:USER_B},{currentStatus:'cancelled'}]) {

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Как запросить удаление аккаунта и связанных данных SBL COFFEE без приложения.">
+  <title>Удаление аккаунта — SBL COFFEE</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f5f5f7;color:#171719;font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{max-width:610px;margin:8vh auto;padding:36px;background:#fff;border:1px solid #e5e5e8;border-radius:20px}
+    .brand{font-weight:800;letter-spacing:.12em;font-size:14px;margin:0 0 28px}h1{font-size:clamp(28px,6vw,36px);line-height:1.15;letter-spacing:-.03em;margin:0 0 20px}h2{font-size:18px;margin:28px 0 8px}p{margin:0 0 16px}ul{padding-left:22px;margin:8px 0 20px}li+li{margin-top:8px}
+    .button{display:block;text-align:center;background:#171719;color:white;text-decoration:none;padding:15px 18px;border-radius:12px;font-weight:600;margin:24px 0 16px}.button:hover{background:#333}
+    .contact{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.contact a{color:inherit;overflow-wrap:anywhere}button{font:inherit;font-size:14px;border:1px solid #d8d8de;background:white;border-radius:8px;padding:8px 12px;cursor:pointer}button:hover{background:#f5f5f7}
+    a:focus-visible,button:focus-visible{outline:3px solid #8161d7;outline-offset:4px}.note{color:#55555f;font-size:14px}.status{min-height:24px;margin:8px 0 0;font-size:14px;color:#55555f}footer{border-top:1px solid #e5e5e8;margin-top:28px;padding-top:18px;font-size:14px;color:#55555f}
+    @media(max-width:650px){main{margin:20px 12px;padding:26px 22px}}
+  </style>
+</head>
+<body>
+<main>
+  <p class="brand">SBL COFFEE</p>
+  <h1>Удаление аккаунта</h1>
+  <p>Вы можете запросить удаление аккаунта SBL COFFEE и связанных с ним персональных данных по электронной почте. Устанавливать приложение для этого не нужно.</p>
+  <a class="button" id="email-request" href="mailto:hello@sbleskom.ru?subject=Удаление%20аккаунта%20SBL%20COFFEE">Запросить удаление по email</a>
+  <div class="contact"><a href="mailto:hello@sbleskom.ru">hello@sbleskom.ru</a><button id="copy" type="button">Скопировать адрес</button></div>
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+  <p class="note">Кнопка открывает почтовое приложение. Чтобы подать запрос, отправьте письмо. Если кнопка не работает, напишите на адрес выше из своей почты.</p>
+  <h2>Что написать</h2>
+  <p>Тема: «Удаление аккаунта SBL COFFEE». Укажите номер телефона, на который зарегистрирован аккаунт, и напишите, что хотите удалить аккаунт и связанные данные.</p>
+  <p class="note">Не отправляйте пароли, коды подтверждения, паспортные или банковские данные.</p>
+  <h2>Что будет дальше</h2>
+  <ul>
+    <li>Мы свяжемся с вами, чтобы подтвердить принадлежность аккаунта, и сообщим порядок и срок обработки запроса.</li>
+    <li>После подтверждения удалим аккаунт и связанные данные профиля, бонусов и настроек уведомлений. Сведения о завершённых заказах сохраняются для учёта в обезличенном виде.</li>
+    <li>Если есть незавершённый заказ, сначала потребуется дождаться его выдачи или отмены.</li>
+  </ul>
+  <footer>Если приложение установлено, запросить удаление также можно в профиле: «Удалить аккаунт и данные».</footer>
+</main>
+<script>
+  'use strict';
+  const address='hello@sbleskom.ru';
+  const subject='Удаление аккаунта SBL COFFEE';
+  const body='Здравствуйте! Прошу удалить мой аккаунт SBL COFFEE и связанные с ним персональные данные.\n\nНомер телефона аккаунта: [укажите номер]\n\nПрошу сообщить порядок подтверждения принадлежности аккаунта и срок обработки запроса.';
+  document.getElementById('email-request').href='mailto:'+address+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  document.getElementById('copy').addEventListener('click',async()=>{
+    const status=document.getElementById('status');
+    try{await navigator.clipboard.writeText(address);status.textContent='Адрес скопирован';}
+    catch{status.textContent='Не удалось скопировать. Выделите адрес hello@sbleskom.ru и скопируйте вручную.';}
+  });
+</script>
+</body>
+</html>

@@ -103,7 +103,8 @@
         "android.permission.ACCESS_FINE_LOCATION"
       ],
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 3
+      "versionCode": 7,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/brand/app-icon.png"

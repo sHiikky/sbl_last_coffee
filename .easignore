@@ -106,6 +106,8 @@ work/.release-local/
 # APK contains only the customer application
 /work/
 /supabase/
-/kassa-terminal/
+# The native Badge component imports this shared pure model.
+/kassa-terminal/*
+!/kassa-terminal/product-badge.js
 /CLAUDE.md
 /start-tunnel.ps1

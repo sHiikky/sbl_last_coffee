@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "412891486264",
+    "project_id": "sbl-coffee",
+    "storage_bucket": "sbl-coffee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412891486264:android:0213f3731d147ef0526ecd",
+        "android_client_info": {
+          "package_name": "com.shikky.sbl"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWWjUc6Bc_x-Pr7s3-K2e2fuJrcAVi5uE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

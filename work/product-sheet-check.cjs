@@ -28,8 +28,8 @@ function makeScreen(extra={}){
   class Value{constructor(n){this.n=n;}setValue(n){this.n=n;}interpolate(){return 0;}stopAnimation(){}}
   const Animated={Value,View:'AnimatedView',timing:(_value,config)=>({start:callback=>animations.push({config,callback}),stop(){}}),spring:()=>({start(){}})};
   const native={Platform:{OS:extra.platform||'ios'},Keyboard:{addListener:(name,callback)=>{keyboardListeners[name]=callback;return{remove:()=>delete keyboardListeners[name]};},dismiss:()=>{keyboardDismissed++;}},View:'View',Text:'Text',TextInput:'TextInput',ScrollView:'ScrollView',Pressable:'Pressable',KeyboardAvoidingView:'KeyboardAvoidingView',Share:{share:async()=>{}},
-    StyleSheet:{create:x=>x,absoluteFill:{}},Animated,Easing:{in:x=>x,out:x=>x,cubic:1},useWindowDimensions:()=>({width:390,height:844}),PanResponder:{create:config=>({panHandlers:config})},BackHandler:{addEventListener:()=>({remove(){}})}};
-  const mocks={react:React,'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>({top:44,bottom:34})},'@react-navigation/native':{useFocusEffect(){}},'expo-status-bar':{StatusBar:'StatusBar'},'expo-haptics':{impactAsync:async()=>{},selectionAsync:async()=>{},ImpactFeedbackStyle:{Light:'light'}},'@expo/vector-icons':{Ionicons:'Icon'},'expo-linear-gradient':{LinearGradient:'Gradient'},
+    StyleSheet:{create:x=>x,absoluteFill:{}},Animated,Easing:{in:x=>x,out:x=>x,cubic:1},useWindowDimensions:()=>extra.window||({width:390,height:844,fontScale:1}),PanResponder:{create:config=>({panHandlers:config})},BackHandler:{addEventListener:()=>({remove(){}})}};
+  const mocks={react:React,'react-native':native,'react-native-safe-area-context':{useSafeAreaInsets:()=>extra.insets||({top:44,bottom:34,left:0,right:0})},'@react-navigation/native':{useFocusEffect(){}},'expo-status-bar':{StatusBar:'StatusBar'},'expo-haptics':{impactAsync:async()=>{},selectionAsync:async()=>{},ImpactFeedbackStyle:{Light:'light'}},'@expo/vector-icons':{Ionicons:'Icon'},'expo-linear-gradient':{LinearGradient:'Gradient'},
     '../theme/tokens':tokens,'../theme/productSheet':material,'../data/products':{cartKey:cartDomain.optionCartKey,formatPrice:n=>`${n} ₽`},'../lib/cartOptions':cartDomain,'../lib/photoComposition':{getPhotoComposition:()=>({fit:'contain',zoom:.9,offsetX:0,offsetY:0})},'../lib/productVisuals':visualModule,'../lib/productSheetModel':model,'../lib/productLinks':{shareProduct:async()=>({copied:true})},'../hooks/useMotionPreference':()=>extra.motionPreference||({reduceMotion:true,ready:true}),'../lib/modifierGroups':load('lib/modifierGroups.js'),'../lib/additionsPresentation':load('lib/additionsPresentation.js')};
   const code=babel.transformSync(fs.readFileSync(path.join(__dirname,'../screens/ProductScreen.js'),'utf8'),{babelrc:false,configFile:false,plugins:['@babel/plugin-transform-react-jsx','@babel/plugin-transform-modules-commonjs']}).code;
   const mod={exports:{}};vm.runInNewContext(code,{module:mod,exports:mod.exports,console,require:n=>{if(n in mocks)return mocks[n];if(n.startsWith('../components/'))return n;throw Error(n);}});
@@ -86,3 +86,34 @@ android.keyboardListeners.keyboardDidHide();androidTree=android.render();
 assert.ok(add(androidTree),'Dock returns when the keyboard closes');assert.equal(label(androidTree,'Пожелание к позиции').props.value,'Без сахара');
 keyboardCleanup();assert.equal(Object.keys(android.keyboardListeners).length,0);
 console.log('PASS: Android keyboard scrolling, Done, dock restoration, note preservation and always-visible nutrition');
+
+// Exercise the actual screen at narrow, short, landscape and tablet sizes.
+// This checks layout contracts; native glyph/image rendering still needs a phone.
+const flatten=value=>Object.assign({},...(Array.isArray(value)?value.flat(Infinity):[value]).filter(Boolean));
+for(const [width,height,fontScale,left,right] of [[320,568,1,0,0],[360,640,1,0,0],[384,854,1,0,0],[430,932,1,0,0],[844,390,1,44,44],[768,1024,1,0,0],[320,568,2,0,0],[390,844,1.5,0,0]]) {
+  const insets={top:24,bottom:24,left,right};
+  const dimensions={width,height,fontScale};
+  const responsive=makeScreen({window:dimensions,insets});
+  const rendered=responsive.render();
+  const sheet=all(rendered,n=>n.props?.accessibilityViewIsModal)[0];
+  const bounds=flatten(sheet.props.style);
+  assert(bounds.height<=height-insets.top-12,'sheet stays below the status area');
+  assert(bounds.width<=width-left-right&&bounds.width<=600,'sheet respects landscape cutouts and tablet width');
+  const photo=all(rendered,n=>n.type==='../components/ProductSheetPhoto')[0];
+  assert(photo.props.width<=bounds.width&&photo.props.height<=176,'hero adapts to the usable viewport');
+  const scrolling=all(rendered,n=>n.type==='ScrollView'&&n.props.ref)[0];
+  assert(scrolling.props.showsVerticalScrollIndicator,'long content exposes vertical scrolling');
+  const row=all(rendered,n=>n.type==='ScrollView'&&n.props.accessibilityLabel?.startsWith('Добавки:'))[0];
+  assert.equal(flatten(row.props.style).flexShrink,0,'horizontal row retains its full intrinsic height');
+  const tiles=all(row,n=>n.type==='../components/ProductGlass');
+  assert(tiles.every(n=>flatten(n.props.style).width*2+12<=bounds.width-32),'two addition tiles fit without a fixed minimum width');
+  assert.equal(all(rendered,n=>n.type==='ScrollView'&&n.props.horizontal).length,1,'group tabs wrap rather than clipping off-screen');
+  assert(!all(scrolling,n=>n===add(rendered)).length,'purchase dock remains outside scrolling content');
+  const purchase=add(rendered);
+  assert(!all(purchase,n=>n.props?.numberOfLines===1).length,'large text and price may wrap without truncation');
+  if(fontScale>=1.5)assert.equal(flatten(purchase.props.style).width,'100%','large text gets the whole dock width');
+}
+const compact=model.productSheetLayout({width:360,height:640,topInset:24,bottomInset:24});
+const tall=model.productSheetLayout({width:360,height:900,topInset:24,bottomInset:24});
+assert(compact.photoHeight<tall.photoHeight,'short phones allocate less space to the photo');
+console.log('PASS: actual sheet layout contracts at eight phone/tablet/landscape/font-scale configurations (native rendering pending)');

@@ -426,11 +426,12 @@ export default function App() {
   const [launchDone, setLaunchDone] = useState(false);
   useEffect(() => {
     if (Platform.OS !== 'android') return undefined;
-    // Hide the OS navigation strip throughout the black intro, then restore it.
+    // Keep the configured immersive state across launch. Toggling this when
+    // the intro finishes resizes the Android window during the transition.
     let active = true;
     const syncBars = async () => {
       try {
-        await NavigationBar.setVisibilityAsync(launchDone ? 'visible' : 'hidden');
+        await NavigationBar.setVisibilityAsync('hidden');
         // expo-navigation-bar 58 удалил setButtonStyleAsync; setStyle задаёт цвет кнопок.
         if (active && typeof NavigationBar.setStyle === 'function') NavigationBar.setStyle('dark');
       } catch (_) {}
@@ -438,7 +439,7 @@ export default function App() {
     void syncBars();
     const sub = AppState.addEventListener('change', state => { if (state === 'active') void syncBars(); });
     return () => { active = false; sub.remove(); };
-  }, [launchDone]);
+  }, []);
   const [navigationVersion, setNavigationVersion] = useState(0);
   const navigationRef = useRef(null);
   const [pendingProductId, setPendingProductId] = useState(null);
@@ -453,6 +454,7 @@ export default function App() {
   const [modifiers, setModifiers] = useState([]);
   const [authUserId, setAuthUserId] = useState(null);
   const [notificationOrder, setNotificationOrder] = useState(null);
+  const [returnReminderUser, setReturnReminderUser] = useState(null);
   const authUserRef = useRef(undefined);
   const adminAccountRef = useRef(null);
   const authRevision = useRef(0);
@@ -758,9 +760,20 @@ export default function App() {
     return () => { active = false; subscription.unsubscribe(); };
   }, [isReady]);
 
-  useOrderNotifications({ userId: authUserId, onOpenOrder: orderId => {
-    if (orderId && authUserRef.current) { setNotificationOrder({ id: orderId, userId: authUserRef.current }); void customerOrders.refresh(); }
-  } });
+  useOrderNotifications({
+    userId: authUserId,
+    onOpenOrder: orderId => {
+      if (orderId && authUserRef.current) { setNotificationOrder({ id: orderId, userId: authUserRef.current }); void customerOrders.refresh(); }
+    },
+    onOpenMenu: setReturnReminderUser,
+  });
+  useEffect(() => {
+    if (!returnReminderUser) return;
+    if (authUserId !== returnReminderUser) { setReturnReminderUser(null); return; }
+    if (orderComplete || !navigationRef.current?.isReady()) return;
+    setReturnReminderUser(null);
+    navigationRef.current.navigate('Tabs', { screen: 'MenuTab' });
+  }, [returnReminderUser, authUserId, orderComplete, navigationVersion]);
   useEffect(() => {
     if (!notificationOrder || !customerOrders.loaded || customerOrders.error || customerOrders.customerId !== notificationOrder.userId) return;
     const ownedOrder = customerOrders.data.find(order => order.id === notificationOrder.id);

@@ -12,13 +12,13 @@ import ProductGlass from '../components/ProductGlass';
 import ProductAtmosphere from '../components/ProductAtmosphere';
 import ProductSheetPhoto from '../components/ProductSheetPhoto';
 import HolographicSurface from '../components/HolographicSurface';
-import { colors, spacing, radius, typography, getHorizontalPadding } from '../theme/tokens';
+import { colors, spacing, radius, typography } from '../theme/tokens';
 import { productSheet as material } from '../theme/productSheet';
 import { formatPrice, cartKey } from '../data/products';
 import { canonicalModifiers, additionsTotal, formatAdditions, isModifierAllowed } from '../lib/cartOptions';
 import { getPhotoComposition } from '../lib/photoComposition';
 import { getProductVisual } from '../lib/productVisuals';
-import { productVariants, productSheetHeight, availableProductQuantity, changeAdditionCount } from '../lib/productSheetModel';
+import { productVariants, productSheetLayout, availableProductQuantity, changeAdditionCount } from '../lib/productSheetModel';
 import { shareProduct } from '../lib/productLinks';
 import useMotionPreference from '../hooks/useMotionPreference';
 import { groupModifiers } from '../lib/modifierGroups';
@@ -30,8 +30,8 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
   const variants=useMemo(()=>productVariants(products,openedProduct),[products,openedProduct]);
   const product=variants.find(p=>p.id===selectedId)||openedProduct;
   const isAvailable=products.some(p=>p.id===product.id&&p.isAvailable!==false);
-  const {width,height}=useWindowDimensions(),insets=useSafeAreaInsets();
-  const hPad=getHorizontalPadding(width),sheetHeight=productSheetHeight(height,insets.top);
+  const {width,height,fontScale}=useWindowDimensions(),insets=useSafeAreaInsets();
+  const {sheetWidth,sheetHeight,padding:hPad,photoHeight,photoWidth,tileWidth,stackedFooter}=productSheetLayout({width,height,fontScale,topInset:insets.top,bottomInset:insets.bottom,leftInset:insets.left,rightInset:insets.right});
   const {reduceMotion,ready:motionReady}=useMotionPreference();
   const [additionCounts,setAdditionCounts]=useState({}),[requestedQuantity,setRequestedQuantity]=useState(1);
   const [selectedGroup,setSelectedGroup]=useState(null),[commentOpen,setCommentOpen]=useState(false);
@@ -135,8 +135,6 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     return changeAdditionCount(previous,id,delta);
   });
   const disabled=!isAvailable||unavailableAdditions.length>0||capacity===0||added;
-  const tileWidth=Math.max(150,Math.min(190,(Math.min(width,600)-hPad*2-12)/2));
-  const photoHeight=height<700?148:184;
   const groupCount=group=>group.items.reduce((sum,m)=>sum+(additionCounts[m.id]||0),0);
   const ingredient=activeGroup?.id==='milk'?['#FFFDF5','#D1B890']:activeGroup?.id==='syrup'?['#F2CF87','#AA561B']:['#E6D5BC','#A18B6D'];
   return <View style={styles.overlay}>
@@ -144,16 +142,16 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill,{backgroundColor:material.scrim,opacity:translate.interpolate({inputRange:[0,Math.max(1,sheetHeight)],outputRange:[1,0],extrapolate:'clamp'})}]} />
     <Pressable style={StyleSheet.absoluteFill} onPress={()=>close()} accessibilityLabel="Закрыть карточку" accessibilityRole="button" {...(Platform.OS==='web'?{tabIndex:-1}:{accessible:false})} />
     <KeyboardAvoidingView pointerEvents="box-none" behavior={Platform.OS==='ios'?'padding':Platform.OS==='android'?'height':undefined} style={styles.keyboard}>
-      <Animated.View ref={sheetRef} accessibilityViewIsModal {...(Platform.OS==='web'?{role:'dialog','aria-modal':true,'aria-labelledby':titleId}:{})} style={[styles.sheet,{height:sheetHeight,transform:[{translateY:translate}]}]}>
+      <Animated.View ref={sheetRef} accessibilityViewIsModal {...(Platform.OS==='web'?{role:'dialog','aria-modal':true,'aria-labelledby':titleId}:{})} style={[styles.sheet,{width:sheetWidth,height:sheetHeight,transform:[{translateY:translate}]}]}>
         <ProductAtmosphere visual={visual} source={product.image} />
         <View style={styles.header}>
           <Pressable {...pan.panHandlers} onPress={()=>close()} style={styles.handle} accessibilityRole="button" accessibilityLabel="Свернуть карточку"><View style={styles.handleLine}/></Pressable>
           <View style={styles.headerActions}><Pressable onPress={handleShare} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Поделиться"><Ionicons name="share-outline" size={19} color={material.text}/></Pressable><Pressable ref={closeButton} onPress={()=>close()} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Закрыть карточку товара"><Ionicons name="close" size={21} color={material.text}/></Pressable></View>
         </View>
-        <ScrollView ref={scrollRef} onContentSizeChange={()=>{if(noteFocused.current)scrollRef.current?.scrollToEnd({animated:true});}} style={styles.scroll} contentContainerStyle={{paddingHorizontal:hPad,paddingBottom:spacing.lg}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        <ScrollView ref={scrollRef} onContentSizeChange={()=>{if(noteFocused.current)scrollRef.current?.scrollToEnd({animated:true});}} style={styles.scroll} contentContainerStyle={{paddingHorizontal:hPad,paddingBottom:spacing.lg}} showsVerticalScrollIndicator indicatorStyle="white" keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
           <View style={styles.hero}>
             <Text style={styles.kicker}>{['SBL',product.menuSubcategory,product.sizeLabel].filter(Boolean).join(' · ')}</Text>
-            <View style={styles.photo}><ProductSheetPhoto product={product} visual={visual} frame={frame} height={photoHeight}/></View>
+            <View style={styles.photo}><ProductSheetPhoto product={product} visual={visual} frame={frame} height={photoHeight} width={photoWidth}/></View>
             <Pressable onPress={()=>onToggleFavorite?.(product.id)} style={styles.favorite} accessibilityRole="button" accessibilityLabel={favorite?'Убрать из избранного':'Добавить в избранное'} accessibilityState={{selected:favorite}}><Ionicons name={favorite?'heart':'heart-outline'} size={21} color={material.text}/></Pressable>
             <Text nativeID={titleId} accessibilityRole="header" style={styles.name}>{name}</Text>
             {!!product.description&&<Text style={styles.description}>{product.description}</Text>}
@@ -169,11 +167,11 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
           {variants.length<2&&product.menuVolumes?.length>1&&<Text style={styles.small}>Объёмы из меню: {product.menuVolumes.join(' / ')} мл</Text>}
           {groups.length>0&&<View style={styles.block}>
             <View style={styles.sectionHeading}><Text style={styles.blockTitle}>Сделать по-своему</Text><Text style={styles.small}>Добавки на порцию</Text></View>
-            {groups.length>1&&<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.groupTabs}>{groups.map(group=><Pressable key={group.id} onPress={()=>setSelectedGroup(group.id)} style={[styles.groupTab,activeGroup?.id===group.id&&styles.groupTabActive]} accessibilityRole="button" accessibilityLabel={group.title} accessibilityState={{selected:activeGroup?.id===group.id}}><Text style={styles.groupTabText}>{group.title}{groupCount(group)>0?` · ${groupCount(group)}`:''}</Text></Pressable>)}</ScrollView>}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tiles} accessibilityLabel={`Добавки: ${activeGroup?.title}`}>
+            {groups.length>1&&<View style={styles.groupTabs}>{groups.map(group=><Pressable key={group.id} onPress={()=>setSelectedGroup(group.id)} style={[styles.groupTab,activeGroup?.id===group.id&&styles.groupTabActive]} accessibilityRole="button" accessibilityLabel={group.title} accessibilityState={{selected:activeGroup?.id===group.id}}><Text style={styles.groupTabText}>{group.title}{groupCount(group)>0?` · ${groupCount(group)}`:''}</Text></Pressable>)}</View>}
+            <ScrollView horizontal nestedScrollEnabled style={styles.tilesScroll} showsHorizontalScrollIndicator indicatorStyle="white" contentContainerStyle={styles.tiles} accessibilityLabel={`Добавки: ${activeGroup?.title}`}>
               {activeGroup?.items.map(addition=>{const count=additionCounts[addition.id]||0;const atLimit=count>=(addition.altMilk?1:10)||(!count&&selectedModifiers.length>=20);return <ProductGlass key={addition.id} selected={count>0} style={[styles.tile,{width:tileWidth}]}>
-                <LinearGradient colors={ingredient} start={{x:.2,y:0}} end={{x:.9,y:1}} style={styles.ingredient}><Ionicons name={activeGroup.id==='milk'?'water-outline':activeGroup.id==='syrup'?'color-fill-outline':'add-outline'} size={18} color="rgba(52,34,18,0.62)"/></LinearGradient>
-                <Text numberOfLines={2} style={styles.additionName}>{addition.displayName||addition.name}</Text><Text style={styles.additionPrice}>+{formatPrice(addition.price)}</Text>
+                <View style={styles.additionHeading}><LinearGradient colors={ingredient} start={{x:.2,y:0}} end={{x:.9,y:1}} style={styles.ingredient}><Ionicons name={activeGroup.id==='milk'?'water-outline':activeGroup.id==='syrup'?'color-fill-outline':'add-outline'} size={16} color="rgba(52,34,18,0.62)"/></LinearGradient>
+                <Text style={styles.additionName}>{addition.displayName||addition.name}</Text></View><Text style={styles.additionPrice}>+{formatPrice(addition.price)}</Text>
                 <View style={styles.tileControls}>{count>0?<><Pressable onPress={()=>adjust(addition.id,-1)} style={styles.countButton} accessibilityRole="button" accessibilityLabel={`Убрать добавку ${addition.displayName||addition.name}`}><Ionicons name="remove" size={18} color={material.text}/></Pressable><Text style={styles.countValue}>{count}</Text></>:<Text style={styles.small}>Добавить</Text>}<Pressable disabled={atLimit} onPress={()=>adjust(addition.id,1)} style={[styles.countButton,atLimit&&styles.dimmed]} accessibilityRole="button" accessibilityLabel={`Добавить добавку ${addition.displayName||addition.name}`} accessibilityState={{disabled:atLimit}}><Ionicons name="add" size={18} color={material.text}/></Pressable></View>
               </ProductGlass>;})}
             </ScrollView>
@@ -183,11 +181,11 @@ export default function ProductScreen({ route, navigation, cart = {}, products =
           {inCart>0&&<Pressable accessibilityRole="button" onPress={()=>{navigation.goBack();navigation.navigate('Tabs',{screen:'CartTab'});}} style={styles.textAction}><Text style={styles.small}>С таким составом в корзине: {inCart} · Открыть корзину</Text></Pressable>}
         </ScrollView>
         {!keyboardOpen&&<ProductGlass style={[styles.footer,{paddingBottom:Math.max(insets.bottom,spacing.md),backgroundColor:visual.footer}]}>
-          <View style={styles.actionRow}><ProductGlass style={styles.quantity}>
+          <View style={[styles.actionRow,stackedFooter&&styles.stackedActions]}><ProductGlass style={styles.quantity}>
             <Pressable disabled={quantity<=1||added} onPress={()=>setRequestedQuantity(v=>Math.max(1,v-1))} style={[styles.countButton,quantity<=1&&styles.dimmed]} accessibilityRole="button" accessibilityLabel="Уменьшить количество напитков"><Ionicons name="remove" size={20} color={material.text}/></Pressable><Text style={styles.quantityValue}>{quantity}</Text><Pressable disabled={quantity>=capacity||added} onPress={()=>setRequestedQuantity(v=>Math.min(capacity,v+1))} style={[styles.countButton,quantity>=capacity&&styles.dimmed]} accessibilityRole="button" accessibilityLabel="Увеличить количество напитков"><Ionicons name="add" size={20} color={material.text}/></Pressable>
-          </ProductGlass><Pressable onPress={handleAdd} disabled={disabled} accessibilityRole="button" accessibilityLabel={disabled?(added?'Добавлено':capacity===0?'В корзине уже 99':'Позиция недоступна'):`Добавить в корзину ${quantity} шт. за ${formatPrice(total)}`} accessibilityState={{disabled}} style={[styles.addButton,disabled&&!added&&styles.dimmed]}>
+          </ProductGlass><Pressable onPress={handleAdd} disabled={disabled} accessibilityRole="button" accessibilityLabel={disabled?(added?'Добавлено':capacity===0?'В корзине уже 99':'Позиция недоступна'):`Добавить в корзину ${quantity} шт. за ${formatPrice(total)}`} accessibilityState={{disabled}} style={[styles.addButton,stackedFooter&&styles.stackedAddButton,disabled&&!added&&styles.dimmed]}>
             <View pointerEvents="none" style={StyleSheet.absoluteFill}><HolographicSurface animated variant="line" intensity={1.35} borderRadius={radius.pill} style={StyleSheet.absoluteFill}/></View>
-            <Text style={styles.addButtonText} numberOfLines={1}>{added?'Добавлено':!isAvailable||unavailableAdditions.length?'Недоступно':capacity===0?'В корзине 99':`Добавить · ${formatPrice(total)}`}</Text>
+            <Text style={styles.addButtonText}>{added?'Добавлено':!isAvailable||unavailableAdditions.length?'Недоступно':capacity===0?'В корзине 99':`Добавить · ${formatPrice(total)}`}</Text>
           </Pressable></View>
         </ProductGlass>}
       </Animated.View>
@@ -200,7 +198,7 @@ const styles=StyleSheet.create({
   sheet:{width:'100%',maxWidth:600,maxHeight:'100%',flexShrink:1,borderTopLeftRadius:radius.xlarge,borderTopRightRadius:radius.xlarge,overflow:'hidden',backgroundColor:colors.surface3,borderWidth:1,borderColor:material.border},
   header:{height:48,alignItems:'center',justifyContent:'center'},handle:{width:88,height:44,alignItems:'center',justifyContent:'center'},handleLine:{width:34,height:4,borderRadius:radius.pill,backgroundColor:'rgba(255,255,255,0.3)'},
   headerActions:{position:'absolute',right:spacing.sm,top:2,flexDirection:'row'},iconButton:{width:44,height:44,alignItems:'center',justifyContent:'center'},scroll:{flex:1,minHeight:0},
-  hero:{alignItems:'center',paddingBottom:spacing.lg},photo:{alignItems:'center',justifyContent:'center',marginTop:spacing.sm,marginBottom:spacing.md},
+  hero:{alignItems:'center',paddingBottom:spacing.md},photo:{alignItems:'center',justifyContent:'center',marginTop:spacing.xs,marginBottom:spacing.sm},
   kicker:{alignSelf:'flex-start',fontSize:12,color:material.faint,letterSpacing:1.6,textTransform:'uppercase',paddingRight:44},
   favorite:{position:'absolute',right:0,top:spacing.lg,width:44,height:44,borderRadius:radius.pill,borderWidth:1,borderColor:material.border,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(255,255,255,0.04)'},
   name:{fontSize:27,fontWeight:'700',letterSpacing:-.7,color:material.text,textAlign:'center'},description:{fontSize:13,lineHeight:20,color:material.secondary,textAlign:'center',marginTop:spacing.sm},
@@ -208,11 +206,12 @@ const styles=StyleSheet.create({
   notice:{fontSize:13,lineHeight:20,color:material.text,marginBottom:spacing.md},warning:{padding:spacing.md,marginBottom:spacing.md},lightText:{fontSize:13,lineHeight:20,color:material.text},small:{fontSize:12,lineHeight:18,color:material.faint},
   block:{marginBottom:spacing.md},blockTitle:{fontSize:14,fontWeight:'700',color:material.text},sectionHeading:{flexDirection:'row',flexWrap:'wrap',justifyContent:'space-between',alignItems:'center',gap:spacing.xs,marginBottom:spacing.sm},
   variants:{flexDirection:'row',flexWrap:'wrap',gap:spacing.sm,marginTop:spacing.md},variant:{paddingHorizontal:spacing.lg,paddingVertical:spacing.sm,minHeight:56,gap:spacing.xs},
-  groupTabs:{gap:spacing.sm,paddingBottom:spacing.md},groupTab:{minHeight:44,paddingHorizontal:spacing.md,alignItems:'center',justifyContent:'center',borderRadius:radius.pill,borderWidth:1,borderColor:material.border},groupTabActive:{backgroundColor:'rgba(255,255,255,0.14)',borderColor:material.selectedBorder},groupTabText:{fontSize:12,color:material.text},
-  tiles:{gap:spacing.md,paddingBottom:spacing.sm},tile:{padding:spacing.md,minHeight:182},ingredient:{width:34,height:34,borderRadius:17,alignItems:'center',justifyContent:'center',marginBottom:spacing.sm},additionName:{fontSize:14,fontWeight:'600',lineHeight:19,color:material.text,minHeight:38},additionPrice:{fontSize:12,lineHeight:18,color:material.secondary,marginTop:spacing.xs},
+  groupTabs:{flexDirection:'row',flexWrap:'wrap',gap:spacing.sm,paddingBottom:spacing.md},groupTab:{minHeight:44,maxWidth:'100%',paddingHorizontal:spacing.sm,paddingVertical:spacing.xs,alignItems:'center',justifyContent:'center',borderRadius:radius.pill,borderWidth:1,borderColor:material.border},groupTabActive:{backgroundColor:'rgba(255,255,255,0.14)',borderColor:material.selectedBorder},groupTabText:{fontSize:12,color:material.text,textAlign:'center'},
+  tilesScroll:{flexGrow:0,flexShrink:0},tiles:{gap:spacing.md,paddingBottom:spacing.sm,alignItems:'stretch'},tile:{padding:spacing.sm,minHeight:132},additionHeading:{flexDirection:'row',gap:spacing.xs,alignItems:'center',minHeight:38},ingredient:{width:26,height:26,flexShrink:0,borderRadius:13,alignItems:'center',justifyContent:'center'},additionName:{flex:1,fontSize:14,fontWeight:'600',lineHeight:19,color:material.text},additionPrice:{fontSize:12,lineHeight:18,color:material.secondary,marginTop:spacing.xs},
   tileControls:{marginTop:spacing.sm,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},countButton:{width:44,height:44,alignItems:'center',justifyContent:'center'},countValue:{fontSize:15,fontWeight:'600',color:material.text},additionsSummary:{fontSize:12,lineHeight:19,color:material.faint,marginTop:spacing.xs},
   noteDone:{minHeight:44,paddingHorizontal:spacing.md,alignItems:'flex-end',justifyContent:'center'},
   comment:{borderTopWidth:1,borderTopColor:material.border},commentToggle:{minHeight:52,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},note:{minHeight:72,padding:spacing.md,color:material.text,fontSize:14,lineHeight:21,textAlignVertical:'top'},commentHint:{fontSize:12,lineHeight:18,color:material.faint,marginTop:spacing.sm},textAction:{minHeight:44,justifyContent:'center'},
   footer:{borderRadius:0,borderWidth:0,borderTopWidth:1,paddingTop:spacing.md,paddingHorizontal:spacing.lg},actionRow:{flexDirection:'row',gap:spacing.sm,alignItems:'center'},quantity:{flexDirection:'row',alignItems:'center',borderRadius:radius.pill,height:54},quantityValue:{fontSize:15,fontWeight:'600',minWidth:18,textAlign:'center',color:material.text},
-  addButton:{height:54,flex:1,minWidth:0,borderRadius:radius.pill,overflow:'hidden',alignItems:'center',justifyContent:'center',paddingHorizontal:spacing.md},addButtonText:{...typography.cardTitle,fontSize:15,fontWeight:'700',color:material.ink,textAlign:'center'},dimmed:{opacity:.4},
+  stackedActions:{flexDirection:'column'},stackedAddButton:{flex:0,width:'100%'},
+  addButton:{minHeight:54,flex:1,minWidth:0,borderRadius:radius.pill,overflow:'hidden',alignItems:'center',justifyContent:'center',paddingHorizontal:spacing.md,paddingVertical:spacing.sm},addButtonText:{...typography.cardTitle,fontSize:15,fontWeight:'700',color:material.ink,textAlign:'center'},dimmed:{opacity:.4},
 });

@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   brandWatermark: { position: 'absolute' },
   loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(238,235,228,0.6)',
   },

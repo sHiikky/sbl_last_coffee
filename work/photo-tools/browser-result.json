@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "syntheticOnly": true,
+  "realUploads": 0,
+  "realBackendRequests": 0,
+  "chooser": true,
+  "drop": true,
+  "containFullGlass": true,
+  "bakedFrame": [
+    1280,
+    720
+  ],
+  "retryReusesUpload": true,
+  "logoutGuard": true,
+  "mobileWidths": [
+    320,
+    390
+  ],
+  "errors": []
+}

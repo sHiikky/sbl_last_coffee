@@ -6,14 +6,14 @@ import { Ionicons } from '@expo/vector-icons';
 import PrimaryButton from '../components/PrimaryButton';
 import ToggleSwitch from '../components/ToggleSwitch';
 import { colors, radius, spacing } from '../theme/tokens';
-import { getOrderNotificationSettings, enableOrderNotifications, disableOrderNotifications, getPushPreferences, setPushPreferences, describeNotificationError } from '../lib/notificationService';
+import { getOrderNotificationSettings, enableOrderNotifications, disableOrderNotifications, getPushPreferences, setPushPreferences, setReturnReminders, describeNotificationError } from '../lib/notificationService';
 
 export default function NotificationSettingsScreen({ visible, onClose }) {
   const insets = useSafeAreaInsets();
   const [settings, setSettings] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [prefs, setPrefs] = useState({ promotions: false, seriesReminders: false });
+  const [prefs, setPrefs] = useState({ promotions: false, seriesReminders: false, returnReminders: null });
   const load = useCallback(async () => {
     setBusy(true); setError('');
     try {
@@ -44,7 +44,14 @@ export default function NotificationSettingsScreen({ visible, onClose }) {
     if (busy) return;
     const next = { ...prefs, ...patch };
     setBusy(true); setError('');
-    try { setPrefs(await setPushPreferences(next)); }
+    try {
+      if ('returnReminders' in patch) {
+        const returnReminders = await setReturnReminders(next.returnReminders);
+        setPrefs({ ...prefs, returnReminders });
+      } else {
+        setPrefs({ ...prefs, ...await setPushPreferences(next) });
+      }
+    }
     catch (cause) { setError(describeNotificationError(cause)); }
     finally { setBusy(false); }
   };
@@ -56,7 +63,7 @@ export default function NotificationSettingsScreen({ visible, onClose }) {
         <View style={styles.card}>
           <Ionicons name="notifications-outline" size={32} color={colors.accent} />
           <Text style={styles.sectionTitle}>Статус заказа</Text>
-          <Text style={styles.copy}>Сообщим, когда заказ примут в работу, когда он будет готов к выдаче или если его отменят. Рекламные рассылки этим переключателем не включаются.</Text>
+          <Text style={styles.copy}>Сообщим, когда заказ оформлен, принят в работу, готов к выдаче или отменён.</Text>
           <Text style={styles.copy}>Доставка сообщений зависит от подключения телефона. Текущий статус всегда можно проверить в приложении.</Text>
           {busy && !settings ? <ActivityIndicator color={colors.accent} style={{ marginTop: spacing.lg }} /> : <Text style={styles.status}>{settings?.enabled ? 'Включены на этом устройстве' : 'Выключены на этом устройстве'}</Text>}
           {!!settings?.message && <Text style={styles.copy}>{settings.message}</Text>}
@@ -67,6 +74,13 @@ export default function NotificationSettingsScreen({ visible, onClose }) {
           <Text style={styles.sectionTitle}>По желанию</Text>
           <View style={styles.prefRow}><View style={{ flex: 1 }}><Text style={styles.prefTitle}>Акции и новости</Text><Text style={styles.prefHint}>Только важное, без спама</Text></View><ToggleSwitch value={prefs.promotions} onValueChange={value => changePref({ promotions: value })} disabled={busy} accessibilityLabel="Акции и новости" /></View>
           <View style={styles.prefRow}><View style={{ flex: 1 }}><Text style={styles.prefTitle}>Напоминания о серии</Text><Text style={styles.prefHint}>Не более одного в день</Text></View><ToggleSwitch value={prefs.seriesReminders} onValueChange={value => changePref({ seriesReminders: value })} disabled={busy} accessibilityLabel="Напоминания о серии" /></View>
+          {typeof prefs.returnReminders === 'boolean' && <View style={styles.prefRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.prefTitle}>Приглашения вернуться</Text>
+              <Text style={styles.prefHint}>Одно приглашение, если вы не заказывали 7 дней</Text>
+            </View>
+            <ToggleSwitch value={prefs.returnReminders} onValueChange={value => changePref({ returnReminders: value })} disabled={busy} accessibilityLabel="Приглашения вернуться" />
+          </View>}
         </View>}
         {!!error && <View style={styles.card}><Text style={styles.error} accessibilityRole="alert">{error}</Text><TouchableOpacity onPress={load} disabled={busy} style={styles.action} accessibilityRole="button"><Text style={styles.link}>Проверить ещё раз</Text></TouchableOpacity></View>}
       </ScrollView>

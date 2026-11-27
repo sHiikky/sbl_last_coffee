@@ -60,7 +60,7 @@ export default function HomeLoyaltyCard({ bonuses = 0, rate = 0.05, level = 1, t
 }
 const styles = StyleSheet.create({
   wrap: { borderRadius: 26, backgroundColor: satinCard.base[0], borderWidth: 1, borderColor: satinCard.border, overflow: 'hidden' },
-  brush: { ...StyleSheet.absoluteFillObject, opacity: 0.6 },
+  brush: { ...StyleSheet.absoluteFill, opacity: 0.6 },
   content: { minHeight: 247, paddingHorizontal: 25, paddingTop: 16, paddingBottom: 24 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 16 },
   infoButton: { minHeight: 44, minWidth: 88, alignItems: 'flex-end', justifyContent: 'center', paddingLeft: 12 },

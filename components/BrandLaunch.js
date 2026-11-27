@@ -127,7 +127,7 @@ export default function BrandLaunch({ ready, onDone }) {
 }
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.launchBackground, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', zIndex: 1000, elevation: 100 },
+  overlay: { ...StyleSheet.absoluteFill, backgroundColor: colors.launchBackground, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', zIndex: 1000, elevation: 100 },
   brand: { alignItems: 'center', justifyContent: 'center' },
   band: { position: 'absolute' },
   loading: { position: 'absolute', bottom: 60, color: colors.textSecondary, fontSize: 13, textAlign: 'center', paddingHorizontal: spacing.xl },

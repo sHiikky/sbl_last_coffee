@@ -10,7 +10,7 @@ const timers = new Map(), animations = [], listeners = new Set();
 const AppState = { currentState: 'active', addEventListener(event, callback) { assert.equal(event, 'change'); listeners.add(callback); return { remove: () => listeners.delete(callback) }; } };
 const native = {
   View: 'View', Text: 'Text', TouchableOpacity: 'Touch',
-  StyleSheet: { create: value => value, absoluteFill: {}, absoluteFillObject: {}, hairlineWidth: 0.5 },
+  StyleSheet: require('./load-installed-stylesheet.cjs')(),
   AppState, Easing: { inOut: value => value, cubic: 'cubic' },
   Animated: {
     View: 'AnimatedView',
